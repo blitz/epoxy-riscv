@@ -1,3 +1,5 @@
+#include "memory.hpp"
+
 OUTPUT_ARCH( "riscv" )
 ENTRY(init)
 
@@ -10,8 +12,7 @@ PHDRS {
 SECTIONS
 {
   /* RAM is typically mapped here. */
-  . = 0x80200000;
-  .text (0x80200000) :
+  .text KERNEL_START :
   {
     *(.text.init)
     *(.text .text.*)
