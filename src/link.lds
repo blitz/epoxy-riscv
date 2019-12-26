@@ -1,12 +1,12 @@
 #include "memory.hpp"
 
 OUTPUT_ARCH( "riscv" )
-ENTRY(init)
+ENTRY(asm_unpaged_entry)
 
 PHDRS {
-      lo_rx PT_LOAD FLAGS (5); /* RX */
-      lo_r  PT_LOAD FLAGS (4); /* R  */
-      lo_rw PT_LOAD FLAGS (6); /* RW */
+      hi_rx PT_LOAD FLAGS (5); /* RX */
+      hi_r  PT_LOAD FLAGS (4); /* R  */
+      hi_rw PT_LOAD FLAGS (6); /* RW */
 }
 
 SECTIONS
@@ -14,13 +14,13 @@ SECTIONS
   /* RAM is typically mapped here. */
   .text KERNEL_START :
   {
-    *(.text.init)
+    *(.text.boot)
     *(.text .text.*)
-  } : lo_rx
+  } : hi_rx
 
-  .rodata : { *(.rodata .rodata.*) } : lo_r
-  .data   : { *(.data .data.*) } : lo_rw
-  .bss    : { *(.bss .bss.*) } : lo_rw
+  .rodata : { *(.rodata .rodata.*) } : hi_r
+  .data   : { *(.data .data.*) } : hi_rw
+  .bss    : { *(.bss .bss.*) } : hi_rw
 
   /DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }
 }

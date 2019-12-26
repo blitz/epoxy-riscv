@@ -1,15 +1,14 @@
-	.section .text.init
+	.section .text
 	.extern start
 	
-	.global init
-init:
+	.global asm_paged_entry
+asm_paged_entry:
 	la sp, stack_end
 	call start
 
 dead:	wfi
 	j dead
 
-	.section .text
 	.global sbi_putchar
 sbi_putchar:
 	li a6, 0
