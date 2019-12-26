@@ -4,10 +4,7 @@
 	.global asm_paged_entry
 asm_paged_entry:
 	la sp, stack_end
-	call start
-
-dead:	wfi
-	j dead
+	j start
 
 	.global sbi_putchar
 sbi_putchar:
