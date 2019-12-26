@@ -6,7 +6,7 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [ epoxyHarden ];
 
-  src = ./src;
+  src = ../src;
 
   makeFlags = [ "TARGET=$(out)"];
   hardeningDisable = [ "all" ];
