@@ -6,19 +6,20 @@
 
 	.section .text.boot
 	.extern asm_paged_entry
-	.option pic
+	.option	norelax
 
 	.global asm_unpaged_entry
 asm_unpaged_entry:
 
 	ld a0, BOOT_STVEC
 	csrw stvec, a0
-	
-	ld a0, BOOT_SATP
-	csrw satp, a0
+
+	ld a1, BOOT_SATP
+	sfence.vma		// This is needed. Why?
+	csrw satp, a1
+	sfence.vma
 
 	// We should never get here.
-	sfence.vma
 	wfi
 
 	.align 3

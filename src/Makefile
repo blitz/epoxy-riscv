@@ -21,7 +21,7 @@ install: kernel.bin kernel.elf hello.elf
 %.o: %.lds
 	$(CPP) $(CFLAGS) -o $@ -P -E -x c $<
 
-kernel.elf: link.o unpaged_entry.o paged_entry.o kernel.o
+kernel.elf: link.o unpaged_entry.o paged_entry.o patched.o kernel.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ -T $^
 
 kernel.bin: kernel.elf
