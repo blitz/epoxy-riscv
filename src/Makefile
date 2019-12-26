@@ -6,14 +6,14 @@ ASFLAGS  += $(CFLAGS)
 LDFLAGS  += -static -nostdlib
 
 .PHONY: all
-all: kernel.bin kernel.elf
+all: kernel.bin kernel.elf hello.elf
 
 .PHONY: clean
 clean:
-	rm -f kernel.bin kernel.elf *.o
+	rm -f kernel.bin *.elf *.o
 
 .PHONY: install
-install: kernel.bin kernel.elf
+install: kernel.bin kernel.elf hello.elf
 	mkdir -p $(TARGET)
 	install -m 0755 $^ $(TARGET)/
 
@@ -26,5 +26,8 @@ kernel.elf: link.o unpaged_entry.o paged_entry.o kernel.o
 
 kernel.bin: kernel.elf
 	$(OBJCOPY) -O binary $< $@
+
+hello.elf: user-link.o hello.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ -T $^
 
 -include *.d
