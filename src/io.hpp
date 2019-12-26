@@ -3,8 +3,6 @@
 #include "types.hpp"
 #include "spinlock.hpp"
 
-void putc(char c);
-
 void put(const char *str);
 void put(uint64_t v);
 

@@ -1,10 +1,10 @@
 TARGET  ?= output
 
 CPPFLAGS += -Iinclude/
-CFLAGS   += -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
+CFLAGS   += -flto -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
 CXXFLAGS += $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS  += $(CFLAGS)
-LDFLAGS  += -static -nostdlib
+LDFLAGS  += -flto -static -nostdlib
 
 .PHONY: all
 all: kernel.elf hello.elf

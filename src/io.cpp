@@ -1,11 +1,14 @@
 #include "asm.hpp"
 #include "io.hpp"
+#include "sbi.hpp"
 
 spinlock format_lock;
 
-void putc(char c)
-{
-  sbi_putchar(c);
+namespace {
+  void putc(char c)
+  {
+    sbi_putc(c);
+  }
 }
 
 void put(const char *str)
