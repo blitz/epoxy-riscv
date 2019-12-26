@@ -1,20 +1,11 @@
-extern "C" void sbi_putchar(int c);
-extern "C" [[noreturn]] void start();
+#include <types.hpp>
 
-namespace {
-
-  void print(const char *str)
-  {
-    for (;*str;str++) {
-      sbi_putchar(*str);
-    }
-  }
-
-}
+#include "asm.hpp"
+#include "io.hpp"
 
 void start()
 {
-  print("\nHello World!\n");
+  format("\nHello World!\n");
 
   while (true) {
     asm volatile ("wfi");
