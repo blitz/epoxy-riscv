@@ -1,11 +1,13 @@
-{ stdenv, cmake }:
+{ stdenv, cmake, epoxyHarden }:
 
 stdenv.mkDerivation {
-  pname = "riscv-hello";
+  pname = "epoxy";
   version = "0.0.0";
+
+  nativeBuildInputs = [ epoxyHarden ];
 
   src = ./src;
 
-  makeFlags = [ "TARGET=$(out)"];  
+  makeFlags = [ "TARGET=$(out)"];
   hardeningDisable = [ "all" ];
 }
