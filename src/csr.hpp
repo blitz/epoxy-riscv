@@ -3,15 +3,50 @@
 #include <types.hpp>
 
 enum class csr : uint16_t {
-  STVEC = 0x105U,
-  SATP  = 0x180U,
+  SSTATUS  = 0x100U,
+  STVEC    = 0x105U,
+  SSCRATCH = 0x140U,
+  SATP     = 0x180U,
+};
+
+enum : mword_t {
+  SSTATUS_SIE = 1UL << 1,
+  SSTATUS_SPIE = 1UL << 5,
+  SSTATUS_UBE = 1UL << 6,
+  SSTATUS_SPP = 1UL << 8,
+  SSTATUS_SUM = 1UL << 18,
+  SSTATUS_MXR = 1UL << 19,
 };
 
 template <csr CSR>
-inline void write_csr(mword_t value)
+inline void csr_w(mword_t value)
 {
   asm volatile ("csrw %[csr], %[val]"
-		:
-		: [csr] "i" (CSR), [val] "r" (value)
-		: "memory");
+                :
+                : [csr] "i" (CSR), [val] "r" (value)
+                : "memory");
+}
+
+template <csr CSR>
+inline mword_t csr_rc(mword_t value)
+{
+  mword_t out;
+
+  asm volatile ("csrrc %[out], %[csr], %[val]"
+                : [out] "=r" (out)
+                : [csr] "i" (CSR), [val] "r" (value));
+
+  return out;
+}
+
+template <csr CSR>
+inline mword_t csr_rs(mword_t value)
+{
+  mword_t out;
+
+  asm volatile ("csrrs %[out], %[csr], %[val]"
+                : [out] "=r" (out)
+                : [csr] "i" (CSR), [val] "r" (value));
+
+  return out;
 }
