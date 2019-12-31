@@ -1,10 +1,10 @@
 TARGET  ?= output
 
 CPPFLAGS += -Iinclude/
-CFLAGS   += -flto -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
+CFLAGS   += -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
 CXXFLAGS += $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS  += $(CFLAGS)
-LDFLAGS  += -flto -static -nostdlib
+LDFLAGS  += -static -nostdlib
 
 .PHONY: all
 all: kernel.elf hello.elf
@@ -22,7 +22,7 @@ install: kernel.elf hello.elf
 %.o: %.lds
 	$(CPP) $(CFLAGS) -o $@ -P -E -x c $<
 
-kernel.elf: link.o unpaged_entry.o paged_entry.o patched.o kernel.o io.o
+kernel.elf: link.o unpaged_entry.o paged_entry.o patched.o kernel.o io.o exc_entry.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ -T $^
 
 hello.elf: user-link.o hello.o

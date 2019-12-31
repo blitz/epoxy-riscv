@@ -13,8 +13,28 @@ void arch_init()
 
   // Prevent touching user memory unintentionally.
   csr_rs<csr::SSTATUS>(SSTATUS_SUM);
+
+  // Set up exception and interrupt entry. We use direct mode where all interrupts and exceptions enter at the same
+  // location.
+  csr_w<csr::STVEC>(reinterpret_cast<uintptr_t>(asm_exc_entry));
 }
 
+}
+
+void exc_entry()
+{
+  mword_t const sepc   {csr_r<csr::SEPC>()};
+  mword_t const scause {csr_r<csr::SCAUSE>()};
+  mword_t const stval  {csr_r<csr::STVAL>()};
+
+  format("Exception!\n"
+         "SCAUSE ", scause, "\n"
+         "SEPC   ", sepc, "\n"
+         "STVAL  ", stval, "\n");
+
+  while (true) {
+    asm volatile ("wfi");
+  }
 }
 
 void start()

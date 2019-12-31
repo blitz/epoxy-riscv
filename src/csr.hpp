@@ -6,6 +6,10 @@ enum class csr : uint16_t {
   SSTATUS  = 0x100U,
   STVEC    = 0x105U,
   SSCRATCH = 0x140U,
+  SEPC     = 0x141U,
+  SCAUSE   = 0x142U,
+  STVAL    = 0x143U,
+  SIP      = 0x144U,
   SATP     = 0x180U,
 };
 
@@ -25,6 +29,18 @@ inline void csr_w(mword_t value)
                 :
                 : [csr] "i" (CSR), [val] "r" (value)
                 : "memory");
+}
+
+template <csr CSR>
+inline mword_t csr_r()
+{
+  mword_t out;
+
+  asm volatile ("csrr %[out], %[csr]"
+                : [out] "=r" (out)
+                : [csr] "i" (CSR));
+
+  return out;
 }
 
 template <csr CSR>
