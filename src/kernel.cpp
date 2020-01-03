@@ -2,6 +2,7 @@
 
 #include "asm.hpp"
 #include "csr.hpp"
+#include "exception_frame.hpp"
 #include "io.hpp"
 
 namespace {
@@ -17,31 +18,43 @@ void arch_init()
   // Set up exception and interrupt entry. We use direct mode where all interrupts and exceptions enter at the same
   // location.
   csr_w<csr::STVEC>(reinterpret_cast<uintptr_t>(asm_exc_entry));
+
+  // A scratch register containing zero means we are in the kernel.
+  csr_w<csr::SSCRATCH>(0);
 }
 
-}
-
-void exc_entry()
+[[noreturn]] void die_on_exception_from(char const *from)
 {
   mword_t const sepc   {csr_r<csr::SEPC>()};
   mword_t const scause {csr_r<csr::SCAUSE>()};
   mword_t const stval  {csr_r<csr::STVAL>()};
 
-  format("Exception!\n"
-         "SCAUSE ", scause, "\n"
-         "SEPC   ", sepc, "\n"
-         "STVAL  ", stval, "\n");
+  format("!! Exception from ", from, "!\n"
+         "!! SCAUSE ", scause, "\n"
+         "!! SEPC   ", sepc, "\n"
+         "!! STVAL  ", stval, "\n");
 
   while (true) {
     asm volatile ("wfi");
   }
 }
 
+} // anonymous namespace
+
+void user_exc_entry()
+{
+  die_on_exception_from("user");
+}
+
+void kern_exc_entry()
+{
+  die_on_exception_from("kernel");
+}
+
 void start()
 {
   format("\n"
-         ">> Epoxy (RISC-V 64-bit)\n"
-         ">>  compiled with "
+         ">> Epoxy (RISC-V 64-bit, "
 #ifdef __clang__
          "clang " __clang_version__
 #elif __GNUC__
@@ -49,7 +62,7 @@ void start()
 #else
          "unknown compiler"
 #endif
-         "\n\n");
+         ")\n");
 
   arch_init();
 

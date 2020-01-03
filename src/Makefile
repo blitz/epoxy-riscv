@@ -2,7 +2,7 @@ TARGET  ?= output
 
 CPPFLAGS += -Iinclude/
 CFLAGS   += -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
-CXXFLAGS += $(CFLAGS) -fno-exceptions -fno-rtti
+CXXFLAGS += $(CFLAGS) -fno-exceptions -fno-rtti -std=c++17
 ASFLAGS  += $(CFLAGS)
 LDFLAGS  += -static -nostdlib
 
