@@ -13,10 +13,10 @@ install: $(BINARIES)
 	mkdir -p $(TARGET)
 	install -m 0755 $^ $(TARGET)/
 
-COMMON_CFLAGS   = -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
+COMMON_CFLAGS   = -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
 COMMON_CXXFLAGS = $(COMMON_CFLAGS) -fno-exceptions -fno-rtti -std=c++17
 COMMON_ASFLAGS  = $(COMMON_CFLAGS)
-COMMON_LDFLAGS  = -static -nostdlib
+COMMON_LDFLAGS  = -flto -static -nostdlib
 
 KERN_CFLAGS := $(COMMON_CFLAGS)
 USER_CFLAGS := $(COMMON_CFLAGS)
