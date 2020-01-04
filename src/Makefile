@@ -61,5 +61,14 @@ epoxy.kern.elf: $(KERN_OBJ)
 hello.user.elf: $(USER_OBJ)
 hello.user.elf: USER_CFLAGS += -Iuser-hello/include
 
+qemu-example-hello.elf: $(BINARIES) examples/user-hello.json examples/user-hello.json examples/riscv-qemu-machine.json
+	epoxy-harden --machine examples/riscv-qemu-machine.json \
+                     --application examples/user-hello.json \
+                     --kernel epoxy.kern.elf --output $@
+
+.PHONY: qemu-boot-hello
+qemu-boot-hello: qemu-example-hello.elf
+	boot -display none -device loader,file=$<
+
 -include kern/src/*.d
 -include user-hello/src/*.d

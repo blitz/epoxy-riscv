@@ -10,7 +10,7 @@
         {
             "_comment": "The process ID is used to refer to this process across this application description",
             "pid": 0,
-            "binary": "result/hello.elf",
+            "binary": "hello.user.elf",
             "capabilities" : [0, 1]
         }
     ]
