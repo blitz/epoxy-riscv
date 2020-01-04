@@ -12,6 +12,7 @@ all: $(BINARIES)
 .PHONY: clean
 clean:
 	rm -f *.elf kern/src/*.[do] user-hello/src/*.[do]
+	rm -f kern/include/state.hpp kern/src/state.cpp
 
 .PHONY: install
 install: $(BINARIES)
@@ -58,14 +59,15 @@ USER_LDFLAGS := $(COMMON_LDFLAGS)
 	$(CC) $(USER_CFLAGS) $(USER_LDFLAGS) -o $@ -T $^
 
 # We need to jump through this hoop, because Make is broken in the way
-# it handles multiple targets in normal rules.
-.PHONY: generate_kern_state
-generate_kern_state: $(MACHINE_DESC) $(APPLICATION_DESC) $(USER_BINARIES)
+# it handles multiple targets in normal rules. Pattern rules don't
+# have this problem.
+kern/src/%.cpp kern/src/%.hpp: kern/src/%.dummy $(MACHINE_DESC) $(APPLICATION_DESC) $(USER_BINARIES)
 	./scripts/config --machine $(MACHINE_DESC) --application $(APPLICATION_DESC) \
                          --output-cpp kern/src/state.cpp \
                          --output-hpp kern/include/state.hpp
 
-kern/src/state.cpp kern/src/state.hpp: generate_kern_state
+kern/src/state.dummy:
+	touch $@
 
 KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, link unpaged_entry paged_entry patched kernel io exc_entry state))
 USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link hello))

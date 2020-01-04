@@ -7,3 +7,4 @@
 *.o
 /src/kern/include/state.hpp
 /src/kern/src/state.cpp
+/src/kern/src/state.dummy
