@@ -61,7 +61,7 @@ USER_LDFLAGS := $(COMMON_LDFLAGS)
 # We need to jump through this hoop, because Make is broken in the way
 # it handles multiple targets in normal rules. Pattern rules don't
 # have this problem.
-kern/src/%.cpp kern/src/%.hpp: kern/src/%.dummy $(MACHINE_DESC) $(APPLICATION_DESC) $(USER_BINARIES)
+kern/src/%.cpp kern/include/%.hpp: kern/src/%.dummy $(MACHINE_DESC) $(APPLICATION_DESC) $(USER_BINARIES)
 	./scripts/config --machine $(MACHINE_DESC) --application $(APPLICATION_DESC) \
                          --output-cpp kern/src/state.cpp \
                          --output-hpp kern/include/state.hpp
@@ -69,8 +69,11 @@ kern/src/%.cpp kern/src/%.hpp: kern/src/%.dummy $(MACHINE_DESC) $(APPLICATION_DE
 kern/src/state.dummy:
 	touch $@
 
-KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, link unpaged_entry paged_entry patched kernel io exc_entry state))
+KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, \
+    link unpaged_entry paged_entry patched process kernel io exc_entry thread state))
 USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link hello))
+
+$(KERN_OBJ): kern/include/state.hpp
 
 epoxy.kern.elf: KERN_CXXFLAGS += -Ikern/include
 epoxy.kern.elf: $(KERN_OBJ)

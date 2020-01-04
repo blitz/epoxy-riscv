@@ -4,6 +4,7 @@
 #include "csr.hpp"
 #include "exception_frame.hpp"
 #include "io.hpp"
+#include "state.hpp"
 
 namespace {
 
@@ -39,7 +40,7 @@ void arch_init()
 
 } // anonymous namespace
 
-void user_exc_entry()
+void user_exc_entry([[maybe_unused]] exception_frame *frame)
 {
   die_on_exception_from("user");
 }
@@ -64,6 +65,6 @@ void start()
 
   arch_init();
 
-  format("!! Code missing... We're dead.\n");
-  wait_forever();
+  processes[0].activate();
+  threads[0].exit_from_syscall();
 }

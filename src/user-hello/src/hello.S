@@ -1,6 +1,6 @@
-	.section .text.boot
+        .section .text.boot
 
-	.global asm_entry
+        .global asm_entry
 asm_entry:
-	wfi
-	j asm_entry
+        ecall
+        j asm_entry
