@@ -5,3 +5,5 @@
 *.bin
 *.d
 *.o
+/src/kern/include/state.hpp
+/src/kern/src/state.cpp

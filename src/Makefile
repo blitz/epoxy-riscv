@@ -1,5 +1,10 @@
 TARGET   ?= output
-BINARIES := epoxy.kern.elf hello.user.elf
+
+USER_BINARIES := hello.user.elf
+BINARIES      := $(USER_BINARIES) epoxy.kern.elf
+
+MACHINE_DESC     ?= examples/riscv-qemu-machine.json
+APPLICATION_DESC ?= examples/user-hello.json
 
 .PHONY: all
 all: $(BINARIES)
@@ -52,7 +57,17 @@ USER_LDFLAGS := $(COMMON_LDFLAGS)
 %.user.elf:
 	$(CC) $(USER_CFLAGS) $(USER_LDFLAGS) -o $@ -T $^
 
-KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, link unpaged_entry paged_entry patched kernel io exc_entry))
+# We need to jump through this hoop, because Make is broken in the way
+# it handles multiple targets in normal rules.
+.PHONY: generate_kern_state
+generate_kern_state: $(MACHINE_DESC) $(APPLICATION_DESC) $(USER_BINARIES)
+	./scripts/config --machine $(MACHINE_DESC) --application $(APPLICATION_DESC) \
+                         --output-cpp kern/src/state.cpp \
+                         --output-hpp kern/include/state.hpp
+
+kern/src/state.cpp kern/src/state.hpp: generate_kern_state
+
+KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, link unpaged_entry paged_entry patched kernel io exc_entry state))
 USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link hello))
 
 epoxy.kern.elf: KERN_CXXFLAGS += -Ikern/include
@@ -62,8 +77,8 @@ hello.user.elf: $(USER_OBJ)
 hello.user.elf: USER_CFLAGS += -Iuser-hello/include
 
 qemu-example-hello.elf: $(BINARIES) examples/user-hello.json examples/user-hello.json examples/riscv-qemu-machine.json
-	epoxy-harden --machine examples/riscv-qemu-machine.json \
-                     --application examples/user-hello.json \
+	epoxy-harden --machine $(MACHINE_DESC) \
+                     --application $(APPLICATION_DESC) \
                      --kernel epoxy.kern.elf --output $@
 
 .PHONY: qemu-boot-hello
