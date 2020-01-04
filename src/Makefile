@@ -1,31 +1,65 @@
-TARGET  ?= output
-
-CPPFLAGS += -Iapi/include/
-CFLAGS   += -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
-CXXFLAGS += $(CFLAGS) -fno-exceptions -fno-rtti -std=c++17
-ASFLAGS  += $(CFLAGS)
-LDFLAGS  += -static -nostdlib
+TARGET   ?= output
+BINARIES := epoxy.kern.elf hello.user.elf
 
 .PHONY: all
-all: kernel.elf hello.elf
+all: $(BINARIES)
 
 .PHONY: clean
 clean:
-	rm -f *.elf *.o
+	rm -f *.elf kern/src/*.[do] user-hello/src/*.[do]
 
 .PHONY: install
-install: kernel.elf hello.elf
+install: $(BINARIES)
 	mkdir -p $(TARGET)
 	install -m 0755 $^ $(TARGET)/
 
-# We call it .o, because that's what the .d file says regardless of what we try to name it.
-%.o: %.lds
-	$(CPP) $(CFLAGS) -o $@ -P -E -x c $<
+COMMON_CFLAGS   = -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
+COMMON_CXXFLAGS = $(COMMON_CFLAGS) -fno-exceptions -fno-rtti -std=c++17
+COMMON_ASFLAGS  = $(COMMON_CFLAGS)
+COMMON_LDFLAGS  = -static -nostdlib
 
-kernel.elf: link.o unpaged_entry.o paged_entry.o patched.o kernel.o io.o exc_entry.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ -T $^
+KERN_CFLAGS := $(COMMON_CFLAGS)
+USER_CFLAGS := $(COMMON_CFLAGS)
 
-hello.elf: user-link.o hello.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ -T $^
+KERN_CXXFLAGS := $(COMMON_CXXFLAGS)
+USER_CXXFLAGS := $(COMMON_CXXFLAGS)
 
--include *.d
+KERN_LDFLAGS := $(COMMON_LDFLAGS)
+USER_LDFLAGS := $(COMMON_LDFLAGS)
+
+# We call it .o, because that makes the file name transformations easier below.
+%.kern.o: %.lds
+	$(CPP) $(KERN_CFLAGS) -MT $@ -c -o $@ -P -E -x c $<
+
+%.kern.o: %.S
+	$(CC) $(KERN_CFLAGS) -c -o $@ $<
+
+%.kern.o: %.cpp
+	$(CC) $(KERN_CXXFLAGS) -c -o $@ $<
+
+%.user.o: %.lds
+	$(CPP) $(USER_CFLAGS) -c -o $@ -P -E -x c $<
+
+%.user.o: %.S
+	$(CC) $(USER_CFLAGS) -c -o $@ $<
+
+%.user.o: %.cpp
+	$(CC) $(USER_CXXFLAGS) -c -o $@ $<
+
+%.kern.elf:
+	$(CC) $(KERN_CFLAGS) $(KERN_LDFLAGS) -o $@ -T $^
+
+%.user.elf:
+	$(CC) $(USER_CFLAGS) $(USER_LDFLAGS) -o $@ -T $^
+
+KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, link unpaged_entry paged_entry patched kernel io exc_entry))
+USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link hello))
+
+epoxy.kern.elf: KERN_CXXFLAGS += -Ikern/include
+epoxy.kern.elf: $(KERN_OBJ)
+
+hello.user.elf: $(USER_OBJ)
+hello.user.elf: USER_CFLAGS += -Iuser-hello/include
+
+-include kern/src/*.d
+-include user-hello/src/*.d
