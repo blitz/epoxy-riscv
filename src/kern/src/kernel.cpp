@@ -34,9 +34,7 @@ void arch_init()
          "!! SEPC   ", sepc, "\n"
          "!! STVAL  ", stval, "\n");
 
-  while (true) {
-    asm volatile ("wfi");
-  }
+  wait_forever();
 }
 
 } // anonymous namespace
@@ -66,7 +64,6 @@ void start()
 
   arch_init();
 
-  while (true) {
-    asm volatile ("wfi");
-  }
+  format("!! Code missing... We're dead.\n");
+  wait_forever();
 }

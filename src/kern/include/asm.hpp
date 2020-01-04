@@ -14,3 +14,10 @@ extern "C" [[noreturn]] void user_exc_entry();
 
 // Entrypoint for interrupts/exceptions from the kernel..
 extern "C" [[noreturn]] void kern_exc_entry();
+
+[[noreturn]] inline void wait_forever()
+{
+  while (true) {
+    asm volatile ("wfi");
+  }
+}
