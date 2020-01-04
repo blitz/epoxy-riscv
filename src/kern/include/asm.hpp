@@ -1,5 +1,7 @@
 #pragma once
 
+#include <types.hpp>
+
 struct exception_frame;
 
 // The entry point for the C++ part of the kernel.
@@ -25,4 +27,14 @@ extern "C" [[noreturn]] void kern_exc_entry();
   while (true) {
     asm volatile ("wfi");
   }
+}
+
+// Return the value of the current wall-clock time.
+inline mword_t rdtime()
+{
+  mword_t time;
+
+  asm volatile ("rdtime %0" : "=r" (time));
+
+  return time;
 }

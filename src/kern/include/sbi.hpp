@@ -1,5 +1,7 @@
 #pragma once
 
+#include <types.hpp>
+
 // Supervisor Binary Interface v0.2
 // https://github.com/riscv/riscv-sbi-doc/blob/master/riscv-sbi.adoc
 
@@ -9,6 +11,7 @@ struct sbi_retval {
 };
 
 enum class sbi_ext_id : int32_t {
+  LEGACY_SET_TIMER = 0,
   LEGACY_PUTCHAR = 1,
 };
 
@@ -38,4 +41,12 @@ inline sbi_retval sbi_ecall1(sbi_ext_id ext_id, sbi_fun_id fun_id,
 
 // Well-known SBI interfaces
 
-inline void sbi_putc(char c) { sbi_ecall1(sbi_ext_id::LEGACY_PUTCHAR, sbi_fun_id::NONE, static_cast<uint8_t>(c)); }
+inline void sbi_putc(char c)
+{
+  sbi_ecall1(sbi_ext_id::LEGACY_PUTCHAR, sbi_fun_id::NONE, static_cast<uint8_t>(c));
+}
+
+inline void sbi_set_timer(mword_t time)
+{
+  sbi_ecall1(sbi_ext_id::LEGACY_SET_TIMER, sbi_fun_id::NONE, time);
+}
