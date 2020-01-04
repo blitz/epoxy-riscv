@@ -4,7 +4,7 @@
 #include "csr.hpp"
 #include "exception_frame.hpp"
 #include "io.hpp"
-#include "state.hpp"
+#include "scheduler.hpp"
 
 namespace {
 
@@ -65,6 +65,5 @@ void start()
 
   arch_init();
 
-  processes[0].activate();
-  threads[0].exit_from_syscall();
+  schedule();
 }

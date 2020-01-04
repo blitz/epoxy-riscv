@@ -19,10 +19,10 @@ install: $(BINARIES)
 	mkdir -p $(TARGET)
 	install -m 0755 $^ $(TARGET)/
 
-COMMON_CFLAGS   = -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
+COMMON_CFLAGS   = -g -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
 COMMON_CXXFLAGS = $(COMMON_CFLAGS) -fno-exceptions -fno-rtti -std=c++17
 COMMON_ASFLAGS  = $(COMMON_CFLAGS)
-COMMON_LDFLAGS  = -flto -static -nostdlib
+COMMON_LDFLAGS  = -g -flto -static -nostdlib
 
 KERN_CFLAGS := $(COMMON_CFLAGS)
 USER_CFLAGS := $(COMMON_CFLAGS)
@@ -70,7 +70,7 @@ kern/src/state.dummy:
 	touch $@
 
 KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, \
-    link unpaged_entry paged_entry patched process kernel io exc_entry thread state))
+    link unpaged_entry paged_entry patched process kernel io exc_entry scheduler thread state))
 USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link hello))
 
 $(KERN_OBJ): kern/include/state.hpp
