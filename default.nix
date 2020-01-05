@@ -16,6 +16,11 @@ in rec {
 
   kernelGcc9 = kernel.override { stdenv = riscvPkgs.gcc9Stdenv; };
 
+  # This doesn't work, because it results in "Package gcc-debug-8.3.0
+  # is not supported in riscv64-none".
+  #
+  # kernelClang = kernel.override { stdenv = riscvPkgs.llvmPackages_latest.stdenv; };
+
   bootScript = pkgs.writeShellScriptBin "boot" ''
     exec ${pkgs.qemu}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio \
          -bios default $*
