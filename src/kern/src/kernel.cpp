@@ -1,10 +1,13 @@
 #include <types.hpp>
 
 #include "asm.hpp"
+#include "assert.hpp"
 #include "csr.hpp"
+#include "exception_info.hpp"
 #include "exception_frame.hpp"
 #include "io.hpp"
 #include "scheduler.hpp"
+#include "thread.hpp"
 
 namespace {
 
@@ -38,11 +41,39 @@ void arch_init()
   wait_forever();
 }
 
+[[noreturn]] void handle_interrupt([[maybe_unused]] exception_frame *frame, exception_info info)
+{
+  format("!! Unexpected interrupt: ", info.exception_code(), "\n");
+  wait_forever();
+}
+
+[[noreturn]] void handle_exception(exception_frame *frame, exception_info info)
+{
+  assert(not info.is_interrupt());
+  assert(thread::active()->frame() == frame);
+
+  switch (info.exception_code()) {
+  case exception_info::EXC_ECALL_U:
+    format("!! Got system call, but it's not implemented. :(\n");
+    wait_forever();
+    break;
+  default:
+    die_on_exception_from("user");
+    break;
+  }
+}
+
 } // anonymous namespace
 
-void user_exc_entry([[maybe_unused]] exception_frame *frame)
+void user_exc_entry(exception_frame *frame)
 {
-  die_on_exception_from("user");
+  exception_info const info {exception_info::capture()};
+
+  if (info.is_interrupt()) {
+    handle_interrupt(frame, info);
+  } else {
+    handle_exception(frame, info);
+  }
 }
 
 void kern_exc_entry()

@@ -20,6 +20,8 @@ enum : mword_t {
   SSTATUS_SPP = 1UL << 8,
   SSTATUS_SUM = 1UL << 18,
   SSTATUS_MXR = 1UL << 19,
+
+  SCAUSE_IRQ  = 1UL << 63,
 };
 
 template <csr CSR>

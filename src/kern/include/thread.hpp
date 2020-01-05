@@ -23,6 +23,8 @@ public:
 
   static thread *active() { return active_; }
 
+  exception_frame *frame() { return this; }
+
   bool is_runnable() const { return state_ == thread_state::RUNNABLE; }
 
   [[noreturn]] void activate();
