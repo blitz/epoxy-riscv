@@ -70,7 +70,8 @@ kern/src/state.dummy:
 	touch $@
 
 KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, \
-    link assert unpaged_entry paged_entry patched process kernel io exc_entry scheduler thread state))
+    link assert unpaged_entry paged_entry patched process kernel kobject io exc_entry \
+    scheduler thread state))
 USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link entry main))
 
 $(KERN_OBJ): kern/include/state.hpp

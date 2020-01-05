@@ -15,8 +15,10 @@ enum class kobject_type {
   YIELD,
 };
 
+class syscall_args;
+
 struct kobject {
   kobject_type type;
 
-  syscall_result_t invoke(uint64_t w0, uint64_t w1, uint64_t w2);
+  syscall_result_t invoke(syscall_args const &args);
 };

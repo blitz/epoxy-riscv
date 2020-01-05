@@ -5,8 +5,10 @@
 #include "csr.hpp"
 #include "exception_info.hpp"
 #include "exception_frame.hpp"
+#include "process.hpp"
 #include "io.hpp"
 #include "scheduler.hpp"
+#include "syscall_args.hpp"
 #include "thread.hpp"
 
 namespace {
@@ -43,8 +45,29 @@ void arch_init()
 
 [[noreturn]] void handle_interrupt([[maybe_unused]] exception_frame *frame, exception_info info)
 {
+  // TODO We shouldn't kernel panic here.
   format("!! Unexpected interrupt: ", info.exception_code(), "\n");
   wait_forever();
+}
+
+[[noreturn]] void handle_syscall(exception_frame *frame, syscall_args const &args)
+{
+  // We have to advance the PC manually. ECALL doesn't do that.
+  frame->pc_ += 4;
+
+  auto * const current {thread::active()};
+  auto * const kobj {current->get_process()->lookup(args.cap_idx)};
+
+  syscall_result_t res {syscall_result_t::NOCAP};
+
+  if (likely(kobj)) {
+    format(">> Invoking capability: ", args.cap_idx, "\n");
+    res = kobj->invoke(args);
+  } else {
+    format("?? Invoking invalid capability: ", args.cap_idx, "\n");
+  }
+
+  current->finish_syscall(res);
 }
 
 [[noreturn]] void handle_exception(exception_frame *frame, exception_info info)
@@ -54,10 +77,10 @@ void arch_init()
 
   switch (info.exception_code()) {
   case exception_info::EXC_ECALL_U:
-    format("!! Got system call, but it's not implemented. :(\n");
-    wait_forever();
+    handle_syscall(frame, syscall_args {*frame});
     break;
   default:
+    // TODO We shouldn't kernel panic here.
     die_on_exception_from("user");
     break;
   }

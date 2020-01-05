@@ -24,8 +24,15 @@ public:
   static thread *active() { return active_; }
 
   exception_frame *frame() { return this; }
+  process *get_process() { return process_; }
 
   bool is_runnable() const { return state_ == thread_state::RUNNABLE; }
+
+  [[noreturn]] void finish_syscall(syscall_result_t ret)
+  {
+    regs_.x[9] = static_cast<mword_t>(ret);
+    activate();
+  }
 
   [[noreturn]] void activate();
 
