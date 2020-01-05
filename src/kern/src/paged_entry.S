@@ -2,6 +2,7 @@
         .extern start
 
         .global asm_paged_entry
+        .align 2
 asm_paged_entry:
         la sp, kern_stack_end
         j start
