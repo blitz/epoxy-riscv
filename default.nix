@@ -14,6 +14,8 @@ in rec {
 
   kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden; };
 
+  kernelGcc9 = kernel.override { stdenv = riscvPkgs.gcc9Stdenv; };
+
   bootScript = pkgs.writeShellScriptBin "boot" ''
     exec ${pkgs.qemu}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio \
          -bios default $*
