@@ -14,7 +14,7 @@ in rec {
 
   kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden; };
 
-  kernelGcc9 = kernel.override { stdenv = riscvPkgs.gcc9Stdenv; };
+  kernelGcc8 = kernel.override { stdenv = riscvPkgs.gcc8Stdenv; };
 
   # This doesn't work, because it results in "Package gcc-debug-8.3.0
   # is not supported in riscv64-none".
