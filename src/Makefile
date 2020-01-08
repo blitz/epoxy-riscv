@@ -15,7 +15,7 @@ clean:
 	rm -f kern/include/state.hpp kern/src/state.cpp
 
 .PHONY: install
-install: $(BINARIES)
+install: qemu-example-hello.elf
 	mkdir -p $(TARGET)
 	install -m 0755 $^ $(TARGET)/
 
