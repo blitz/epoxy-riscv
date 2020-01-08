@@ -7,6 +7,7 @@
 #include "exception_frame.hpp"
 #include "process.hpp"
 #include "io.hpp"
+#include "sbi.hpp"
 #include "scheduler.hpp"
 #include "syscall_args.hpp"
 #include "thread.hpp"
@@ -40,6 +41,7 @@ void arch_init()
          "!! SEPC   ", sepc, "\n"
          "!! STVAL  ", stval, "\n");
 
+  sbi_shutdown();
   wait_forever();
 }
 

@@ -25,5 +25,10 @@ in rec {
     exec ${pkgs.qemu}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio \
          -bios default $*
   '';
+
+  test = pkgs.callPackage ./nix/test.nix {
+    inherit bootScript;
+    qemuBootImage = "${kernel}/qemu-example-hello.elf";
+  };
 }
 
