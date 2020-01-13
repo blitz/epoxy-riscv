@@ -11,7 +11,6 @@ PHDRS {
 
 SECTIONS
 {
-  /* RAM is typically mapped here. */
   .text USER_START :
   {
     *(.text .text.*)

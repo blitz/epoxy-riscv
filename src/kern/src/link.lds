@@ -11,7 +11,6 @@ PHDRS {
 
 SECTIONS
 {
-  /* RAM is typically mapped here. */
   .text KERNEL_START :
   {
     *(.text.boot)
