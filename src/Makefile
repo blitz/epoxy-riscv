@@ -58,6 +58,9 @@ USER_LDFLAGS := $(COMMON_LDFLAGS)
 %.user.elf:
 	$(CC) $(USER_CFLAGS) $(USER_LDFLAGS) -o $@ -T $^
 
+%.json: %.dhall
+	dhall-to-json < $< > $@
+
 # We need to jump through this hoop, because Make is broken in the way
 # it handles multiple targets in normal rules. Pattern rules don't
 # have this problem.
