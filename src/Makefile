@@ -65,9 +65,9 @@ USER_LDFLAGS := $(COMMON_LDFLAGS)
 # it handles multiple targets in normal rules. Pattern rules don't
 # have this problem.
 kern/src/%.cpp kern/include/%.hpp: kern/src/%.dummy $(MACHINE_DESC) $(APPLICATION_DESC) $(USER_BINARIES)
-	./scripts/config --machine $(MACHINE_DESC) --application $(APPLICATION_DESC) \
-                         --output-cpp kern/src/state.cpp \
-                         --output-hpp kern/include/state.hpp
+	epoxy-harden codegen --machine $(MACHINE_DESC) --application $(APPLICATION_DESC) \
+                             --out-cpp kern/src/state.cpp \
+                             --out-hpp kern/include/state.hpp
 
 kern/src/state.dummy:
 	touch $@
@@ -86,9 +86,9 @@ hello.user.elf: $(USER_OBJ)
 hello.user.elf: USER_CFLAGS += -Iuser-hello/include
 
 qemu-example-hello.elf: $(BINARIES) examples/user-hello.json examples/user-hello.json examples/riscv-qemu-machine.json
-	epoxy-harden --machine $(MACHINE_DESC) \
-                     --application $(APPLICATION_DESC) \
-                     --kernel epoxy.kern.elf --output $@
+	epoxy-harden boot-image --machine $(MACHINE_DESC) \
+                                --application $(APPLICATION_DESC) \
+                                --kernel epoxy.kern.elf --output $@
 
 .PHONY: qemu-boot-hello
 qemu-boot-hello: qemu-example-hello.elf

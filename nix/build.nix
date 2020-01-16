@@ -6,18 +6,12 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [
     epoxyHarden
-    python3
-    python3Packages.pyelftools
     dhall-json
   ];
 
   # This is not useful and patchelf also segfaults on our crude ELFs.
   dontPatchELF = true;
   dontStrip = true;
-
-  postPatch = ''
-    patchShebangs scripts/config
-  '';
 
   src = ../src;
 

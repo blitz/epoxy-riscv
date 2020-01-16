@@ -5,10 +5,10 @@
         "homepage": null,
         "owner": "blitz",
         "repo": "epoxy-harden",
-        "rev": "829625284132c1b0618d472fab00d204b1e22f95",
-        "sha256": "1ri6kbfqr336lz6x8i8k4xihj5vjd37d6fjhbzy3fp05wqdpn7l1",
+        "rev": "0e0ddac4a8880b6e34ac3fce79618e229acee227",
+        "sha256": "1js22q7kidjsmjl7xmz35gdy9n37as625cahg25lw0i8dqi06j7x",
         "type": "tarball",
-        "url": "https://github.com/blitz/epoxy-harden/archive/829625284132c1b0618d472fab00d204b1e22f95.tar.gz",
+        "url": "https://github.com/blitz/epoxy-harden/archive/0e0ddac4a8880b6e34ac3fce79618e229acee227.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {
