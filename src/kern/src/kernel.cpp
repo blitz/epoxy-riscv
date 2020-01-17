@@ -63,7 +63,6 @@ void arch_init()
   syscall_result_t res {syscall_result_t::NOCAP};
 
   if (likely(kobj)) {
-    format(">> Invoking capability: ", args.cap_idx, "\n");
     res = kobj->invoke(args);
   } else {
     format("?? Invoking invalid capability: ", args.cap_idx, "\n");

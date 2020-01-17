@@ -1,10 +1,8 @@
 #pragma once
 
+#include "api.hpp"
 #include "types.hpp"
 #include "kobject.hpp"
-
-using cap_t = int;
-const cap_t invalid_capability = -1;
 
 struct capability_set {
   cap_t length;

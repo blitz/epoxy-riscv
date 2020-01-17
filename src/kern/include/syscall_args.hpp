@@ -7,7 +7,6 @@
 class syscall_args {
 public:
 
-  uint8_t syscall_no;
   cap_t   cap_idx;
 
   mword_t arg0;
@@ -18,8 +17,7 @@ public:
   syscall_args() = delete;
 
   explicit syscall_args(exception_frame const &frame)
-    : syscall_no {static_cast<uint8_t>(frame.a0())},
-      cap_idx {static_cast<cap_t>(frame.a0() >> 8)},
+    : cap_idx {static_cast<cap_t>(frame.a0())},
       arg0 {frame.a1()},
       arg1 {frame.a2()},
       arg2 {frame.a3()},
