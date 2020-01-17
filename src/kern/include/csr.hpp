@@ -4,6 +4,7 @@
 
 enum class csr : uint16_t {
   SSTATUS  = 0x100U,
+  SIE      = 0x104U,
   STVEC    = 0x105U,
   SSCRATCH = 0x140U,
   SEPC     = 0x141U,
@@ -22,6 +23,8 @@ enum : mword_t {
   SSTATUS_MXR = 1UL << 19,
 
   SCAUSE_IRQ  = 1UL << 63,
+
+  SIE_STIE   = 1UL << 5,	// Timer enable
 };
 
 template <csr CSR>

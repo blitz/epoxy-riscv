@@ -33,9 +33,12 @@ inline sbi_retval sbi_ecall1(sbi_ext_id ext_id, sbi_fun_id fun_id,
 		: "+r" (param0), "=r" (_param1), "+r" (_fun_id), "+r" (_ext_id)
 		:
 		: "memory",
-		  "ra", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "a2", "a3", "a4", "a5");
+		  "ra", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "a2", "a3", "a4", "a5",
+		  "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11"
+		);
 
   // TODO Is the SBI backend guaranteed to preserve register content?
+  // Without clobbering the s registers, we get corruption.
 
   return {static_cast<int64_t>(_param0), static_cast<int64_t>(_param1)};
 }

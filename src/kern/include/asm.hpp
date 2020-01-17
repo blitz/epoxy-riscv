@@ -22,10 +22,15 @@ extern "C" [[noreturn]] void user_exc_entry(exception_frame *frame);
 // Entrypoint for interrupts/exceptions from the kernel..
 extern "C" [[noreturn]] void kern_exc_entry();
 
+inline void wait_for_interrupt()
+{
+  asm volatile ("wfi");
+}
+
 [[noreturn]] inline void wait_forever()
 {
   while (true) {
-    asm volatile ("wfi");
+    wait_for_interrupt();
   }
 }
 

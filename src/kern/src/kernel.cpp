@@ -28,6 +28,9 @@ void arch_init()
 
   // A scratch register containing zero means we are in the kernel.
   csr_w<csr::SSCRATCH>(0);
+
+  // Enable timer interrupts.
+  csr_rs<csr::SIE>(SIE_STIE);
 }
 
 [[noreturn]] void die_on_exception_from(char const *from)
@@ -45,7 +48,7 @@ void arch_init()
   wait_forever();
 }
 
-[[noreturn]] void handle_interrupt([[maybe_unused]] exception_frame *frame, exception_info info)
+[[noreturn]] void handle_interrupt(exception_info info)
 {
   // TODO We shouldn't kernel panic here.
   format("!! Unexpected interrupt: ", info.exception_code(), "\n");
@@ -71,7 +74,7 @@ void arch_init()
   current->finish_syscall(res);
 }
 
-[[noreturn]] void handle_exception(exception_frame *frame, exception_info info)
+[[noreturn]] void handle_user_exception(exception_frame *frame, exception_info info)
 {
   assert(not info.is_interrupt());
   assert(thread::active()->frame() == frame);
@@ -94,15 +97,21 @@ void user_exc_entry(exception_frame *frame)
   exception_info const info {exception_info::capture()};
 
   if (info.is_interrupt()) {
-    handle_interrupt(frame, info);
+    handle_interrupt(info);
   } else {
-    handle_exception(frame, info);
+    handle_user_exception(frame, info);
   }
 }
 
 void kern_exc_entry()
 {
-  die_on_exception_from("kernel");
+  exception_info const info {exception_info::capture()};
+
+  if (info.is_interrupt()) {
+    handle_interrupt(info);
+  } else {
+    die_on_exception_from("kernel");
+  }
 }
 
 void start()
