@@ -5,7 +5,10 @@
 asm_entry:
         la sp, stack_end
         call main
-        ebreak
+
+        // Invoke the EXIT capability
+        li a0, 0
+        ecall
 
         .section .bss.stack
 stack:

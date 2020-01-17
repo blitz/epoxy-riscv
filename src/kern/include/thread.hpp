@@ -5,7 +5,7 @@
 
 class process;
 
-enum class thread_state : uint8_t { RUNNABLE, BLOCKED };
+enum class thread_state : uint8_t { RUNNABLE, BLOCKED, EXITED };
 
 class thread : private exception_frame {
   // The current thread. Maybe nullptr, if the CPU is idle.
@@ -27,6 +27,11 @@ public:
   process *get_process() { return process_; }
 
   bool is_runnable() const { return state_ == thread_state::RUNNABLE; }
+
+  void exit()
+  {
+    state_ = thread_state::EXITED;
+  }
 
   [[noreturn]] void finish_syscall(syscall_result_t ret)
   {

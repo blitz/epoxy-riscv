@@ -4,7 +4,7 @@ extern "C" void main();
 
 namespace {
 
-  const cap_t klog_cap {0};
+  const cap_t klog_cap {1};
 
   void klog_msg(char const *msg)
   {
