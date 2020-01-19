@@ -4,6 +4,5 @@
 
 void assert_failed(char const *file, int line)
 {
-  format("!! Assertion failed at ", file, ":", line, "\n");
-  wait_forever();
+  panic("!! Assertion failed at ", file, ":", line, "\n");
 }

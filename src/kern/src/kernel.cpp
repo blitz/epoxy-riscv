@@ -39,22 +39,16 @@ void arch_init()
   mword_t const scause {csr_r<csr::SCAUSE>()};
   mword_t const stval  {csr_r<csr::STVAL>()};
 
-  format("!! Exception from ", from, "!\n"
-         "!! SCAUSE ", scause, "\n"
-         "!! SEPC   ", sepc, "\n"
-         "!! STVAL  ", stval, "\n");
-
-  sbi_shutdown();
-  wait_forever();
+  panic("!! Exception from ", from, "!\n"
+	"!! SCAUSE ", scause, "\n"
+	"!! SEPC   ", sepc, "\n"
+	"!! STVAL  ", stval, "\n");
 }
 
 [[noreturn]] void handle_interrupt(exception_info info)
 {
   // TODO We shouldn't kernel panic here.
-  format("!! Unexpected interrupt: ", info.exception_code(), "\n");
-
-  sbi_shutdown();
-  wait_forever();
+  panic("!! Unexpected interrupt: ", info.exception_code(), "\n");
 }
 
 [[noreturn]] void handle_syscall(exception_frame *frame, syscall_args const &args)

@@ -28,3 +28,12 @@ void format(T... args)
   spinlock_guard g { format_lock };
   format_unlocked(args...);
 }
+
+[[noreturn]] void do_panic();
+
+template <typename... T>
+[[noreturn]] void panic(T... args)
+{
+  format(args...);
+  do_panic();
+}

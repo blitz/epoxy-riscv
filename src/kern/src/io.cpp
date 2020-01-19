@@ -34,3 +34,11 @@ void put(uint64_t v)
     put_char(hex[nibble]);
   }
 }
+
+void do_panic()
+{
+  format("!! Panic! System reset...\n");
+
+  sbi_shutdown();
+  wait_forever();
+}
