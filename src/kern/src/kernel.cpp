@@ -52,6 +52,8 @@ void arch_init()
 {
   // TODO We shouldn't kernel panic here.
   format("!! Unexpected interrupt: ", info.exception_code(), "\n");
+
+  sbi_shutdown();
   wait_forever();
 }
 

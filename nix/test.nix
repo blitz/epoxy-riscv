@@ -10,8 +10,7 @@ stdenv.mkDerivation {
   phases = [ "buildPhase" "installPhase" ];
 
   buildPhase = ''
-    timeout 10 boot -display none -device loader,file=${qemuBootImage} | tee > output.log
-    cat output.log
+    timeout 10 boot -display none -device loader,file=${qemuBootImage} | tee output.log
     grep -q "Epoxy.*RISC-V" output.log
   '';
 

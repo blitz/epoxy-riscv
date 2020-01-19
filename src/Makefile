@@ -7,7 +7,7 @@ MACHINE_DESC     ?= examples/riscv-qemu-machine.json
 APPLICATION_DESC ?= examples/user-hello.json
 
 .PHONY: all
-all: $(BINARIES)
+all: qemu-example-hello.elf
 
 .PHONY: clean
 clean:

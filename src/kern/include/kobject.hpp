@@ -4,30 +4,21 @@
 #include "types.hpp"
 
 class thread;
-
-using kobj_id_t = int;
-
-enum class kobject_type {
-  // A primitive logging system call.
-  KLOG,
-
-  // Graceful exit from a thread.
-  EXIT,
-};
-
 class syscall_args;
 
-struct kobject {
-  kobject_type type;
-  syscall_result_t invoke(thread *thread, syscall_args const &args);
+class kobject {
+public:
+  virtual syscall_result_t invoke(thread *thread, syscall_args const &args) = 0;
 };
 
-struct klog_kobject : public kobject {
-  syscall_result_t invoke(thread *thread, syscall_args const &args);
+// A primitive logging system call.
+class klog_kobject final : public kobject {
+  syscall_result_t invoke(thread *thread, syscall_args const &args) override;
 };
 static_assert(sizeof(klog_kobject) == sizeof(kobject));
 
-struct exit_kobject : public kobject {
-  [[noreturn]] syscall_result_t invoke(thread *thread, syscall_args const &args);
+// Graceful exit from a thread.
+class exit_kobject final : public kobject {
+  [[noreturn]] syscall_result_t invoke(thread *thread, syscall_args const &args) override;
 };
 static_assert(sizeof(exit_kobject) == sizeof(kobject));

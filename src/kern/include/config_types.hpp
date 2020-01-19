@@ -6,7 +6,7 @@
 
 struct capability_set {
   cap_t length;
-  kobj_id_t const *object;
+  kobject * const *object;
 };
 
 using processor_id_t = int;

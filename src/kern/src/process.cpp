@@ -11,7 +11,7 @@ extern "C" mword_t const USER_SATPS[num_processes];
 kobject *process::lookup(cap_t capability)
 {
   if (capability < capabilities_.length)
-    return &kobjects[capabilities_.object[capability]];
+    return capabilities_.object[capability];
 
   return nullptr;
 }
