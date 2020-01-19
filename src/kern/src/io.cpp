@@ -2,8 +2,6 @@
 #include "io.hpp"
 #include "sbi.hpp"
 
-spinlock format_lock;
-
 void put_char(char c)
 {
     sbi_putc(c);
