@@ -16,21 +16,19 @@ namespace {
 
 void arch_init()
 {
-  // Prevent executable memory from being automatically readable and disable interrupts while we are in supervisor mode.
+  // Prevent executable memory from being automatically readable and
+  // disable interrupts while we are in supervisor mode.
   csr_rc<csr::SSTATUS>(SSTATUS_MXR | SSTATUS_SIE);
 
   // Prevent touching user memory unintentionally.
   csr_rs<csr::SSTATUS>(SSTATUS_SUM);
 
-  // Set up exception and interrupt entry. We use direct mode where all interrupts and exceptions enter at the same
-  // location.
+  // Set up exception and interrupt entry. We use direct mode where
+  // all interrupts and exceptions enter at the same location.
   csr_w<csr::STVEC>(reinterpret_cast<uintptr_t>(asm_exc_entry));
 
   // A scratch register containing zero means we are in the kernel.
   csr_w<csr::SSCRATCH>(0);
-
-  // Enable timer interrupts.
-  csr_rs<csr::SIE>(SIE_STIE);
 }
 
 [[noreturn]] void die_on_exception_from(char const *from)
@@ -47,8 +45,19 @@ void arch_init()
 
 [[noreturn]] void handle_interrupt(exception_info info)
 {
-  // TODO We shouldn't kernel panic here.
-  panic("!! Unexpected interrupt: ", info.exception_code(), "\n");
+  auto const int_no {info.exception_code()};
+
+  switch (int_no) {
+  case exception_info::INT_TIMER:
+    // Weirdly we have to toggle the timer enable bit to get timers to
+    // do anything sane.
+    csr_rc<csr::SIE>(SIE_STIE);
+    schedule();
+    break;
+  default:
+    panic("!! Unexpected interrupt: ", int_no, "\n");
+    break;
+  };
 }
 
 [[noreturn]] void handle_syscall(exception_frame *frame, syscall_args const &args)

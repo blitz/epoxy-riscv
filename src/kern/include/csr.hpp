@@ -25,6 +25,7 @@ enum : mword_t {
   SCAUSE_IRQ  = 1UL << 63,
 
   SIE_STIE   = 1UL << 5,	// Timer enable
+  SIP_STIP   = 1UL << 5,	// Timer pending
 };
 
 template <csr CSR>

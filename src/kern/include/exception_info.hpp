@@ -15,6 +15,7 @@ class exception_info {
 public:
 
   enum : mword_t {
+    INT_TIMER   = 5,
     EXC_ECALL_U = 8,
   };
 

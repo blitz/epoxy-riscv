@@ -28,16 +28,16 @@ void schedule()
 
       if (candidate->is_runnable()) {
 	// TODO Use a decent time slice length.
-	sbi_set_timer(rdtime() + 1000000);
+	csr_rs<csr::SIE>(SIE_STIE);
+	sbi_set_timer(rdtime() + 100000);
 	candidate->activate();
       }
     }
 
     format(">> We're idle.\n");
 
-    // Enable interrupts in supevisor mode.
-    csr_rs<csr::SSTATUS>(SSTATUS_SIE);
-    wait_for_interrupt();
-    csr_rc<csr::SSTATUS>(SSTATUS_SIE);
+    // Enable interrupts in supervisor mode. It will be automatically
+    // disabled once we get an interrupt.
+    reset_stack_and_wait_for_interrupt();
   }
 }

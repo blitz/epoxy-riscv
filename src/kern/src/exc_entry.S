@@ -5,8 +5,6 @@
         .align 2
 asm_exc_entry:
 
-        // TODO We actually need to save state here.
-
         // Exchange SSCRATCH with the stack pointer. We could use any
 	// register, but sp gives short instruction encodings.
         csrrw sp, sscratch, sp
@@ -76,8 +74,9 @@ asm_kernel_exc:
         // Restore our stack pointer.
         csrrw sp, sscratch, sp
 
-        // We died in the kernel. Don't save state, but just return to C++
-        // to print some diagnostics.
+        // We got an interrupt in the kernel. This can only happen,
+        // because we were idle and got an interrupt or we crashed.
+        // In either case, we don't need to save state here.
         j kern_exc_entry
 
         .section .text.asm_exc_ret

@@ -27,6 +27,8 @@ inline void wait_for_interrupt()
   asm volatile ("wfi");
 }
 
+[[noreturn]] void reset_stack_and_wait_for_interrupt();
+
 [[noreturn]] inline void wait_forever()
 {
   while (true) {
