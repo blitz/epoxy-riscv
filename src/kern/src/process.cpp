@@ -2,11 +2,9 @@
 #include "state.hpp"
 #include "process.hpp"
 
-static const int num_processes = (int)array_size(processes);
-
 process *process::active_ = nullptr;
 
-extern "C" mword_t const USER_SATPS[num_processes];
+extern "C" mword_t const USER_SATPS[];
 
 kobject *process::lookup(cap_t capability)
 {
