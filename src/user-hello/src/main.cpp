@@ -9,7 +9,7 @@ namespace {
   void klog_msg(char const *msg)
   {
     char c;
-    while (c = *(msg++)) {
+    while ((c = *(msg++)) != 0) {
       invoke(klog_cap, c);
     }
   }
