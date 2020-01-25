@@ -36,6 +36,9 @@ void schedule()
 
     format(">> We're idle.\n");
 
+    // XXX For now just shutdown when we are idle.
+    sbi_shutdown();
+
     // Enable interrupts in supervisor mode. It will be automatically
     // disabled once we get an interrupt.
     reset_stack_and_wait_for_interrupt();

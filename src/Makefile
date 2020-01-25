@@ -20,6 +20,7 @@ install: qemu-example-hello.elf
 	install -m 0755 $^ $(TARGET)/
 
 COMMON_CFLAGS   = -g -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -mcmodel=medlow -ffreestanding -nostdinc -march=rv64gc
+COMMON_CFLAGS  += -Wall -Wunused-parameter
 COMMON_CXXFLAGS = $(COMMON_CFLAGS) -fno-exceptions -fno-rtti -std=c++17
 COMMON_ASFLAGS  = $(COMMON_CFLAGS)
 COMMON_LDFLAGS  = -g -flto -static -nostdlib
