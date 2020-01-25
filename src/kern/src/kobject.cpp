@@ -1,6 +1,6 @@
 #include "assert.hpp"
 #include "io.hpp"
-#include "kobject.hpp"
+#include "kobject_all.hpp"
 #include "process.hpp"
 #include "scheduler.hpp"
 #include "syscall_args.hpp"
