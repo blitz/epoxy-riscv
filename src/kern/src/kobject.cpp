@@ -2,7 +2,9 @@
 #include "io.hpp"
 #include "kobject_all.hpp"
 #include "process.hpp"
+#include "sbi.hpp"
 #include "scheduler.hpp"
+#include "state.hpp"
 #include "syscall_args.hpp"
 #include "thread.hpp"
 
@@ -38,9 +40,17 @@ syscall_result_t klog_kobject::invoke(thread *t, syscall_args const &args)
   return syscall_result_t::OK;
 }
 
-syscall_result_t exit_kobject::invoke(thread *thread, syscall_args const &args)
+syscall_result_t exit_kobject::invoke(thread *thread, [[maybe_unused]] syscall_args const &args)
 {
+  static size_t running_threads {array_size(threads)};
+
   format(">> Thread of process ", thread->get_process()->pid(), " is done.\n");
   thread->exit();
+
+  if (unlikely(--running_threads == 0)) {
+    format(">> Last thread is gone. Bye bye.\n");
+    sbi_shutdown();
+  }
+
   schedule();
 }
