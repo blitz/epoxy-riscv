@@ -4,8 +4,7 @@
 #include "thread.hpp"
 #include "state.hpp"
 
-// Initializing this with a valid pointer saves us a special case in schedule() for the initial system start.
-thread *thread::active_ = &threads[0];
+thread *thread::active_;
 
 namespace {
 

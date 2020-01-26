@@ -4,10 +4,10 @@
 
 let
   lib = pkgs.lib;
+  epoxyHardenSrc = import sources.epoxy-harden {};
 in rec {
   inherit pkgs;
-
-  epoxyHarden = (import sources.epoxy-harden {}).epoxy-harden;
+  inherit (epoxyHardenSrc) epoxyHarden dhall;
 
   riscvPkgs =
     import nixpkgs { crossSystem = lib.systems.examples.riscv64-embedded; };

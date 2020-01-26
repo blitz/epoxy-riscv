@@ -6,25 +6,26 @@
 #include "scheduler.hpp"
 #include "state.hpp"
 
-namespace {
-
-size_t clamp_tid(size_t tid)
-{
-  return tid >= array_size(threads) ? tid - array_size(threads) : tid;
-}
-
-}
-
 // We implement a trivial round-robin scheduling for now. This saves us from
 // having a run queue or any other fancy data structure.
 void schedule()
 {
   while (true) {
-    // The first thread that should get a chance.
-    size_t const initial_tid {clamp_tid(thread::active() - threads + 1)};
+    static_assert(array_size(threads) > 0);
 
-    for (size_t cur = initial_tid; cur < initial_tid + array_size(threads); cur++) {
-      thread * const candidate {&threads[clamp_tid(cur)]};
+    using thread_list_entry = thread * const;
+
+    // Pointing to the last-but-one thread is mostly cosmetical to
+    // ensure we schedule thread[0] initially.
+    static thread_list_entry *       thread_cur {&threads[array_size(threads) - 1]};
+    static thread_list_entry * const thread_end {&threads[array_size(threads)]};
+
+    for (size_t i = 0; i < array_size(threads); i++) {
+      if (++thread_cur == thread_end) {
+	thread_cur = &threads[0];
+      }
+
+      auto const candidate {*thread_cur};
 
       if (candidate->is_runnable()) {
 	// TODO Use a decent time slice length.

@@ -1,2 +1,13 @@
 -- Dhall 13.0.0 can do hexadecimal.
-{ memory_map = [ { base_addr = 2149580800, length = 33554432, type = 1 } ] }
+let MemoryType : Type = < Available | Reserved >
+
+in  { memoryMap =
+        [ { baseAddress =
+              2149580800
+          , memoryLength =
+              33554432
+          , memoryType =
+              MemoryType.Available
+          }
+        ]
+    }

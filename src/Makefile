@@ -3,8 +3,8 @@ TARGET   ?= output
 USER_BINARIES := hello.user.elf
 BINARIES      := $(USER_BINARIES) epoxy.kern.elf
 
-MACHINE_DESC     ?= examples/riscv-qemu-machine.json
-APPLICATION_DESC ?= examples/user-hello.json
+MACHINE_DESC     ?= examples/riscv-qemu-machine.dhall
+APPLICATION_DESC ?= examples/user-hello.dhall
 
 .PHONY: all
 all: qemu-example-hello.elf
@@ -59,9 +59,6 @@ USER_LDFLAGS := $(COMMON_LDFLAGS)
 %.user.elf:
 	$(CC) $(USER_CFLAGS) $(USER_LDFLAGS) -o $@ -T $^
 
-%.json: %.dhall
-	dhall-to-json < $< > $@
-
 # We need to jump through this hoop, because Make is broken in the way
 # it handles multiple targets in normal rules. Pattern rules don't
 # have this problem.
@@ -86,7 +83,7 @@ epoxy.kern.elf: $(KERN_OBJ)
 hello.user.elf: $(USER_OBJ)
 hello.user.elf: USER_CFLAGS += -Iuser-hello/include
 
-qemu-example-hello.elf: $(BINARIES) examples/user-hello.json examples/user-hello.json examples/riscv-qemu-machine.json
+qemu-example-hello.elf: $(BINARIES) $(MACHINE_DESC) $(APPLICATION_DESC)
 	epoxy-harden boot-image --machine $(MACHINE_DESC) \
                                 --application $(APPLICATION_DESC) \
                                 --kernel epoxy.kern.elf --output $@

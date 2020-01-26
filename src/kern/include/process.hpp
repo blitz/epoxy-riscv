@@ -20,7 +20,8 @@ public:
   // Change to this process' address space
   void activate();
 
-  constexpr process(int pid, capability_set const &capabilities)
-    : pid_ {pid}, capabilities_ {capabilities}
+  template <size_t N>
+  constexpr process(int pid, kobject * const(&capability_set)[N])
+    : pid_ {pid}, capabilities_ {N, capability_set}
   { }
 };

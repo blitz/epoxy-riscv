@@ -1,9 +1,33 @@
 -- An application description is a set of processes and their capabilities.
-{ kobjects =
-    [ { gid = 0, kobjType = "exit" },
-      { gid = 1, kobjType = "klog" },
-      { gid = 2, kobjType = "klog" }]
-, processes =
-    [ { pid = 0, binary = "hello.user.elf", capabilities = [ 0, 1 ] },
-      { pid = 1, binary = "hello.user.elf", capabilities = [ 0, 2 ] }]
-}
+
+let KObjectImpl
+    : Type
+    = < Exit
+      | KLog :
+          { prefix : Text }
+      | Process :
+          { pid : Natural, binary : Text, capabilities : List Natural }
+      | Thread :
+          { process : Natural }
+      >
+
+in  { kobjects =
+        [ { gid = 0, impl = KObjectImpl.Exit }
+        , { gid = 1, impl = KObjectImpl.KLog { prefix = "U1" } }
+        , { gid = 2, impl = KObjectImpl.KLog { prefix = "U2" } }
+        , { gid =
+              3
+          , impl =
+              KObjectImpl.Process
+              { pid = 0, binary = "hello.user.elf", capabilities = [ 0, 1 ] }
+          }
+        , { gid =
+              4
+          , impl =
+              KObjectImpl.Process
+              { pid = 1, binary = "hello.user.elf", capabilities = [ 0, 2 ] }
+          }
+        , { gid = 5, impl = KObjectImpl.Thread { process = 3 } }
+        , { gid = 6, impl = KObjectImpl.Thread { process = 4 } }
+        ]
+    }
