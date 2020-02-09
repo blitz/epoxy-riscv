@@ -6,34 +6,44 @@ let KObjectImpl
     : Type
     = < Exit
       | KLog : { prefix : Text }
-      | Process : { pid : Natural, binary : Text, capabilities : List Natural }
-      | Thread : { process : Natural }
+      | Process : { pid : Natural, binary : Text, capabilities : List Text }
+      | Thread : { process : Text }
       >
 
 let KObject
     : Type
-    = { gid : Natural, impl : KObjectImpl }
+    = { gid : Text, impl : KObjectImpl }
 
 let ApplicationDescription
     : Type
     = { kobjects : List KObject }
 
 in    { kobjects =
-        [ { gid = 0, impl = KObjectImpl.Exit }
-        , { gid = 1, impl = KObjectImpl.KLog { prefix = "U1" } }
-        , { gid = 2, impl = KObjectImpl.KLog { prefix = "U2" } }
-        , { gid = 3
+        [ { gid = "exit", impl = KObjectImpl.Exit }
+        , { gid = "klog_u1", impl = KObjectImpl.KLog { prefix = "U1" } }
+        , { gid = "klog_u2", impl = KObjectImpl.KLog { prefix = "U2" } }
+        , { gid = "process_u1"
           , impl =
               KObjectImpl.Process
-                { pid = 0, binary = "hello.user.elf", capabilities = [ 0, 1 ] }
+                { pid = 0
+                , binary = "hello.user.elf"
+                , capabilities = [ "exit", "klog_u1" ]
+                }
           }
-        , { gid = 4
+        , { gid = "process_u2"
           , impl =
               KObjectImpl.Process
-                { pid = 1, binary = "hello.user.elf", capabilities = [ 0, 2 ] }
+                { pid = 1
+                , binary = "hello.user.elf"
+                , capabilities = [ "exit", "klog_u2" ]
+                }
           }
-        , { gid = 5, impl = KObjectImpl.Thread { process = 3 } }
-        , { gid = 6, impl = KObjectImpl.Thread { process = 4 } }
+        , { gid = "thread_u1"
+          , impl = KObjectImpl.Thread { process = "process_u1" }
+          }
+        , { gid = "thread_u2"
+          , impl = KObjectImpl.Thread { process = "process_u2" }
+          }
         ]
       }
     : ApplicationDescription
