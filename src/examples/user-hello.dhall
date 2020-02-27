@@ -2,11 +2,25 @@
 --
 -- TODO Store type definitions in epoxy-harden instead of here.
 
+let AddressSpaceElem
+    : Type
+    = < ELF : { binary : Text }
+      | SharedMemory : { key : Text, vaDestination : Natural }
+      >
+
+let AddressSpace
+    : Type
+    = List AddressSpaceElem
+
 let KObjectImpl
     : Type
     = < Exit
       | KLog : { prefix : Text }
-      | Process : { pid : Natural, binary : Text, capabilities : List Text }
+      | Process :
+          { pid : Natural
+          , addressSpace : AddressSpace
+          , capabilities : List Text
+          }
       | Thread : { process : Text }
       >
 
@@ -18,6 +32,12 @@ let ApplicationDescription
     : Type
     = { kobjects : List KObject }
 
+let helloAddressSpace =
+      [ AddressSpaceElem.ELF { binary = "hello.user.elf" }
+      , AddressSpaceElem.SharedMemory
+          { key = "PCIe ECAM", vaDestination = 16777216 }
+      ]
+
 in    { kobjects =
         [ { gid = "exit", impl = KObjectImpl.Exit }
         , { gid = "klog_u1", impl = KObjectImpl.KLog { prefix = "U1" } }
@@ -26,7 +46,7 @@ in    { kobjects =
           , impl =
               KObjectImpl.Process
                 { pid = 0
-                , binary = "hello.user.elf"
+                , addressSpace = helloAddressSpace
                 , capabilities = [ "exit", "klog_u1" ]
                 }
           }
@@ -34,7 +54,7 @@ in    { kobjects =
           , impl =
               KObjectImpl.Process
                 { pid = 1
-                , binary = "hello.user.elf"
+                , addressSpace = helloAddressSpace
                 , capabilities = [ "exit", "klog_u2" ]
                 }
           }
