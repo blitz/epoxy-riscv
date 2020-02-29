@@ -72,7 +72,7 @@ kern/src/state.dummy:
 
 KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, \
     link asm assert unpaged_entry paged_entry patched process kernel kobject io exc_entry \
-    scheduler thread state))
+    scheduler thread state format))
 USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link entry main))
 
 $(KERN_OBJ): kern/include/state.hpp

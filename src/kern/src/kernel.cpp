@@ -1,12 +1,10 @@
-#include <types.hpp>
-
 #include "asm.hpp"
 #include "assert.hpp"
 #include "csr.hpp"
-#include "exception_info.hpp"
 #include "exception_frame.hpp"
+#include "exception_info.hpp"
+#include "format.hpp"
 #include "process.hpp"
-#include "io.hpp"
 #include "sbi.hpp"
 #include "scheduler.hpp"
 #include "syscall_args.hpp"

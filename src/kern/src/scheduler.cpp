@@ -1,7 +1,7 @@
 #include "asm.hpp"
 #include "assert.hpp"
 #include "csr.hpp"
-#include "io.hpp"
+#include "format.hpp"
 #include "sbi.hpp"
 #include "scheduler.hpp"
 #include "state.hpp"
