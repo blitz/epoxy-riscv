@@ -35,7 +35,7 @@ let ApplicationDescription
 let helloAddressSpace =
       [ AddressSpaceElem.ELF { binary = "hello.user.elf" }
       , AddressSpaceElem.SharedMemory
-          { key = "PCIe ECAM", vaDestination = 268435456 }
+          { key = "virtio-net pci-cfg", vaDestination = 268435456 }
       ]
 
 in    { kobjects =

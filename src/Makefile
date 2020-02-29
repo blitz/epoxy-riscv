@@ -97,7 +97,7 @@ qemu-example-hello.elf: $(BINARIES) $(MACHINE_DESC) $(APPLICATION_DESC)
 
 .PHONY: qemu-boot-hello
 qemu-boot-hello: qemu-example-hello.elf
-	boot -display none -device loader,file=$<
+	boot -display none -net user -device virtio-net-pci -device loader,file=$<
 
 -include kern/src/*.d
 -include user-hello/src/*.d
