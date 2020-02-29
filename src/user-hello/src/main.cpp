@@ -1,19 +1,9 @@
 #include "api.hpp"
+#include "format.hpp"
 
 extern "C" void main();
 
 namespace {
-
-  const cap_t klog_cap {1};
-
-  void klog_msg(char const *msg)
-  {
-    char c;
-    while ((c = *(msg++)) != 0) {
-      invoke(klog_cap, c);
-    }
-  }
-
   // TODO We have to hardcode the virtual addresses here for now. In
   // the future epoxy-harden should generate a nice header with
   // virtual addresses of shared memory regions.
@@ -23,7 +13,7 @@ namespace {
 
 void main()
 {
-  klog_msg("Hello from userspace!\n");
+  format("Hello from userspace!\n");
 
   // XXX This is just to check whether we can access the memory.
   pci_ecam[0];

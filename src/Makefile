@@ -79,7 +79,7 @@ KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, \
                 link asm unpaged_entry paged_entry patched process kernel kobject exc_entry \
                 scheduler thread state format_backend)) \
             $(API_KERN_OBJ)
-USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link entry main)) \
+USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link entry main format_backend)) \
             $(API_USER_OBJ)
 
 $(KERN_OBJ): kern/include/state.hpp
@@ -88,7 +88,7 @@ epoxy.kern.elf: KERN_CXXFLAGS += -Ikern/include
 epoxy.kern.elf: $(KERN_OBJ)
 
 hello.user.elf: $(USER_OBJ)
-hello.user.elf: USER_CFLAGS += -Iuser-hello/include
+hello.user.elf: USER_CXXFLAGS += -Iuser-hello/include
 
 qemu-example-hello.elf: $(BINARIES) $(MACHINE_DESC) $(APPLICATION_DESC)
 	epoxy-harden boot-image --machine $(MACHINE_DESC) \
