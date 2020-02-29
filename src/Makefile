@@ -11,7 +11,7 @@ all: qemu-example-hello.elf
 
 .PHONY: clean
 clean:
-	rm -f *.elf kern/src/*.[do] user-hello/src/*.[do]
+	rm -f *.elf {api,kern,user-hello}/src/*.[do]
 	rm -f kern/include/state.hpp kern/src/state.cpp
 
 .PHONY: install
@@ -70,10 +70,17 @@ kern/src/%.cpp kern/include/%.hpp: kern/src/%.dummy $(MACHINE_DESC) $(APPLICATIO
 kern/src/state.dummy:
 	touch $@
 
+# These contain common functionality for kernel and userspace.
+API_OBJ := assert format
+API_KERN_OBJ := $(addsuffix .kern.o, $(addprefix api/src/, $(API_OBJ)))
+API_USER_OBJ := $(addsuffix .user.o, $(addprefix api/src/, $(API_OBJ)))
+
 KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, \
-    link asm assert unpaged_entry paged_entry patched process kernel kobject io exc_entry \
-    scheduler thread state format))
-USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link entry main))
+                link asm unpaged_entry paged_entry patched process kernel kobject io exc_entry \
+                scheduler thread state)) \
+            $(API_KERN_OBJ)
+USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link entry main)) \
+            $(API_USER_OBJ)
 
 $(KERN_OBJ): kern/include/state.hpp
 
