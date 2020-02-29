@@ -76,8 +76,8 @@ API_KERN_OBJ := $(addsuffix .kern.o, $(addprefix api/src/, $(API_OBJ)))
 API_USER_OBJ := $(addsuffix .user.o, $(addprefix api/src/, $(API_OBJ)))
 
 KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, \
-                link asm unpaged_entry paged_entry patched process kernel kobject io exc_entry \
-                scheduler thread state)) \
+                link asm unpaged_entry paged_entry patched process kernel kobject exc_entry \
+                scheduler thread state format_backend)) \
             $(API_KERN_OBJ)
 USER_OBJ := $(addsuffix .user.o, $(addprefix user-hello/src/, link entry main)) \
             $(API_USER_OBJ)
