@@ -17,7 +17,14 @@ SECTIONS
   } : lo_rx
 
   . = ALIGN(PAGE_SIZE);
-  .rodata : { *(.rodata .rodata.*) } : lo_r
+  .rodata : {
+    *(.rodata .rodata.*)
+
+    . = ALIGN(8);
+    PROVIDE (ctor_start_ = .);
+    *(.init_array SORT_BY_INIT_PRIORITY(.init_array.*));
+    PROVIDE (ctor_end_ = .);
+  } : lo_r
   . = ALIGN(PAGE_SIZE);
   .data   : { *(.data .data.*) } : lo_rw
   .bss    : { *(.bss .bss.*) } : lo_rw
