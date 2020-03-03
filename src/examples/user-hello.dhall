@@ -42,8 +42,8 @@ let virtioNetAddressSpace =
 
 in    { kobjects =
         [ { gid = "exit", impl = KObjectImpl.Exit }
-        , { gid = "klog_u1", impl = KObjectImpl.KLog { prefix = "U1" } }
-        , { gid = "klog_u2", impl = KObjectImpl.KLog { prefix = "U2" } }
+        , { gid = "klog_u1", impl = KObjectImpl.KLog { prefix = "hello" } }
+        , { gid = "klog_u2", impl = KObjectImpl.KLog { prefix = "vnet " } }
         , { gid = "process_u1"
           , impl =
               KObjectImpl.Process
