@@ -29,6 +29,35 @@ namespace {
     }
   };
 
+  class virtio_vendor_pci_cap : public pci_device::pci_cap
+  {
+    static uint8_t const ID {0x9};
+
+  public:
+
+    // This type means that bar_no, bar_offset, and bar_length are
+    // writable to select location in one of the BARs and there is an
+    // additional 32-bit field at offset 16 to read/write data from.
+    static const uint8_t CFG_TYPE_PCI_CFG {5};
+
+    uint8_t  get_cfg_type()   const { return get_u8(3); }
+    uint8_t  get_bar_no()     const { return get_u8(4); }
+    uint32_t get_bar_offset() const { return get_u32(8); }
+    uint32_t get_bar_length() const { return get_u32(12); }
+
+    static bool converts_from(pci_device::pci_cap const &cap)
+    {
+      return cap.get_id() == ID and cap.get_len() >= 16;
+    }
+
+    explicit virtio_vendor_pci_cap(pci_device::pci_cap const &other)
+      : pci_device::pci_cap(other)
+    {
+      assert(converts_from(other));
+    }
+
+  };
+
 } // anonymous namespace
 
 void main()
@@ -38,6 +67,17 @@ void main()
   virtio_net_device virtio_net {virtio_net_pci_cfg};
 
   for (auto const pci_cap : virtio_net.get_cap_list()) {
-    format("CAP ID ", pci_cap.get_id(), "\n");
+
+    if (not virtio_vendor_pci_cap::converts_from(pci_cap)) {
+      continue;
+    }
+
+    auto const vendor_cap { static_cast<virtio_vendor_pci_cap>(pci_cap) };
+
+    format("cfg_type=", vendor_cap.get_cfg_type(),
+	   " bar=",     vendor_cap.get_bar_no(),
+	   " offset=",  vendor_cap.get_bar_offset(),
+	   " length=",  vendor_cap.get_bar_length(),
+	   "\n");
   }
 }

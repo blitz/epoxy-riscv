@@ -13,11 +13,18 @@ public:
   static uint8_t const CAP_PTR_MASK {static_cast<uint8_t>(~0b11U)};
 
   // Accessor functions
-  uint8_t  get_byte(uint8_t byte_offset) const { return u8_cfg_[byte_offset]; }
+  uint8_t  get_u8(uint8_t byte_offset) const { return u8_cfg_[byte_offset]; }
+
+  uint32_t get_u32(uint8_t byte_offset) const
+  {
+    assert((byte_offset & (sizeof(uint32_t) - 1)) == 0);
+
+    return u32_cfg_[byte_offset / sizeof(uint32_t)];
+  }
 
   uint32_t get_vendor_device_id() const { return u32_cfg_[0]; }
   uint16_t get_status()           const { return u16_cfg_[3]; }
-  uint8_t  get_cap_ptr()          const { return get_byte(0x34) & CAP_PTR_MASK; };
+  uint8_t  get_cap_ptr()          const { return get_u8(0x34) & CAP_PTR_MASK; };
 
   bool has_cap_list() const
   {
@@ -30,14 +37,33 @@ public:
 
   public:
 
+    uint8_t get_u8(uint8_t offset) const
+    {
+      // TODO Pretty slow, because the compiler can't cache the
+      // length.
+      assert(offset < get_len());
+
+      return dev_->get_u8(offset_ + offset);
+    }
+
+    uint32_t get_u32(uint8_t offset) const
+    {
+      return dev_->get_u32(offset_ + offset);
+    }
+
     uint8_t get_id() const
     {
-      return dev_->get_byte(offset_);
+      return dev_->get_u8(offset_);
     }
 
     uint8_t get_next_cap_ptr() const
     {
-      return dev_->get_byte(offset_ + 1) & CAP_PTR_MASK;
+      return dev_->get_u8(offset_ + 1) & CAP_PTR_MASK;
+    }
+
+    uint8_t get_len() const
+    {
+      return dev_->get_u8(offset_ + 2);
     }
 
     pci_cap(pci_device *dev, uint8_t offset)
