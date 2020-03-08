@@ -9,8 +9,7 @@ in rec {
   inherit pkgs;
   inherit (epoxyHardenSrc) epoxyHarden dhall;
 
-  riscvPkgs =
-    import nixpkgs { crossSystem = lib.systems.examples.riscv64-embedded; };
+  riscvPkgs = pkgs.pkgsCross.riscv64-embedded;
 
   kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden; };
 
