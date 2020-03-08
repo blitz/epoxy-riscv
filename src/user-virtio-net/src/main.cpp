@@ -45,17 +45,84 @@ namespace {
     uint32_t get_bar_offset() const { return get_u32(8); }
     uint32_t get_bar_length() const { return get_u32(12); }
 
+    // If this is true, you can static_cast a pci_cap to this type.
     static bool converts_from(pci_device::pci_cap const &cap)
     {
       return cap.get_id() == ID and cap.get_len() >= 16;
     }
 
     explicit virtio_vendor_pci_cap(pci_device::pci_cap const &other)
-      : pci_device::pci_cap(other)
+      : pci_device::pci_cap{other}
     {
       assert(converts_from(other));
     }
 
+  };
+
+  template <typename predicate_type,
+	    typename range_type>
+  class filter_range {
+    predicate_type predicate;
+    range_type &range;
+
+    using range_it = decltype(range.begin());
+
+  public:
+
+    class filtered_it {
+      predicate_type predicate;
+
+      range_it source_it;
+      range_it end_it;
+
+    public:
+
+      auto operator*()
+      {
+	return *source_it;
+      }
+
+      filtered_it &operator++()
+      {
+	do {
+	  ++source_it;
+	} while (source_it != end_it and not predicate(*source_it));
+
+	return *this;
+      }
+
+      bool operator==(filtered_it const &other) const
+      {
+	return source_it == other.source_it;
+      }
+
+      bool operator!=(filtered_it const &other) const
+      {
+	return source_it != other.source_it;
+      }
+
+      filtered_it(predicate_type const &predicate_, range_it const &source_it_, range_it const &end_it_)
+	: predicate{predicate_}, source_it{source_it_}, end_it{end_it_}
+      {
+	while (source_it != end_it and not predicate(*source_it)) {
+	  ++source_it;
+	}
+      }
+    };
+
+    filtered_it begin()
+    {
+      return {predicate, range.begin(), range.end()};
+    }
+
+    filtered_it end()
+    {
+      return {predicate, range.end(), range.end()};
+    }
+
+    filter_range(range_type &range_, predicate_type const &predicate_)
+      : predicate{predicate_}, range{range_}
+    {}
   };
 
 } // anonymous namespace
@@ -66,12 +133,9 @@ void main()
 
   virtio_net_device virtio_net {virtio_net_pci_cfg};
 
-  for (auto const pci_cap : virtio_net.get_cap_list()) {
+  auto cap_list {virtio_net.get_cap_list()};
 
-    if (not virtio_vendor_pci_cap::converts_from(pci_cap)) {
-      continue;
-    }
-
+  for (auto const pci_cap : filter_range(cap_list, &virtio_vendor_pci_cap::converts_from)) {
     auto const vendor_cap { static_cast<virtio_vendor_pci_cap>(pci_cap) };
 
     format("cfg_type=", vendor_cap.get_cfg_type(),
