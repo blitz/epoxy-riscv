@@ -10,8 +10,8 @@
 #include "syscall_args.hpp"
 #include "thread.hpp"
 
-namespace {
-
+namespace
+{
 void arch_init()
 {
   // Prevent executable memory from being automatically readable and
@@ -31,14 +31,20 @@ void arch_init()
 
 [[noreturn]] void die_on_exception_from(char const *from)
 {
-  mword_t const sepc   {csr_r<csr::SEPC>()};
+  mword_t const sepc {csr_r<csr::SEPC>()};
   mword_t const scause {csr_r<csr::SCAUSE>()};
-  mword_t const stval  {csr_r<csr::STVAL>()};
+  mword_t const stval {csr_r<csr::STVAL>()};
 
-  panic("!! Exception from ", from, "!\n"
-	"!! SCAUSE ", scause, "\n"
-	"!! SEPC   ", sepc, "\n"
-	"!! STVAL  ", stval, "\n");
+  panic("!! Exception from ", from,
+        "!\n"
+        "!! SCAUSE ",
+        scause,
+        "\n"
+        "!! SEPC   ",
+        sepc,
+        "\n"
+        "!! STVAL  ",
+        stval, "\n");
 }
 
 [[noreturn]] void handle_interrupt(exception_info info)
@@ -63,8 +69,8 @@ void arch_init()
   // We have to advance the PC manually. ECALL doesn't do that.
   frame->pc_ += 4;
 
-  auto * const current {thread::active()};
-  auto * const kobj {current->get_process()->lookup(args.cap_idx)};
+  auto *const current {thread::active()};
+  auto *const kobj {current->get_process()->lookup(args.cap_idx)};
 
   syscall_result_t res {syscall_result_t::NOCAP};
 
@@ -93,7 +99,7 @@ void arch_init()
   }
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 void user_exc_entry(exception_frame *frame)
 {
@@ -119,16 +125,17 @@ void kern_exc_entry()
 
 void start()
 {
-  format("\n"
-         ">> Epoxy (RISC-V 64-bit, "
+  format(
+      "\n"
+      ">> Epoxy (RISC-V 64-bit, "
 #ifdef __clang__
-         "clang " __clang_version__
+      "clang " __clang_version__
 #elif __GNUC__
-         "gcc " __VERSION__
+      "gcc " __VERSION__
 #else
-         "unknown compiler"
+      "unknown compiler"
 #endif
-         ")\n");
+      ")\n");
 
   arch_init();
 

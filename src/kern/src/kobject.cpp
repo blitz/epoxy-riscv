@@ -8,21 +8,21 @@
 #include "syscall_args.hpp"
 #include "thread.hpp"
 
-namespace {
-
-  template <size_t SIZE>
-  void line_buffer_flush(char const *prefix, vector<char, SIZE> *line_buffer)
-  {
-    format(prefix, " | ");
-    for (char c : *line_buffer) {
-      put_char(c);
-    }
-    put_char('\n');
-
-    line_buffer->reset();
+namespace
+{
+template <size_t SIZE>
+void line_buffer_flush(char const *prefix, vector<char, SIZE> *line_buffer)
+{
+  format(prefix, " | ");
+  for (char c : *line_buffer) {
+    put_char(c);
   }
+  put_char('\n');
 
+  line_buffer->reset();
 }
+
+}  // namespace
 
 syscall_result_t klog_kobject::invoke(thread *, syscall_args const &args)
 {

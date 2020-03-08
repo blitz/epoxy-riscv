@@ -2,7 +2,8 @@
 
 #include "config_types.hpp"
 
-class process {
+class process
+{
   // Keep track of the currently activated address space.
   static process *active_;
 
@@ -10,7 +11,6 @@ class process {
   capability_set capabilities_ {};
 
 public:
-
   int pid() const { return pid_; };
 
   // Resolve a capability index to a kernel object pointer or nullptr, if there
@@ -21,7 +21,8 @@ public:
   void activate();
 
   template <size_t N>
-  constexpr process(int pid, kobject * const(&capability_set)[N])
-    : pid_ {pid}, capabilities_ {N, capability_set}
-  { }
+  constexpr process(int pid, kobject *const (&capability_set)[N])
+      : pid_ {pid}, capabilities_ {N, capability_set}
+  {
+  }
 };

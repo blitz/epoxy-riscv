@@ -5,22 +5,22 @@
 // A vector with statically allocating backing store and a compile-time maximum
 // length.
 template <typename T, size_t CAPACITY>
-class vector {
+class vector
+{
   size_t length {};
   alignas(T) char backing[sizeof(T[CAPACITY])] {};
 
 public:
-
-  T &operator[](size_t i)       { return reinterpret_cast<T       *>(backing)[i]; }
+  T &operator[](size_t i) { return reinterpret_cast<T *>(backing)[i]; }
   T &operator[](size_t i) const { return reinterpret_cast<T const *>(backing)[i]; }
 
-  T       *begin()       { return &(*this)[0]; }
+  T *begin() { return &(*this)[0]; }
   T const *begin() const { return &(*this)[0]; }
 
-  T       *end()       { return &(*this)[length]; }
+  T *end() { return &(*this)[length]; }
   T const *end() const { return &(*this)[length]; }
 
-  size_t size()          const { return length; }
+  size_t size() const { return length; }
   size_t capacity_left() const { return CAPACITY - size(); }
 
   void reset()
@@ -38,11 +38,10 @@ public:
       __builtin_trap();
     }
 
-    new (&(*this)[length++]) (T) {value};
+    new (&(*this)[length++])(T) {value};
   }
 
-  constexpr vector()
-  {}
+  constexpr vector() {}
 
   // TODO We have to prevent destructor calls from being generatoed.
   // ~vector()

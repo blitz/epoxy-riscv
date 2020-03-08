@@ -9,7 +9,8 @@ struct gp_regs {
   mword_t x[31] {};
 };
 
-class exception_frame {
+class exception_frame
+{
 public:
   gp_regs regs_;
   mword_t pc_;
@@ -21,12 +22,9 @@ public:
   mword_t a4() const { return regs_.x[13]; }
 
 protected:
-
-  explicit constexpr exception_frame(mword_t pc)
-    : pc_ {pc}
-  {}
+  explicit constexpr exception_frame(mword_t pc) : pc_ {pc} {}
 };
 
-  // These offsets are used from assembly (see exc_entry.S).
+// These offsets are used from assembly (see exc_entry.S).
 static_assert(offsetof(exception_frame, regs_) == 0);
-static_assert(offsetof(exception_frame, pc_)   == 31*8);
+static_assert(offsetof(exception_frame, pc_) == 31 * 8);

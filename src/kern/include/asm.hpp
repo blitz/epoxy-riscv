@@ -24,7 +24,7 @@ extern "C" [[noreturn]] void kern_exc_entry();
 
 inline void wait_for_interrupt()
 {
-  asm volatile ("wfi");
+  asm volatile("wfi");
 }
 
 [[noreturn]] void reset_stack_and_wait_for_interrupt();
@@ -41,7 +41,7 @@ inline mword_t rdtime()
 {
   mword_t time;
 
-  asm volatile ("rdtime %0" : "=r" (time));
+  asm volatile("rdtime %0" : "=r"(time));
 
   return time;
 }

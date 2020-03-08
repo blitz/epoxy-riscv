@@ -1,4 +1,5 @@
 #include "assert.hpp"
+
 #include "format.hpp"
 
 void assert_failed(char const *file, int line)

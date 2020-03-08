@@ -1,7 +1,6 @@
 #pragma once
 
-#include "kobject.hpp"
-
-#include "klog_kobject.hpp"
 #include "exit_kobject.hpp"
+#include "klog_kobject.hpp"
+#include "kobject.hpp"
 #include "process.hpp"

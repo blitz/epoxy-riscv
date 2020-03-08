@@ -4,7 +4,7 @@
 
 void put_char(char c)
 {
-    sbi_putc(c);
+  sbi_putc(c);
 }
 
 void do_panic()

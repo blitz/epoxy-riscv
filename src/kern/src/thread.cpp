@@ -1,28 +1,27 @@
+#include "thread.hpp"
+
 #include "asm.hpp"
 #include "csr.hpp"
 #include "process.hpp"
-#include "thread.hpp"
 #include "state.hpp"
 
 thread *thread::active_;
 
-namespace {
-
+namespace
+{
 // Clear outstanding load-reserved / store-conditional reservations.
 void clear_lrsc_reservation()
 {
   mword_t sc_dummy;
 
-  asm volatile ("sc.d zero, zero, (%[mem])"
-                : "=m" (sc_dummy)
-                : [mem] "r" (&sc_dummy));
+  asm volatile("sc.d zero, zero, (%[mem])" : "=m"(sc_dummy) : [ mem ] "r"(&sc_dummy));
 }
 
-}
+}  // namespace
 
 void thread::exit_from_preemption()
 {
-  exception_frame * const frame {this};
+  exception_frame *const frame {this};
   process_->activate();
 
   clear_lrsc_reservation();

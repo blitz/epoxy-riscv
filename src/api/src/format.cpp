@@ -2,7 +2,7 @@
 
 void put(const char *str)
 {
-  for (;*str != 0; str++)
+  for (; *str != 0; str++)
     put_char(*str);
 }
 
@@ -11,9 +11,10 @@ void put(uint64_t v)
   static const char hex[] = "0123456789abcdef";
   bool skip_leading_zeroes = true;
 
-  put_char('0'); put_char('x');
+  put_char('0');
+  put_char('x');
 
-  for (int i = sizeof(v)*8 - 4; i >= 0; i -= 4) {
+  for (int i = sizeof(v) * 8 - 4; i >= 0; i -= 4) {
     int nibble = (v >> i) & 0xF;
 
     // Don't print leading zeroes.

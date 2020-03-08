@@ -1,7 +1,8 @@
+#include "process.hpp"
+
 #include "api.hpp"
 #include "csr.hpp"
 #include "state.hpp"
-#include "process.hpp"
 
 process *process::active_ = nullptr;
 
@@ -23,6 +24,6 @@ void process::activate()
     csr_w<csr::SATP>(USER_SATPS[pid()]);
 
     // TODO We could optimize this by using ASIDs.
-    asm volatile ("sfence.vma" ::: "memory");
+    asm volatile("sfence.vma" ::: "memory");
   }
 }
