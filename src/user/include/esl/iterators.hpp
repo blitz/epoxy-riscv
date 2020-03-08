@@ -1,5 +1,10 @@
 #pragma once
 
+// Some simple iterator transformation code.
+//
+// Someone who actually knows how to do metaprogramming in C++ should
+// probably redo them...
+
 namespace esl {
 
   template <typename predicate_type,
