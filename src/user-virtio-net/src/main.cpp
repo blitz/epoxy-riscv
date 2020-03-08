@@ -125,6 +125,64 @@ namespace {
     {}
   };
 
+  template <typename transform_type,
+	    typename range_type>
+  class transform_range {
+    transform_type transform;
+    range_type &range;
+
+    using range_it = decltype(range.begin());
+
+  public:
+
+    class transformed_it {
+      transform_type transform;
+
+      range_it source_it;
+
+    public:
+
+      auto operator*()
+      {
+	return transform(*source_it);
+      }
+
+      transformed_it &operator++()
+      {
+	++source_it;
+	return *this;
+      }
+
+      bool operator==(transformed_it const &other) const
+      {
+	return source_it == other.source_it;
+      }
+
+      bool operator!=(transformed_it const &other) const
+      {
+	return source_it != other.source_it;
+      }
+
+      transformed_it(transform_type const &transform_, range_it const &source_it_)
+	: transform{transform_}, source_it{source_it_}
+      {}
+    };
+
+    transformed_it begin()
+    {
+      return {transform, range.begin()};
+    }
+
+    transformed_it end()
+    {
+      return {transform, range.end()};
+    }
+
+    transform_range(range_type &range_, transform_type const &transform_)
+      : transform{transform_}, range{range_}
+    {}
+  };
+
 } // anonymous namespace
 
 void main()
@@ -134,10 +192,11 @@ void main()
   virtio_net_device virtio_net {virtio_net_pci_cfg};
 
   auto cap_list {virtio_net.get_cap_list()};
+  auto filtered_cap_list {filter_range(cap_list, &virtio_vendor_pci_cap::converts_from)};
 
-  for (auto const pci_cap : filter_range(cap_list, &virtio_vendor_pci_cap::converts_from)) {
-    auto const vendor_cap { static_cast<virtio_vendor_pci_cap>(pci_cap) };
-
+  for (auto const vendor_cap
+	 : transform_range(filtered_cap_list,
+			   [] (pci_device::pci_cap const &cap) { return static_cast<virtio_vendor_pci_cap>(cap); })) {
     format("cfg_type=", vendor_cap.get_cfg_type(),
 	   " bar=",     vendor_cap.get_bar_no(),
 	   " offset=",  vendor_cap.get_bar_offset(),
