@@ -3,6 +3,7 @@
 #include "assert.hpp"
 #include "format.hpp"
 #include "pci_device.hpp"
+#include "virtio-spec.hpp"
 
 extern "C" void main();
 
