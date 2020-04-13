@@ -1,4 +1,4 @@
-{ stdenv, dhall-json, cmake, epoxyHarden, python3, python3Packages }:
+{ stdenv, dhall-json, epoxyHarden }:
 
 stdenv.mkDerivation {
   pname = "epoxy";
