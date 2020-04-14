@@ -9,7 +9,8 @@ in rec {
   inherit pkgs;
   inherit (epoxyHardenSrc) epoxyHarden dhall;
 
-  riscvPkgs = pkgs.pkgsCross.riscv64-embedded;
+  #riscvPkgs = pkgs.pkgsCross.riscv64-embedded;
+  riscvPkgs = import nixpkgs { crossSystem = lib.systems.examples.riscv64-embedded // { useLLVM = true; }; };
 
   kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden; };
 
@@ -25,4 +26,3 @@ in rec {
     qemuBootImage = "${kernel}/qemu-example-hello.elf";
   };
 }
-
