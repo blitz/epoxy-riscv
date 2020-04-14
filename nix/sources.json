@@ -12,15 +12,15 @@
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {
-        "branch": "nixos-20.03",
+        "branch": "epoxy-unstable",
         "description": "A read-only mirror of NixOS/nixpkgs tracking the released channels. Send issues and PRs to",
         "homepage": "https://github.com/NixOS/nixpkgs",
-        "owner": "NixOS",
-        "repo": "nixpkgs-channels",
-        "rev": "29eddfc36d720dcc4822581175217543b387b1e8",
-        "sha256": "1gqv2m7plkladd3va664xyqb962pqs4pizzibvkm1nh0f4rfpxvy",
+        "owner": "blitz",
+        "repo": "nixpkgs",
+        "rev": "bf3993725dea056a1f7a5ac3ef29705e4193d08f",
+        "sha256": "1g61mwyjaq4xraa8lyq0hacj941s323zx7ly9ck85f6zb0rrzdbw",
         "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs-channels/archive/29eddfc36d720dcc4822581175217543b387b1e8.tar.gz",
+        "url": "https://github.com/blitz/nixpkgs/archive/bf3993725dea056a1f7a5ac3ef29705e4193d08f.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
