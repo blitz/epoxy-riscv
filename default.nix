@@ -1,10 +1,9 @@
-{ sources ? import ./nix/sources.nix
-, nixpkgs ? sources.nixpkgs
-, pkgs ? import nixpkgs { }}:
+{ sources ? import ./nix/sources.nix, nixpkgs ? sources.nixpkgs
+, pkgs ? import nixpkgs { } }:
 
 let
   lib = pkgs.lib;
-  epoxyHardenSrc = import sources.epoxy-harden {};
+  epoxyHardenSrc = import sources.epoxy-harden { };
 in rec {
   inherit pkgs;
   inherit (epoxyHardenSrc) epoxyHarden dhall;
@@ -15,8 +14,19 @@ in rec {
 
   kernelGcc8 = kernel.override { stdenv = riscvPkgs.gcc8Stdenv; };
 
+  # Use a ncurses-only qemu to reduce closure size.
+  qemuHeadless = pkgs.qemu.override {
+    gtkSupport = false;
+    vncSupport = false;
+    sdlSupport = false;
+    spiceSupport = false;
+    pulseSupport = false;
+    smartcardSupport = false;
+    hostCpuTargets = [ "riscv64-softmmu" ];
+  };
+
   bootScript = pkgs.writeShellScriptBin "boot" ''
-    exec ${pkgs.qemu}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio \
+    exec ${qemuHeadless}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio \
          -bios default $*
   '';
 
