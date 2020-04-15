@@ -34,14 +34,14 @@ public:
 
   [[noreturn]] void finish_syscall(syscall_result_t ret)
   {
-    regs_.x[9] = static_cast<mword_t>(ret);
+    regs_[10] = static_cast<mword_t>(ret);
     activate();
   }
 
   [[noreturn]] void activate();
 
-  constexpr thread(process *process, mword_t user_entry)
-      : exception_frame {user_entry}, process_ {process}, state_ {thread_state::RUNNABLE}
+  constexpr thread(process *process, mword_t user_entry, mword_t stack_ptr)
+    : exception_frame {user_entry, stack_ptr}, process_ {process}, state_ {thread_state::RUNNABLE}
   {
   }
 };

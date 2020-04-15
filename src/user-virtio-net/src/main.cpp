@@ -5,7 +5,7 @@
 #include "pci_device.hpp"
 #include "virtio-spec.hpp"
 
-extern "C" void main();
+extern "C" int main();
 
 namespace
 {
@@ -59,7 +59,7 @@ public:
 
 }  // anonymous namespace
 
-void main()
+int main()
 {
   format("Hello from virtio-io!\n");
 
@@ -75,4 +75,6 @@ void main()
     format("cfg_type=", vendor_cap.get_cfg_type(), " bar=", vendor_cap.get_bar_no(),
            " offset=", vendor_cap.get_bar_offset(), " length=", vendor_cap.get_bar_length(), "\n");
   }
+
+  return 0;
 }

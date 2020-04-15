@@ -1,5 +1,12 @@
 #pragma once
 
+#if __STDC_HOSTED__
+
+#include <cstddef>
+#include <cstdint>
+
+#else
+
 using int8_t = signed char;
 using uint8_t = unsigned char;
 
@@ -18,8 +25,18 @@ using size_t = unsigned long;
 #error Unknown platform
 #endif
 
+#define offsetof(type, member) __builtin_offsetof(type, member)
+
+inline void *operator new(size_t, void *p)
+{
+  return p;
+}
+
+#endif
+
 static_assert(sizeof(void *) == sizeof(size_t));
 using uintptr_t = size_t;
+
 using mword_t = size_t;
 
 #define __packed __attribute__((packed))
@@ -37,11 +54,4 @@ template <typename T, size_t SIZE>
 constexpr size_t array_size(T (&)[SIZE])
 {
   return SIZE;
-}
-
-#define offsetof(type, member) __builtin_offsetof(type, member)
-
-inline void *operator new(size_t, void *p)
-{
-  return p;
 }

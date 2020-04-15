@@ -1,8 +1,10 @@
 #include "format.hpp"
 
-extern "C" void main();
+extern "C" int main();
 
-void main()
+int main()
 {
   format("Hello World!\n");
+
+  return 0;
 }

@@ -2,15 +2,33 @@
 --
 -- TODO Store type definitions in epoxy-harden instead of here.
 
+let SharedMemorySource
+    : Type
+    = < NamedSharedMemory : { sharedMemKey : Text }
+      | AnonymousMemory : { sharedMemSize : Natural }
+      >
+
+let SharedMemoryPermissions
+    : Type
+    = < R | RW | RX >
+
 let AddressSpaceElem
     : Type
     = < ELF : { binary : Text }
-      | SharedMemory : { key : Text, vaDestination : Natural }
+      | SharedMemory :
+          { source : SharedMemorySource
+          , vaDestination : Natural
+          , permissions : SharedMemoryPermissions
+          }
       >
 
 let AddressSpace
     : Type
     = List AddressSpaceElem
+
+let ThreadStack
+    : Type
+    = < Auto | Fixed : { vaInitStackPtr : Natural } >
 
 let KObjectImpl
     : Type
@@ -21,7 +39,7 @@ let KObjectImpl
           , addressSpace : AddressSpace
           , capabilities : List Text
           }
-      | Thread : { process : Text }
+      | Thread : { process : Text, stack : ThreadStack }
       >
 
 let KObject
@@ -37,7 +55,12 @@ let helloAddressSpace = [ AddressSpaceElem.ELF { binary = "hello.user.elf" } ]
 let virtioNetAddressSpace =
       [ AddressSpaceElem.ELF { binary = "virtio-net.user.elf" }
       , AddressSpaceElem.SharedMemory
-          { key = "virtio-net pci-cfg", vaDestination = 268435456 }
+          { source =
+              SharedMemorySource.NamedSharedMemory
+                { sharedMemKey = "virtio-net pci-cfg" }
+          , vaDestination = 268435456
+          , permissions = SharedMemoryPermissions.RW
+          }
       ]
 
 in    { kobjects =
@@ -61,10 +84,14 @@ in    { kobjects =
                 }
           }
         , { gid = "thread_u1"
-          , impl = KObjectImpl.Thread { process = "process_u1" }
+          , impl =
+              KObjectImpl.Thread
+                { process = "process_u1", stack = ThreadStack.Auto }
           }
         , { gid = "thread_u2"
-          , impl = KObjectImpl.Thread { process = "process_u2" }
+          , impl =
+              KObjectImpl.Thread
+                { process = "process_u2", stack = ThreadStack.Auto }
           }
         ]
       }
