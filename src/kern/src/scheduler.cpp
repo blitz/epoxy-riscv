@@ -6,6 +6,7 @@
 #include "format.hpp"
 #include "sbi.hpp"
 #include "state.hpp"
+#include "util.hpp"
 
 // We implement a trivial round-robin scheduling for now. This saves us from
 // having a run queue or any other fancy data structure.

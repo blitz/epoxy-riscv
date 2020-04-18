@@ -7,6 +7,7 @@
 #include "state.hpp"
 #include "syscall_args.hpp"
 #include "thread.hpp"
+#include "util.hpp"
 
 namespace
 {
