@@ -1,4 +1,4 @@
-#include "memory.hpp"
+#include "memory.h"
 
 OUTPUT_ARCH( "riscv" )
 ENTRY(asm_unpaged_entry)

@@ -96,6 +96,7 @@ KERN_OBJ := $(addsuffix .kern.o, $(addprefix kern/src/, \
 $(KERN_OBJ): kern/include/state.hpp
 
 epoxy.kern.elf: KERN_CXXFLAGS += -Ikern/include
+epoxy.kern.elf: KERN_CFLAGS += -Ikern/include
 epoxy.kern.elf: $(KERN_OBJ)
 
 # Common user objects
