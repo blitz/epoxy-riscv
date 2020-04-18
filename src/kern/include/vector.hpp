@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "likely.hpp"
 
 // A vector with statically allocating backing store and a compile-time maximum
 // length.

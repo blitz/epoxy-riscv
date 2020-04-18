@@ -2,6 +2,7 @@
 
 #include "api.hpp"
 #include "types.hpp"
+#include "likely.hpp"
 
 class thread;
 class syscall_args;
