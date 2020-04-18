@@ -2,6 +2,7 @@
 
 #include <assert.hpp>
 #include <types.hpp>
+#include <c_types.hpp>
 
 // General-purpose registers.
 class gp_regs {
