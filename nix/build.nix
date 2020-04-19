@@ -1,4 +1,4 @@
-{ stdenv, dhall-json, epoxyHarden, pprintpp }:
+{ stdenv, dhall-json, epoxyHarden, pprintpp, range-v3 }:
 
 stdenv.mkDerivation {
   pname = "epoxy";
@@ -10,7 +10,7 @@ stdenv.mkDerivation {
   ];
 
   buildInputs = [
-    pprintpp
+    pprintpp range-v3
   ];
 
   # This is not useful and patchelf also segfaults on our crude ELFs.

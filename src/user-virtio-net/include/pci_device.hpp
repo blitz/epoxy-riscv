@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 class pci_device
 {
@@ -55,56 +56,19 @@ public:
     pci_cap(pci_device *dev, uint8_t offset) : dev_ {dev}, offset_ {offset} {}
   };
 
-  class pci_cap_iterator
+  std::vector<pci_cap> get_caps()
   {
-    pci_device *dev_;
-    uint8_t offset_;
+    std::vector<pci_cap> caps;
 
-  public:
-    pci_cap operator*() const { return {dev_, offset_}; }
-
-    bool operator==(pci_cap_iterator const &other) const
-    {
-      // It's broken to compare iterators from different PCI
-      // devices.
-      assert(dev_ == other.dev_);
-
-      return offset_ == other.offset_;
-    }
-
-    bool operator!=(pci_cap_iterator const &other) const { return not(*this == other); }
-
-    pci_cap_iterator &operator++()
-    {
-      assert(offset_ != 0);
-
-      offset_ = (**this).get_next_cap_ptr();
-      return *this;
-    }
-
-    pci_cap_iterator(pci_device *dev, uint8_t offset) : dev_ {dev}, offset_ {offset} {}
-  };
-
-  class pci_cap_list
-  {
-    pci_device *dev_;
-
-  public:
-    pci_cap_iterator begin()
-    {
-      if (dev_->has_cap_list()) {
-        return {dev_, dev_->get_cap_ptr()};
-      } else {
-        return end();
+    if (has_cap_list()) {
+      for (uint8_t off = get_cap_ptr(); off != 0;) {
+	caps.emplace_back(this, off);
+	off = caps.back().get_next_cap_ptr();
       }
     }
 
-    pci_cap_iterator end() { return {dev_, 0}; }
-
-    explicit pci_cap_list(pci_device *dev) : dev_ {dev} {}
-  };
-
-  pci_cap_list get_cap_list() { return pci_cap_list {this}; }
+    return caps;
+  }
 
   explicit pci_device(uint32_t volatile *cfg_space) : u32_cfg_ {cfg_space} {}
 };

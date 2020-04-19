@@ -18,8 +18,9 @@ in rec {
   riscvPkgs = (import nixpkgs { overlays = [ newlibOverlay ]; }).pkgsCross.riscv64-embedded;
 
   pprintpp = riscvPkgs.callPackage ./nix/pprintpp.nix {};
+  range-v3 = riscvPkgs.callPackage ./nix/range-v3.nix {};
 
-  kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden pprintpp; };
+  kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden pprintpp range-v3; };
 
   kernelGcc8 = kernel.override { stdenv = riscvPkgs.gcc8Stdenv; };
 

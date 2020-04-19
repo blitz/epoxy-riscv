@@ -1,8 +1,8 @@
 #include <cassert>
 #include <cstdio>
 #include <pprintpp/pprintpp.hpp>
-
-#include <esl/iterators.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
 
 #include "pci_device.hpp"
 #include "virtio-spec.hpp"
@@ -63,17 +63,20 @@ public:
 
 int main()
 {
+  using namespace ranges;
+
   pprintf("Hello from virtio-io!\n");
 
   virtio_net_device virtio_net {virtio_net_pci_cfg};
 
-  auto cap_list {virtio_net.get_cap_list()};
-  auto filtered_cap_list {esl::filter_range(cap_list, &virtio_vendor_pci_cap::converts_from)};
+  auto caps {virtio_net.get_caps()};
 
   for (auto const vendor_cap :
-       esl::transform_range(filtered_cap_list, [](pci_device::pci_cap const &cap) {
-         return static_cast<virtio_vendor_pci_cap>(cap);
-       })) {
+	 caps
+	 | views::filter(virtio_vendor_pci_cap::converts_from)
+	 | views::transform([](pci_device::pci_cap const &cap) {
+			      return static_cast<virtio_vendor_pci_cap>(cap);
+			    })) {
 
     pprintf("cfg_types={#x} bar={} offset={#x} length={#x}\n",
 	    vendor_cap.get_cfg_type(), vendor_cap.get_bar_no(),
