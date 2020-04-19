@@ -20,15 +20,15 @@ install: qemu-example-hello.elf
 	install -m 0755 $^ $(TARGET)/
 
 COMMON_CFLAGS   = -g -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -march=rv64gc
-COMMON_CFLAGS  += -Wall -Wunused-parameter -fno-asynchronous-unwind-tables -fno-exceptions
-COMMON_CXXFLAGS = $(COMMON_CFLAGS) -fno-rtti -std=c++17
+COMMON_CFLAGS  += -Wall -Wunused-parameter -fno-asynchronous-unwind-tables
+COMMON_CXXFLAGS = $(COMMON_CFLAGS) -std=c++17
 COMMON_ASFLAGS  = $(COMMON_CFLAGS)
 COMMON_LDFLAGS  = -g -flto -static
 
-KERN_CFLAGS := $(COMMON_CFLAGS) -ffreestanding -nostdinc
+KERN_CFLAGS := $(COMMON_CFLAGS) -ffreestanding -nostdinc -fno-exceptions -fno-rtti
 USER_CFLAGS := $(COMMON_CFLAGS)
 
-KERN_CXXFLAGS := $(COMMON_CXXFLAGS) -ffreestanding -nostdinc
+KERN_CXXFLAGS := $(COMMON_CXXFLAGS) $(KERN_CFLAGS)
 USER_CXXFLAGS := $(COMMON_CXXFLAGS) -Iuser/include
 
 KERN_LDFLAGS := $(COMMON_LDFLAGS) -nostdlib
@@ -69,7 +69,7 @@ USER_LDFLAGS := $(COMMON_LDFLAGS) -Wl,--gc-sections -Wl,-z,common-page-size=4096
 	$(CC) $(KERN_CFLAGS) $(KERN_LDFLAGS) -o $@ -T $^
 
 %.user.elf:
-	$(CC) $(USER_CFLAGS) $(USER_LDFLAGS) -o $@ $^
+	$(CXX) $(USER_CXXFLAGS) $(USER_LDFLAGS) -o $@ $^
 
 # We need to jump through this hoop, because Make is broken in the way
 # it handles multiple targets in normal rules. Pattern rules don't
@@ -100,7 +100,7 @@ epoxy.kern.elf: KERN_CFLAGS += -Ikern/include
 epoxy.kern.elf: $(KERN_OBJ)
 
 # Common user objects
-USER_OBJ := $(addsuffix .user.o, $(addprefix user/src/, format_backend)) \
+USER_OBJ := $(addsuffix .user.o, $(addprefix user/src/, format_backend newlib_backend)) \
             $(API_USER_OBJ)
 
 # Hello application

@@ -1,10 +1,24 @@
 #include "format.hpp"
+#include <cstdio>
+#include <errno.h>
+#include <cstdlib>
+#include <unistd.h>
 
-extern "C" int main();
+#include <capabilities.hpp>
+
+struct hello_world_exception {
+};
+
+int test()
+{
+  throw hello_world_exception {};
+}
 
 int main()
 {
-  format("Hello World!\n");
+  printf("Hello World!\n");
+
+  test();
 
   return 0;
 }

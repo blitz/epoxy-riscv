@@ -4,11 +4,18 @@
 let
   lib = pkgs.lib;
   epoxyHardenSrc = import sources.epoxy-harden { };
+
+  newlibOverlay = self: super: {
+    newlibCross = super.newlibCross.overrideAttrs (attrs: {
+      version = "epoxy";
+      src = sources.epoxy-newlib;
+    });
+  };
 in rec {
   inherit pkgs;
   inherit (epoxyHardenSrc) epoxyHarden dhall;
 
-  riscvPkgs = pkgs.pkgsCross.riscv64-embedded;
+  riscvPkgs = (import nixpkgs { overlays = [ newlibOverlay ]; }).pkgsCross.riscv64-embedded;
 
   kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden; };
 

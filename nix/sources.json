@@ -11,6 +11,18 @@
         "url": "https://github.com/blitz/epoxy-harden/archive/54249c227b44969be02c963336cc36edbda6bb3a.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "epoxy-newlib": {
+        "branch": "epoxy-riscv",
+        "description": "Newlib fork for RISC-V Epoxy",
+        "homepage": null,
+        "owner": "blitz",
+        "repo": "epoxy-newlib",
+        "rev": "46b3d487600dbe4ba227f26c7432882658336a42",
+        "sha256": "09gwnb96gm8ghidndjaxgyksmybrq5ar9xcmdndsvvwsvv0vzwlp",
+        "type": "tarball",
+        "url": "https://github.com/blitz/epoxy-newlib/archive/46b3d487600dbe4ba227f26c7432882658336a42.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "nixpkgs": {
         "branch": "nixos-20.03",
         "description": "A read-only mirror of NixOS/nixpkgs tracking the released channels. Send issues and PRs to",
