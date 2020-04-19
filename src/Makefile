@@ -100,7 +100,7 @@ epoxy.kern.elf: KERN_CFLAGS += -Ikern/include
 epoxy.kern.elf: $(KERN_OBJ)
 
 # Common user objects
-USER_OBJ := $(addsuffix .user.o, $(addprefix user/src/, format_backend string)) \
+USER_OBJ := $(addsuffix .user.o, $(addprefix user/src/, format_backend)) \
             $(API_USER_OBJ)
 
 # Hello application
