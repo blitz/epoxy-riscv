@@ -32,18 +32,7 @@ KERN_CXXFLAGS := $(COMMON_CXXFLAGS) $(KERN_CFLAGS)
 USER_CXXFLAGS := $(COMMON_CXXFLAGS) -Iuser/include
 
 KERN_LDFLAGS := $(COMMON_LDFLAGS) -nostdlib
-
-# XXX We need to add a feature to epoxy-harden to deal with these kinds of layouts gracefully:
-#
-# Program Headers:
-# Type           Offset             VirtAddr           PhysAddr
-#                 FileSiz            MemSiz              Flags  Align
-# LOAD           0x0000000000000000 0x0000000000010000 0x0000000000010000
-#                0x0000000000000530 0x0000000000000530  R E    0x1000
-# LOAD           0x0000000000000530 0x0000000000011530 0x0000000000011530
-#                0x0000000000000798 0x0000000000000818  RW     0x1000
-
-USER_LDFLAGS := $(COMMON_LDFLAGS) -Wl,--gc-sections -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=4096
+USER_LDFLAGS := $(COMMON_LDFLAGS) -Wl,--gc-sections
 
 # We call it .o, because that makes the file name transformations easier below.
 %.kern.o: %.lds
