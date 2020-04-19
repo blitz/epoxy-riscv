@@ -25,10 +25,10 @@ COMMON_CXXFLAGS = $(COMMON_CFLAGS) -std=c++17
 COMMON_ASFLAGS  = $(COMMON_CFLAGS)
 COMMON_LDFLAGS  = -g -flto -static
 
-KERN_CFLAGS := $(COMMON_CFLAGS) -ffreestanding -nostdinc -fno-exceptions -fno-rtti
+KERN_CFLAGS := $(COMMON_CFLAGS) -ffreestanding -nostdinc -fno-exceptions
 USER_CFLAGS := $(COMMON_CFLAGS)
 
-KERN_CXXFLAGS := $(COMMON_CXXFLAGS) $(KERN_CFLAGS)
+KERN_CXXFLAGS := $(COMMON_CXXFLAGS) $(KERN_CFLAGS) -fno-rtti
 USER_CXXFLAGS := $(COMMON_CXXFLAGS) -Iuser/include
 
 KERN_LDFLAGS := $(COMMON_LDFLAGS) -nostdlib

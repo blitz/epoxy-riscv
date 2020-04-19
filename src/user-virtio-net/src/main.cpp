@@ -1,6 +1,6 @@
 #include <cassert>
-#include <cinttypes>
 #include <cstdio>
+#include <pprintpp/pprintpp.hpp>
 
 #include <esl/iterators.hpp>
 
@@ -63,7 +63,7 @@ public:
 
 int main()
 {
-  printf("Hello from virtio-io!\n");
+  pprintf("Hello from virtio-io!\n");
 
   virtio_net_device virtio_net {virtio_net_pci_cfg};
 
@@ -75,9 +75,9 @@ int main()
          return static_cast<virtio_vendor_pci_cap>(cap);
        })) {
 
-    printf("cfg_types=%x bar=%d offset=%" PRIx32 " length=%" PRIx32 "\n",
-	   vendor_cap.get_cfg_type(), vendor_cap.get_bar_no(),
-           vendor_cap.get_bar_offset(), vendor_cap.get_bar_length());
+    pprintf("cfg_types={#x} bar={} offset={#x} length={#x}\n",
+	    vendor_cap.get_cfg_type(), vendor_cap.get_bar_no(),
+	    vendor_cap.get_bar_offset(), vendor_cap.get_bar_length());
   }
 
   return 0;

@@ -17,7 +17,9 @@ in rec {
 
   riscvPkgs = (import nixpkgs { overlays = [ newlibOverlay ]; }).pkgsCross.riscv64-embedded;
 
-  kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden; };
+  pprintpp = riscvPkgs.callPackage ./nix/pprintpp.nix {};
+
+  kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden pprintpp; };
 
   kernelGcc8 = kernel.override { stdenv = riscvPkgs.gcc8Stdenv; };
 
@@ -42,4 +44,3 @@ in rec {
     qemuBootImage = "${kernel}/qemu-example-hello.elf";
   };
 }
-
