@@ -1,12 +1,9 @@
-let thisPackage = import ./default.nix { };
+{ sources ? import ./nix/sources.nix, nixpkgs ? sources.nixpkgs
+, pkgs ? import nixpkgs { } }:
+
+let thisPackage = import ./default.nix { inherit sources nixpkgs pkgs; };
 in thisPackage.riscvPkgs.mkShell {
   inputsFrom = [ thisPackage.kernel ];
 
-  nativeBuildInputs = with thisPackage; [
-    bootScript
-    dhall
-    pkgs.clang-tools
-    pkgs.niv
-    pkgs.nixfmt
-  ];
+  nativeBuildInputs = pkgs.lib.attrsets.mapAttrsToList (_: v: v) thisPackage.shellDependencies;
 }

@@ -12,36 +12,44 @@ let
     });
   };
 in rec {
-  inherit pkgs;
-  inherit (epoxyHardenSrc) epoxyHarden dhall;
+  riscvPkgs = (import nixpkgs {
+    overlays = [ newlibOverlay ];
+  }).pkgsCross.riscv64-embedded;
 
-  riscvPkgs = (import nixpkgs { overlays = [ newlibOverlay ]; }).pkgsCross.riscv64-embedded;
+  shellDependencies = rec {
+    inherit (epoxyHardenSrc) dhall;
 
-  pprintpp = riscvPkgs.callPackage ./nix/pprintpp.nix {};
-  range-v3 = riscvPkgs.callPackage ./nix/range-v3.nix {};
+    # Use a ncurses-only qemu to reduce closure size.
+    qemuHeadless = pkgs.qemu.override {
+      gtkSupport = false;
+      vncSupport = false;
+      sdlSupport = false;
+      spiceSupport = false;
+      pulseSupport = false;
+      smartcardSupport = false;
+      hostCpuTargets = [ "riscv64-softmmu" ];
+    };
 
-  kernel = riscvPkgs.callPackage ./nix/build.nix { inherit epoxyHarden pprintpp range-v3; };
+    bootScript = pkgs.writeShellScriptBin "boot" ''
+      exec ${qemuHeadless}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio -bios default $*
+    '';
+
+    inherit (pkgs) clang-tools niv nixfmt;
+  };
+
+  dependencies = {
+    inherit (epoxyHardenSrc) epoxyHarden;
+
+    pprintpp = riscvPkgs.callPackage ./nix/pprintpp.nix { };
+    range-v3 = riscvPkgs.callPackage ./nix/range-v3.nix { };
+  };
+
+  kernel = riscvPkgs.callPackage ./nix/build.nix dependencies;
 
   kernelGcc8 = kernel.override { stdenv = riscvPkgs.gcc8Stdenv; };
 
-  # Use a ncurses-only qemu to reduce closure size.
-  qemuHeadless = pkgs.qemu.override {
-    gtkSupport = false;
-    vncSupport = false;
-    sdlSupport = false;
-    spiceSupport = false;
-    pulseSupport = false;
-    smartcardSupport = false;
-    hostCpuTargets = [ "riscv64-softmmu" ];
-  };
-
-  bootScript = pkgs.writeShellScriptBin "boot" ''
-    exec ${qemuHeadless}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio \
-         -bios default $*
-  '';
-
   test = pkgs.callPackage ./nix/test.nix {
-    inherit bootScript;
+    inherit (shellDependencies) bootScript;
     qemuBootImage = "${kernel}/qemu-example-hello.elf";
   };
 }
