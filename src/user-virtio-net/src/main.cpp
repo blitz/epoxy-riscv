@@ -1,7 +1,9 @@
+#include <cassert>
+#include <cinttypes>
+#include <cstdio>
+
 #include <esl/iterators.hpp>
 
-#include "assert.hpp"
-#include "format.hpp"
 #include "pci_device.hpp"
 #include "virtio-spec.hpp"
 
@@ -61,7 +63,7 @@ public:
 
 int main()
 {
-  format("Hello from virtio-io!\n");
+  printf("Hello from virtio-io!\n");
 
   virtio_net_device virtio_net {virtio_net_pci_cfg};
 
@@ -72,8 +74,10 @@ int main()
        esl::transform_range(filtered_cap_list, [](pci_device::pci_cap const &cap) {
          return static_cast<virtio_vendor_pci_cap>(cap);
        })) {
-    format("cfg_type=", vendor_cap.get_cfg_type(), " bar=", vendor_cap.get_bar_no(),
-           " offset=", vendor_cap.get_bar_offset(), " length=", vendor_cap.get_bar_length(), "\n");
+
+    printf("cfg_types=%x bar=%d offset=%" PRIx32 " length=%" PRIx32 "\n",
+	   vendor_cap.get_cfg_type(), vendor_cap.get_bar_no(),
+           vendor_cap.get_bar_offset(), vendor_cap.get_bar_length());
   }
 
   return 0;
