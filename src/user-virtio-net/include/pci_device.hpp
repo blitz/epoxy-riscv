@@ -62,8 +62,8 @@ public:
 
     if (has_cap_list()) {
       for (uint8_t off = get_cap_ptr(); off != 0;) {
-	caps.emplace_back(this, off);
-	off = caps.back().get_next_cap_ptr();
+        caps.emplace_back(this, off);
+        off = caps.back().get_next_cap_ptr();
       }
     }
 

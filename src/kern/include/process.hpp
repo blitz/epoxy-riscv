@@ -1,7 +1,7 @@
 #pragma once
 
-#include "config_types.hpp"
 #include "c_types.hpp"
+#include "config_types.hpp"
 
 class process
 {

@@ -1,26 +1,28 @@
 #pragma once
 
 #include <assert.hpp>
-#include <types.hpp>
 #include <c_types.hpp>
+#include <types.hpp>
 
 // General-purpose registers.
-class gp_regs {
+class gp_regs
+{
 private:
   // Registers are offset by one, i.e. x1 is stored at reg[0].
   mword_t reg[31] {};
 
 public:
-  mword_t &operator[](size_t i) {
+  mword_t &operator[](size_t i)
+  {
     assert(i > 0 and i < 32);
     return reg[i - 1];
   }
 
-  mword_t const &operator[](size_t i) const {
+  mword_t const &operator[](size_t i) const
+  {
     assert(i > 0 and i < 32);
     return reg[i - 1];
   }
-
 };
 
 class exception_frame
@@ -36,10 +38,7 @@ public:
   mword_t a4() const { return regs_[14]; }
 
 protected:
-  explicit constexpr exception_frame(mword_t pc, mword_t sp) : pc_ {pc}
-  {
-    regs_[2] = sp;
-  }
+  explicit constexpr exception_frame(mword_t pc, mword_t sp) : pc_ {pc} { regs_[2] = sp; }
 };
 
 // These offsets are used from assembly (see exc_entry.S).

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "api.hpp"
-#include "types.hpp"
 #include "likely.hpp"
+#include "types.hpp"
 
 class thread;
 class syscall_args;

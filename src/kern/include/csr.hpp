@@ -1,7 +1,7 @@
 #pragma once
 
-#include <types.hpp>
 #include <c_types.hpp>
+#include <types.hpp>
 
 enum class csr : uint16_t {
   SSTATUS = 0x100U,

@@ -41,7 +41,7 @@ public:
   [[noreturn]] void activate();
 
   constexpr thread(process *process, mword_t user_entry, mword_t stack_ptr)
-    : exception_frame {user_entry, stack_ptr}, process_ {process}, state_ {thread_state::RUNNABLE}
+      : exception_frame {user_entry, stack_ptr}, process_ {process}, state_ {thread_state::RUNNABLE}
   {
   }
 };
