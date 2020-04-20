@@ -11,10 +11,18 @@ let
       src = sources.epoxy-newlib;
     });
   };
-in rec {
+
   riscvPkgs = (import nixpkgs {
     overlays = [ newlibOverlay ];
   }).pkgsCross.riscv64-embedded;
+
+  testConfigurations = {
+    "gcc8" = { stdenv = riscvPkgs.gcc8Stdenv; };
+    "gcc9" = { stdenv = riscvPkgs.gcc9Stdenv; };
+  };
+
+in rec {
+  inherit riscvPkgs;
 
   shellDependencies = rec {
     inherit (epoxyHardenSrc) dhall;
@@ -44,12 +52,13 @@ in rec {
     range-v3 = riscvPkgs.callPackage ./nix/range-v3.nix { };
   };
 
-  kernel = riscvPkgs.callPackage ./nix/build.nix dependencies;
+  kernel = let kernelDrv = riscvPkgs.callPackage ./nix/build.nix dependencies;
+  in builtins.mapAttrs (_: overrides: kernelDrv.override overrides)
+  testConfigurations;
 
-  kernelGcc8 = kernel.override { stdenv = riscvPkgs.gcc8Stdenv; };
-
-  test = pkgs.callPackage ./nix/test.nix {
-    inherit (shellDependencies) bootScript;
-    qemuBootImage = "${kernel}/qemu-example-hello.elf";
-  };
+  test = builtins.mapAttrs (_: kernel:
+    pkgs.callPackage ./nix/test.nix {
+      inherit (shellDependencies) bootScript;
+      qemuBootImage = "${kernel}/qemu-example-hello.elf";
+    }) kernel;
 }

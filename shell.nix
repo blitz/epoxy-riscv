@@ -3,7 +3,7 @@
 
 let thisPackage = import ./default.nix { inherit sources nixpkgs pkgs; };
 in thisPackage.riscvPkgs.mkShell {
-  inputsFrom = [ thisPackage.kernel ];
+  inputsFrom = [ thisPackage.kernel.gcc9 ];
 
   nativeBuildInputs = pkgs.lib.attrsets.mapAttrsToList (_: v: v) thisPackage.shellDependencies;
 }
