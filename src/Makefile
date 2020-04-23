@@ -20,16 +20,15 @@ install: qemu-example-hello.elf
 	install -m 0755 $^ $(TARGET)/
 
 COMMON_CFLAGS   = -g -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -march=rv64gc
-COMMON_CFLAGS  += -Wall -Wunused-parameter -fno-asynchronous-unwind-tables
-COMMON_CXXFLAGS = $(COMMON_CFLAGS) -std=c++17
-COMMON_ASFLAGS  = $(COMMON_CFLAGS)
+COMMON_CFLAGS  += -Wall -Wunused-parameter
+COMMON_CXXFLAGS = -std=c++17
 COMMON_LDFLAGS  = -g -flto -static
 
-KERN_CFLAGS := $(COMMON_CFLAGS) -ffreestanding -nostdinc -fno-exceptions
+KERN_CFLAGS := $(COMMON_CFLAGS) -ffreestanding -nostdinc -fno-exceptions -fno-unwind-tables
 USER_CFLAGS := $(COMMON_CFLAGS)
 
 KERN_CXXFLAGS := $(COMMON_CXXFLAGS) $(KERN_CFLAGS) -fno-rtti
-USER_CXXFLAGS := $(COMMON_CXXFLAGS) -Iuser/include
+USER_CXXFLAGS := $(COMMON_CXXFLAGS) $(USER_CFLAGS) -Iuser/include
 
 KERN_LDFLAGS := $(COMMON_LDFLAGS) -nostdlib
 USER_LDFLAGS := $(COMMON_LDFLAGS) -Wl,--gc-sections
