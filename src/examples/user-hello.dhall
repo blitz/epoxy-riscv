@@ -58,7 +58,14 @@ let virtioNetAddressSpace =
           { source =
               SharedMemorySource.NamedSharedMemory
                 { sharedMemKey = "virtio-net pci-cfg" }
-          , vaDestination = 268435456
+          , vaDestination = 0x10000000
+          , permissions = SharedMemoryPermissions.RW
+          }
+      , AddressSpaceElem.SharedMemory
+          { source =
+              SharedMemorySource.NamedSharedMemory
+                { sharedMemKey = "virtio-net bar4" }
+          , vaDestination = 0x11000000
           , permissions = SharedMemoryPermissions.RW
           }
       ]

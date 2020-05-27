@@ -14,7 +14,12 @@ namespace
 // TODO We have to hardcode the virtual addresses here for now. In
 // the future epoxy-harden should generate a nice header with
 // virtual addresses of shared memory regions.
+//
+// See virtioNetAddressSpace in user-hello.dhall.
 auto const virtio_net_pci_cfg {reinterpret_cast<uint32_t volatile *>(0x10000000)};
+
+uint32_t const virtio_net_pci_bar4_phys {0x40000000};
+auto const     virtio_net_bar4 {reinterpret_cast<uint32_t volatile *>(0x11000000)};
 
 class virtio_net_device : public pci_device
 {
@@ -71,6 +76,16 @@ int main()
 
   auto caps {virtio_net.get_caps()};
 
+  // TODO This should be autoconfigured.
+  virtio_net.set_bar(4, virtio_net_pci_bar4_phys);
+
+  // Failure to enable memory decoding leads to load access faults
+  // from the CPU (at least on QEMU).
+  virtio_net.enable_mem_decoding();
+
+  // Allow the device to access memory via DMA.
+  virtio_net.enable_bus_master();
+
   for (auto const vendor_cap : caps | views::filter(virtio_vendor_pci_cap::converts_from) |
                                    views::transform([](pci_device::pci_cap const &cap) {
                                      return static_cast<virtio_vendor_pci_cap>(cap);
@@ -78,6 +93,10 @@ int main()
     pprintf("cfg_types={#x} bar={} offset={#x} length={#x}\n", vendor_cap.get_cfg_type(),
             vendor_cap.get_bar_no(), vendor_cap.get_bar_offset(), vendor_cap.get_bar_length());
   }
+
+  // XXX This shouldn't be hardcoded.
+  pprintf("features {#x}\n", reinterpret_cast<virtio::pci_common_cfg volatile *>(virtio_net_bar4)->device_feature);
+  pprintf("queues   {#x}\n", reinterpret_cast<virtio::pci_common_cfg volatile *>(virtio_net_bar4)->num_queues);
 
   return 0;
 }

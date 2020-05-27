@@ -28,11 +28,19 @@ let virtioNetRid
     : RID
     = { bus = 0, device = 1, function = 0 }
 
+let virtioNetBar4Base = 0x40000000
+
+let virtioNetBar4Size = 0x00010000
+
 in  { memoryMap =
       [ { baseAddress = 0x80200000
         , memoryLength = 0x2000000
         , memoryType = MemoryType.Available
         }
       , cfgSpaceEntry virtioNetRid "virtio-net pci-cfg"
+      , { baseAddress = virtioNetBar4Base
+        , memoryLength = virtioNetBar4Size
+        , memoryType = MemoryType.Device { key = "virtio-net bar4" }
+        }
       ]
     }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -22,6 +23,28 @@ public:
     assert((byte_offset & (sizeof(uint32_t) - 1)) == 0);
 
     return u32_cfg_[byte_offset / sizeof(uint32_t)];
+  }
+
+  uint32_t get_bar(uint8_t bar_no) const
+  {
+    assert(bar_no < 6);
+    return u32_cfg_[4 + bar_no];
+  }
+
+  void set_bar(uint8_t bar_no, uint32_t val)
+  {
+    assert(bar_no < 6);
+    u32_cfg_[4 + bar_no] = val;
+  }
+
+  void enable_mem_decoding()
+  {
+    u8_cfg_[4] |= (1U << 1);
+  }
+
+  void enable_bus_master()
+  {
+    u8_cfg_[4] |= (1U << 2);
   }
 
   uint32_t get_vendor_device_id() const { return u32_cfg_[0]; }
