@@ -12,12 +12,10 @@ To run (with qemu >= 4.1):
 
 ```
 % qemu-system-riscv64 -M virt -m 256M -serial stdio \
-     -bios default -device loader,file=result/kernel,addr=0x80200000
+     -bios default -device loader,file=result/kernel
 # Or if lorri/direnv is available:
-% boot -device loader,file=result/kernel,addr=0x80200000
+% boot -device loader,file=result/kernel
 ```
-
-The `addr=` parameter must equal the entry point of the kernel.
 
 # Resources
 
