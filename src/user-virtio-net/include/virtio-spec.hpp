@@ -131,4 +131,11 @@ struct pci_common_cfg {
   le64 queue_device;
 };
 
+struct virtio_net_config {
+  u8 mac[6];
+  le16 status;
+  le16 max_virtqueue_pairs;
+  le16 mtu;
+};
+
 }  // namespace virtio

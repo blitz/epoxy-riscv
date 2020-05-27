@@ -98,5 +98,11 @@ int main()
   pprintf("features {#x}\n", reinterpret_cast<virtio::pci_common_cfg volatile *>(virtio_net_bar4)->device_feature);
   pprintf("queues   {#x}\n", reinterpret_cast<virtio::pci_common_cfg volatile *>(virtio_net_bar4)->num_queues);
 
+  pprintf("mac     ");
+  for (auto mac_octet : reinterpret_cast<virtio::virtio_net_config volatile *>(virtio_net_bar4 + 0x2000/4)->mac) {
+    pprintf(" {02x}", mac_octet)
+  }
+  pprintf("\n");
+
   return 0;
 }
