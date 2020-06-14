@@ -37,15 +37,9 @@ public:
     u32_cfg_[4 + bar_no] = val;
   }
 
-  void enable_mem_decoding()
-  {
-    u8_cfg_[4] |= (1U << 1);
-  }
+  void enable_mem_decoding() { u8_cfg_[4] |= (1U << 1); }
 
-  void enable_bus_master()
-  {
-    u8_cfg_[4] |= (1U << 2);
-  }
+  void enable_bus_master() { u8_cfg_[4] |= (1U << 2); }
 
   uint32_t get_vendor_device_id() const { return u32_cfg_[0]; }
   uint16_t get_status() const { return u16_cfg_[3]; }

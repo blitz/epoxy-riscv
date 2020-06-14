@@ -19,7 +19,7 @@ namespace
 auto const virtio_net_pci_cfg {reinterpret_cast<uint32_t volatile *>(0x10000000)};
 
 uint32_t const virtio_net_pci_bar4_phys {0x40000000};
-auto const     virtio_net_bar4 {reinterpret_cast<uint32_t volatile *>(0x11000000)};
+auto const virtio_net_bar4 {reinterpret_cast<uint32_t volatile *>(0x11000000)};
 
 class virtio_net_device : public pci_device
 {
@@ -95,11 +95,14 @@ int main()
   }
 
   // XXX This shouldn't be hardcoded.
-  pprintf("features {#x}\n", reinterpret_cast<virtio::pci_common_cfg volatile *>(virtio_net_bar4)->device_feature);
-  pprintf("queues   {#x}\n", reinterpret_cast<virtio::pci_common_cfg volatile *>(virtio_net_bar4)->num_queues);
+  pprintf("features {#x}\n",
+          reinterpret_cast<virtio::pci_common_cfg volatile *>(virtio_net_bar4)->device_feature);
+  pprintf("queues   {#x}\n",
+          reinterpret_cast<virtio::pci_common_cfg volatile *>(virtio_net_bar4)->num_queues);
 
   pprintf("mac     ");
-  for (auto mac_octet : reinterpret_cast<virtio::virtio_net_config volatile *>(virtio_net_bar4 + 0x2000/4)->mac) {
+  for (auto mac_octet :
+       reinterpret_cast<virtio::virtio_net_config volatile *>(virtio_net_bar4 + 0x2000 / 4)->mac) {
     pprintf(" {02x}", mac_octet)
   }
   pprintf("\n");
