@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstdio>
 #include <iomanip>
+#include <numeric>
 #include <optional>
 #include <pprintpp/pprintpp.hpp>
 #include <range/v3/view/filter.hpp>
@@ -24,6 +25,14 @@ auto const virtio_net_pci_cfg {reinterpret_cast<uint32_t volatile *>(0x10000000)
 
 uint32_t const virtio_net_pci_bar4_phys {0x40000000};
 auto const virtio_net_bar4 {reinterpret_cast<uint32_t volatile *>(0x11000000)};
+
+template <typename CONTAINER>
+uint64_t bits_to_word(CONTAINER bits)
+{
+  return std::accumulate(
+      std::begin(bits), std::end(bits), static_cast<uint64_t>(0),
+      [](uint64_t accum, int bit) { return accum | (static_cast<uint64_t>(1) << bit); });
+}
 
 struct mac_address {
   std::array<uint8_t, 6> raw {};
@@ -100,6 +109,8 @@ private:
     enable_mem_decoding();
   }
 
+  // Finds the first PCI virtio vendor capability that matches the
+  // given type.
   std::optional<virtio_vendor_pci_cap> find_mmio_region(virtio::pci_vendor_cap_type type)
   {
     using namespace ranges;
@@ -149,6 +160,48 @@ private:
 
   mac_address get_mac() const { return mmio_net_config->mac; }
 
+  uint64_t get_device_features() const
+  {
+    uint32_t lo, hi;
+
+    mmio_pci_common->device_feature_select = 0;
+    lo = mmio_pci_common->device_feature;
+
+    mmio_pci_common->device_feature_select = 1;
+    hi = mmio_pci_common->device_feature;
+
+    return static_cast<uint64_t>(hi) << 32 | lo;
+  }
+
+  void set_driver_features(uint64_t driver_features)
+  {
+    mmio_pci_common->driver_feature_select = 0;
+    mmio_pci_common->driver_feature = static_cast<uint32_t>(driver_features);
+
+    mmio_pci_common->driver_feature_select = 1;
+    mmio_pci_common->driver_feature = static_cast<uint32_t>(driver_features >> 32);
+  }
+
+  void negotiate_features()
+  {
+    auto const device_features {get_device_features()};
+    auto required_features {bits_to_word(std::initializer_list {virtio::VIRTIO_F_VERSION_1})};
+
+    if ((device_features & required_features) != required_features) {
+      pprintf("Missing required features: {x} vs {x}\n", device_features, required_features);
+      abort();
+    }
+
+    set_driver_features(required_features);
+
+    mmio_pci_common->device_status |= virtio::FEATURES_OK;
+
+    if (not(mmio_pci_common->device_status & virtio::FEATURES_OK)) {
+      pprintf("Device did not accept our feature selection.\n");
+      abort();
+    }
+  }
+
 public:
   void print_device_info()
   {
@@ -163,10 +216,20 @@ public:
     // desaster fail-safe when you configured the system wrong.
     assert(get_vendor_device_id() == VIRTIO_NET_ID);
 
+    mmio_pci_common->device_status |= virtio::ACKNOWLEDGE;
+
     initialize_bars();
     discover_mmio_regions();
 
     enable_bus_master();  // Allow the device to access memory via DMA.
+
+    mmio_pci_common->device_status |= virtio::DRIVER;
+
+    negotiate_features();
+
+    // TODO: Setup queues
+
+    mmio_pci_common->device_status |= virtio::DRIVER_OK;
   }
 };
 
