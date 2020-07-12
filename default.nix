@@ -19,6 +19,7 @@ let
   testConfigurations = {
     "gcc8" = { stdenv = riscvPkgs.gcc8Stdenv; };
     "gcc9" = { stdenv = riscvPkgs.gcc9Stdenv; };
+    "gcc10" = { stdenv = riscvPkgs.gcc10Stdenv; };
   };
 
 in rec {
