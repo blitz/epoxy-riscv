@@ -159,4 +159,67 @@ struct virtio_net_config {
   le16 mtu;
 };
 
+enum virtq_desc_flags : le16 {
+  /* This marks a buffer as continuing via the next field. */
+  VIRTQ_DESC_F_NEXT = 1,
+  /* This marks a buffer as device write-only (otherwise device read-only). */
+  VIRTQ_DESC_F_WRITE = 2,
+  /* This means the buffer contains a list of buffer descriptors. */
+  VIRTQ_DESC_F_INDIRECT = 4,
+};
+
+struct virtq_desc {
+  /* Address (guest-physical). */
+  le64 addr;
+  /* Length. */
+  le32 len;
+
+  /* The flags as indicated in virtq_desc_flags. */
+  le16 flags;
+  /* Next field if flags & NEXT */
+  le16 next;
+};
+
+enum virtq_avail_flags : le16 {
+  VIRTQ_AVAIL_F_NO_INTERRUPT = 1,
+};
+
+template <size_t QUEUE_SIZE>
+struct virtq_avail {
+  le16 flags;
+  le16 idx;
+  le16 ring[QUEUE_SIZE];
+};
+
+enum virtq_used_flags {
+  VIRTQ_USED_F_NO_NOTIFY = 1,
+};
+
+/* le32 is used here for ids for padding reasons. */
+struct virtq_used_elem {
+  /* Index of start of used descriptor chain. */
+  le32 id;
+  /* Total length of the descriptor chain which was used (written to) */
+  le32 len;
+};
+
+template <size_t QUEUE_SIZE>
+struct virtq_used {
+  le16 flags;
+  le16 idx;
+  struct virtq_used_elem ring[QUEUE_SIZE];
+};
+
+template <size_t QUEUE_SIZE>
+struct virtq {
+  // The actual descriptors (16 bytes each)
+  alignas(16) struct virtq_desc desc[QUEUE_SIZE];
+
+  // A ring of available descriptor heads with free-running index.
+  alignas(2) struct virtq_avail<QUEUE_SIZE> avail;
+
+  // A ring of used descriptor heads with free-running index.
+  alignas(4) struct virtq_used<QUEUE_SIZE> used;
+};
+
 }  // namespace virtio
