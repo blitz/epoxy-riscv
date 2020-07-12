@@ -109,6 +109,27 @@ enum pci_vendor_cap_type : u8 {
   PCI_CAP_PCI_CFG = 5,
 };
 
+enum status : u8 {
+  ACKNOWLEDGE = 1,
+  DRIVER = 2,
+  FAILED = 128,
+  FEATURES_OK = 8,
+  DRIVER_OK = 4,
+  DEVICE_NEEDS_RESET = 64,
+};
+
+enum features : int {
+  VIRTIO_F_RING_INDIRECT_DESC = 28,
+  VIRTIO_F_RING_EVENT_IDX = 29,
+  VIRTIO_F_VERSION_1 = 32,
+  VIRTIO_F_ACCESS_PLATFORM = 33,
+  VIRTIO_F_RING_PACKED = 34,
+  VIRTIO_F_IN_ORDER = 35,
+  VIRTIO_F_ORDER_PLATFORM = 36,
+  VIRTIO_F_SR_IOV = 37,
+  VIRTIO_F_NOTIFICATION_DATA = 38,
+};
+
 struct pci_common_cfg {
   /* About the whole device. */
   le32 device_feature_select;
