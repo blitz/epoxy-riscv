@@ -5,7 +5,7 @@
 To build:
 
 ```
-% nix build -f . kernel
+% nix build -f . kernel.gcc9
 ```
 
 To run (with qemu >= 4.1):
