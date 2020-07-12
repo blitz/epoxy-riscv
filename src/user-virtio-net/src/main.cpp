@@ -216,18 +216,22 @@ public:
     // desaster fail-safe when you configured the system wrong.
     assert(get_vendor_device_id() == VIRTIO_NET_ID);
 
-    mmio_pci_common->device_status |= virtio::ACKNOWLEDGE;
-
     initialize_bars();
     discover_mmio_regions();
-
     enable_bus_master();  // Allow the device to access memory via DMA.
 
-    mmio_pci_common->device_status |= virtio::DRIVER;
+    mmio_pci_common->device_status |= virtio::ACKNOWLEDGE | virtio::DRIVER;
 
     negotiate_features();
 
     // TODO: Setup queues
+    size_t nqueues = mmio_pci_common->num_queues;
+    for (size_t i = 0; i < nqueues; i++) {
+      mmio_pci_common->queue_select = i;
+
+      auto size {mmio_pci_common->queue_size};
+      pprintf("queue{}: max_size={}\n", i, size);
+    }
 
     mmio_pci_common->device_status |= virtio::DRIVER_OK;
   }
