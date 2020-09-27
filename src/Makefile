@@ -20,8 +20,7 @@ install: qemu-example-hello.elf
 	install -m 0755 $^ $(TARGET)/
 
 COMMON_CFLAGS   = -g -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -march=rv64gc
-COMMON_CFLAGS  += -Wall -Wunused-parameter
-COMMON_CXXFLAGS = -std=c++17
+COMMON_CXXFLAGS = -std=c++17 -Wall -Wunused-parameter
 COMMON_LDFLAGS  = -g -flto -static
 
 KERN_CFLAGS := $(COMMON_CFLAGS) -ffreestanding -nostdinc -fno-exceptions -fno-unwind-tables
@@ -47,6 +46,9 @@ USER_LDFLAGS := $(COMMON_LDFLAGS) -Wl,--gc-sections
 	$(CPP) $(USER_CFLAGS) -c -o $@ -P -E -x c $<
 
 %.user.o: %.S
+	$(CC) $(USER_CFLAGS) -c -o $@ $<
+
+%.user.o: %.c
 	$(CC) $(USER_CFLAGS) -c -o $@ $<
 
 %.user.o: %.cpp
@@ -97,11 +99,18 @@ USER_HELLO_OBJ := $(USER_OBJ) $(addsuffix .user.o, $(addprefix user-hello/src/, 
 hello.user.elf: $(USER_HELLO_OBJ)
 hello.user.elf: USER_CXXFLAGS += -Iuser-hello/include
 
+# UIP
+UIP_CFLAGS := -Iuser-uip/include -Iuser-uip/src/uip -Iuser-uip/src/apps/hello-world
+USER_UIP_OBJ := $(addsuffix .user.o, \
+                  $(addprefix user-uip/src/uip/, psock timer uip_arp uip uip-fw uiplib uip-neighbor uip-split) \
+                  $(addprefix user-uip/src/apps/hello-world/, hello-world))
+
 # Virtio-net application
-USER_VIRTIO_NET_OBJ := $(USER_OBJ) $(addsuffix .user.o, $(addprefix user-virtio-net/src/, main))
+USER_VIRTIO_NET_OBJ := $(USER_OBJ) $(USER_UIP_OBJ) $(addsuffix .user.o, $(addprefix user-virtio-net/src/, main))
 
 virtio-net.user.elf: $(USER_VIRTIO_NET_OBJ)
 virtio-net.user.elf: USER_CXXFLAGS += -Iuser-virtio-net/include
+virtio-net.user.elf: USER_CFLAGS += $(UIP_CFLAGS)
 
 # Booting convenience
 qemu-example-hello.elf: $(BINARIES) $(MACHINE_DESC) $(APPLICATION_DESC)
@@ -118,3 +127,5 @@ qemu-boot-hello: qemu-example-hello.elf
 -include user/src/*.d
 -include user-hello/src/*.d
 -include user-virtio-net/src/*.d
+-include user-uip/src/uip/*.d
+-include user-uip/src/apps/*/*.d

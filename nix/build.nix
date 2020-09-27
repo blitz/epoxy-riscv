@@ -19,6 +19,6 @@ stdenv.mkDerivation {
 
   inherit src;
 
-  makeFlags = [ "TARGET=$(out)"];
+  makeFlags = [ "TARGET=$(out)" ];
   hardeningDisable = [ "all" ];
 }
