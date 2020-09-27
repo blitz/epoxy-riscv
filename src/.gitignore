@@ -1,0 +1,7 @@
+*.elf
+*.bin
+*.d
+*.o
+/kern/include/state.hpp
+/kern/src/state.cpp
+/kern/src/state.dummy

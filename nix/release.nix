@@ -22,6 +22,9 @@ let
     "gcc10" = { stdenv = riscvPkgs.gcc10Stdenv; };
   };
 
+  gitignoreSource = (import sources.gitignore { inherit (pkgs) lib; }).gitignoreSource;
+  cleanSrc = gitignoreSource ../src;
+
 in rec {
   inherit riscvPkgs;
 
@@ -54,6 +57,8 @@ in rec {
 
     pprintpp = riscvPkgs.callPackage ./pprintpp.nix { };
     range-v3 = riscvPkgs.callPackage ./range-v3.nix { };
+
+    src = cleanSrc;
   };
 
   kernel = let kernelDrv = riscvPkgs.callPackage ./build.nix dependencies;

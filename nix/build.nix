@@ -1,4 +1,4 @@
-{ stdenv, dhall-json, epoxyHarden, pprintpp, range-v3 }:
+{ stdenv, dhall-json, epoxyHarden, pprintpp, range-v3, src }:
 
 stdenv.mkDerivation {
   pname = "epoxy";
@@ -17,7 +17,7 @@ stdenv.mkDerivation {
   dontPatchELF = true;
   dontStrip = true;
 
-  src = ../src;
+  inherit src;
 
   makeFlags = [ "TARGET=$(out)"];
   hardeningDisable = [ "all" ];
