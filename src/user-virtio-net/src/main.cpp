@@ -1,3 +1,4 @@
+#include <array>
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -5,12 +6,17 @@
 #include <numeric>
 #include <optional>
 #include <pprintpp/pprintpp.hpp>
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/filter.hpp>
+#include <range/v3/view/generate.hpp>
+#include <range/v3/view/iota.hpp>
+#include <range/v3/view/take.hpp>
 #include <range/v3/view/transform.hpp>
 #include <sstream>
 
 #include "pci_device.hpp"
 #include "virtio-spec.hpp"
+#include "vring.hpp"
 
 extern "C" int main();
 
@@ -301,6 +307,10 @@ private:
   rx_virtq *rx;
   tx_virtq *tx;
 
+  vring<rx_virtq::queue_size> rx_ring {rx};
+
+  using packet_buffer = std::array<uint8_t, 2048>;
+
 public:
   void print_device_info()
   {
@@ -350,6 +360,13 @@ public:
     setup_queue(tx_queue_no, tx);
 
     mmio_pci_common->device_status |= virtio::DRIVER_OK;
+
+    // Populate the receive queue with buffers.
+    for (packet_buffer *packet :
+         (ranges::views::generate([dma_alloc] { return dma_alloc->allocate<packet_buffer>(); }) |
+          ranges::views::take(rx_virtq::queue_size - 1))) {
+      rx_ring.add_buf({packet->data(), static_cast<uint32_t>(packet->size())});
+    }
   }
 };
 

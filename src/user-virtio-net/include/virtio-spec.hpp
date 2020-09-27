@@ -212,6 +212,8 @@ struct virtq_used {
 
 template <size_t QUEUE_SIZE>
 struct virtq {
+  static constexpr size_t queue_size {QUEUE_SIZE};
+
   // The actual descriptors (16 bytes each)
   alignas(16) struct virtq_desc desc[QUEUE_SIZE];
 
