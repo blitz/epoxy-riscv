@@ -1,7 +1,7 @@
 { sources ? import ./nix/sources.nix, nixpkgs ? sources.nixpkgs
 , pkgs ? import nixpkgs { } }:
 
-let thisPackage = import ./default.nix { inherit sources nixpkgs pkgs; };
+let thisPackage = import ./nix/release.nix { inherit sources nixpkgs pkgs; };
 in thisPackage.riscvPkgs.mkShell {
   inputsFrom = [ thisPackage.kernel.gcc10 ];
 
