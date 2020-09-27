@@ -102,14 +102,14 @@ hello.user.elf: USER_CXXFLAGS += -Iuser-hello/include
 # UIP
 UIP_CFLAGS := -Iuser-uip/include -Iuser-uip/src/uip -Iuser-uip/src/apps/hello-world
 USER_UIP_OBJ := $(addsuffix .user.o, \
-                  $(addprefix user-uip/src/uip/, psock timer uip_arp uip uip-fw uiplib uip-neighbor uip-split) \
+                  $(addprefix user-uip/src/uip/, psock timer uip_arp uip uiplib) \
                   $(addprefix user-uip/src/apps/hello-world/, hello-world))
 
 # Virtio-net application
 USER_VIRTIO_NET_OBJ := $(USER_OBJ) $(USER_UIP_OBJ) $(addsuffix .user.o, $(addprefix user-virtio-net/src/, main))
 
 virtio-net.user.elf: $(USER_VIRTIO_NET_OBJ)
-virtio-net.user.elf: USER_CXXFLAGS += -Iuser-virtio-net/include
+virtio-net.user.elf: USER_CXXFLAGS += -Iuser-virtio-net/include $(UIP_CFLAGS)
 virtio-net.user.elf: USER_CFLAGS += $(UIP_CFLAGS)
 
 # Booting convenience

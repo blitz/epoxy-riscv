@@ -372,6 +372,10 @@ public:
 
 }  // anonymous namespace
 
+extern "C" {
+#include <uip.h>
+}
+
 int main()
 {
   using namespace ranges;
@@ -383,7 +387,25 @@ int main()
   static virtio_net_device virtio_net {virtio_net_pci_cfg, &dma_allocator};
   virtio_net.print_device_info();
 
-  // TODO Set up DMA queues.
+  pprintf("Initializing uIP...\n");
+
+  uip_init();
+
+  uip_ipaddr_t ipaddr;
+
+  uip_ipaddr(ipaddr, 192, 168, 0, 2);
+  uip_sethostaddr(ipaddr);
+
+  uip_ipaddr(ipaddr, 192, 168, 0, 1);
+  uip_setdraddr(ipaddr);
+
+  uip_ipaddr(ipaddr, 255, 255, 255, 0);
+  uip_setnetmask(ipaddr);
+
+  hello_world_init();
+
+  // TODO Implement me
+  // pprintf("Starting packet loop.\n");
 
   return 0;
 }
