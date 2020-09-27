@@ -68,6 +68,13 @@ let virtioNetAddressSpace =
           , vaDestination = 0x11000000
           , permissions = SharedMemoryPermissions.RW
           }
+      , AddressSpaceElem.SharedMemory
+          { source =
+              SharedMemorySource.NamedSharedMemory
+                { sharedMemKey = "virtio-net dma buffer" }
+          , vaDestination = 0x82200000
+          , permissions = SharedMemoryPermissions.RW
+          }
       ]
 
 in    { kobjects =

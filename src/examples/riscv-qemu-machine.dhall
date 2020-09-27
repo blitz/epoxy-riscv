@@ -37,6 +37,10 @@ in  { memoryMap =
         , memoryLength = 0x2000000
         , memoryType = MemoryType.Available
         }
+      , { baseAddress = 0x82200000
+        , memoryLength = 0x100000
+        , memoryType = MemoryType.Device { key = "virtio-net dma buffer" }
+        }
       , cfgSpaceEntry virtioNetRid "virtio-net pci-cfg"
       , { baseAddress = virtioNetBar4Base
         , memoryLength = virtioNetBar4Size

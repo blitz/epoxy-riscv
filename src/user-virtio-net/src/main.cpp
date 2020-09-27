@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdio>
+#include <cstring>
 #include <iomanip>
 #include <numeric>
 #include <optional>
@@ -7,7 +8,6 @@
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/transform.hpp>
 #include <sstream>
-#include <string>
 
 #include "pci_device.hpp"
 #include "virtio-spec.hpp"
@@ -25,6 +25,74 @@ auto const virtio_net_pci_cfg {reinterpret_cast<uint32_t volatile *>(0x10000000)
 
 uint32_t const virtio_net_pci_bar4_phys {0x40000000};
 auto const virtio_net_bar4 {reinterpret_cast<uint32_t volatile *>(0x11000000)};
+
+// See user-hello.dhall for this. These are identity mapped DMA buffers.
+uint32_t const virtio_net_dma_phys {0x82200000};
+size_t const virtio_net_dma_len {0x100000};
+void *const virtio_net_dma_virt {reinterpret_cast<void *>(virtio_net_dma_phys)};
+
+bool is_power_of_two(uint64_t x)
+{
+  return x == 0 ? false : ((x & (x - 1)) == 0);
+}
+
+// A simple bump-pointer allocator for DMA-able memory.
+class dma_allocator
+{
+  uintptr_t const start_phys;
+  size_t const dma_length;
+
+  // The position of free memory.
+  size_t cur {0};
+
+  void align_to(size_t alignment)
+  {
+    assert(is_power_of_two(alignment));
+
+    size_t mask = alignment - 1;
+
+    // We could handle misaligned DMA areas, but currently we don't.
+    assert((start_phys & mask) == 0);
+
+    cur = (cur + mask) & ~mask;
+
+    if (cur >= dma_length) {
+      pprintf("Ran out of DMA space!");
+      abort();
+    }
+  }
+
+  // Allocate zero-initialized memory.
+  void *allocate(size_t length, size_t alignment)
+  {
+    align_to(alignment);
+
+    void *ptr = reinterpret_cast<void *>(start_phys + cur);
+    cur += length;
+
+    if (cur >= dma_length) {
+      pprintf("Not enough DMA memory left to satisfy allocation of {} bytes.\n", length);
+      abort();
+    }
+
+    memset(ptr, 0, length);
+    return ptr;
+  }
+
+public:
+  // Allocate backing store for a DMA-able data structure.
+  template <typename T>
+  T *allocate()
+  {
+    return new (reinterpret_cast<void *>(allocate(sizeof(T), alignof(T)))) T;
+  }
+
+  dma_allocator(uintptr_t dma_start_phys, void *dma_start_virt, size_t length)
+      : start_phys {dma_start_phys}, dma_length {length}
+  {
+    assert(dma_start_phys == reinterpret_cast<uintptr_t>(dma_start_virt));
+  }
+};
 
 template <typename CONTAINER>
 uint64_t bits_to_word(CONTAINER bits)
@@ -202,6 +270,37 @@ private:
     }
   }
 
+  template <size_t QUEUE_SIZE>
+  void setup_queue(size_t queue_no, virtio::virtq<QUEUE_SIZE> *vq)
+  {
+    assert(queue_no < mmio_pci_common->num_queues);
+
+    mmio_pci_common->queue_select = queue_no;
+
+    if (mmio_pci_common->queue_size < QUEUE_SIZE) {
+      pprintf("Trying to setup queue {} with size {}, but it only supports {} elements.\n",
+              queue_no, QUEUE_SIZE, mmio_pci_common->queue_size);
+      abort();
+    }
+
+    mmio_pci_common->queue_size = QUEUE_SIZE;
+
+    // TODO We assume 1:1 mapping of the DMA area.
+    mmio_pci_common->queue_desc = reinterpret_cast<uintptr_t>(&vq->desc);
+    mmio_pci_common->queue_driver = reinterpret_cast<uintptr_t>(&vq->avail);
+    mmio_pci_common->queue_device = reinterpret_cast<uintptr_t>(&vq->used);
+
+    pprintf("Enabling queue{}: vq={}\n", queue_no, vq);
+
+    mmio_pci_common->queue_enable = 1;
+  }
+
+  using rx_virtq = virtio::virtq<32>;
+  using tx_virtq = virtio::virtq<32>;
+
+  rx_virtq *rx;
+  tx_virtq *tx;
+
 public:
   void print_device_info()
   {
@@ -209,7 +308,10 @@ public:
             mmio_pci_common->device_feature, mmio_pci_common->num_queues);
   }
 
-  virtio_net_device(uint32_t volatile *cfg_space) : pci_device {cfg_space}
+  virtio_net_device(uint32_t volatile *cfg_space, dma_allocator *dma_alloc)
+      : pci_device {cfg_space},
+        rx {dma_alloc->allocate<rx_virtq>()},
+        tx {dma_alloc->allocate<tx_virtq>()}
   {
     // This is only an assertion, because we are guaranteed that we
     // get a correct device by construction. The assertion is just a
@@ -224,14 +326,28 @@ public:
 
     negotiate_features();
 
-    // TODO: Setup queues
+    // Queue Setup
     size_t nqueues = mmio_pci_common->num_queues;
+    if (nqueues < 3) {
+      pprintf("virtio device has too few queues ({}) to be a network device?\n", nqueues);
+      abort();
+    }
+
+    // Dump some queue statistics.
     for (size_t i = 0; i < nqueues; i++) {
       mmio_pci_common->queue_select = i;
 
       auto size {mmio_pci_common->queue_size};
       pprintf("queue{}: max_size={}\n", i, size);
     }
+
+    // Start configuring queues.
+    size_t const rx_queue_no = 0;
+    size_t const tx_queue_no = 1;
+    // size_t const ctrl_queue_no = nqueues - 1;
+
+    setup_queue(rx_queue_no, rx);
+    setup_queue(tx_queue_no, tx);
 
     mmio_pci_common->device_status |= virtio::DRIVER_OK;
   }
@@ -245,7 +361,9 @@ int main()
 
   pprintf("Hello from virtio-io!\n");
 
-  virtio_net_device virtio_net {virtio_net_pci_cfg};
+  static dma_allocator dma_allocator {virtio_net_dma_phys, virtio_net_dma_virt, virtio_net_dma_len};
+
+  static virtio_net_device virtio_net {virtio_net_pci_cfg, &dma_allocator};
   virtio_net.print_device_info();
 
   // TODO Set up DMA queues.
