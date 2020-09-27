@@ -6,4 +6,5 @@ in thisPackage.riscvPkgs.mkShell {
   inputsFrom = [ thisPackage.kernel.gcc10 ];
 
   nativeBuildInputs = pkgs.lib.attrsets.mapAttrsToList (_: v: v) thisPackage.shellDependencies;
+  buildInputs = [ pkgs.niv ];
 }
