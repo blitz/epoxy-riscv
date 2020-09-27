@@ -3,7 +3,7 @@
 
 let
   lib = pkgs.lib;
-  epoxyHardenSrc = import sources.epoxy-harden { };
+  epoxyHardenSrc = import "${sources.epoxy-harden}/nix/ci.nix";
 
   newlibOverlay = self: super: {
     newlibCross = super.newlibCross.overrideAttrs (attrs: {
@@ -53,7 +53,7 @@ in rec {
   };
 
   dependencies = {
-    inherit (epoxyHardenSrc) epoxyHarden;
+    inherit (epoxyHardenSrc) epoxy-harden;
 
     pprintpp = riscvPkgs.callPackage ./pprintpp.nix { };
     range-v3 = riscvPkgs.callPackage ./range-v3.nix { };

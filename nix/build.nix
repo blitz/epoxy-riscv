@@ -1,11 +1,11 @@
-{ stdenv, dhall-json, epoxyHarden, pprintpp, range-v3, src }:
+{ stdenv, dhall-json, epoxy-harden, pprintpp, range-v3, src }:
 
 stdenv.mkDerivation {
   pname = "epoxy";
   version = "0.0.0";
 
   nativeBuildInputs = [
-    epoxyHarden
+    epoxy-harden
     dhall-json
   ];
 
