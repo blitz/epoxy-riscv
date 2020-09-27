@@ -29,7 +29,7 @@ in rec {
     inherit (epoxyHardenSrc) dhall;
 
     # Use a ncurses-only qemu to reduce closure size.
-    qemuHeadless = pkgs.qemu.override {
+    qemuHeadless = (pkgs.qemu.override {
       gtkSupport = false;
       vncSupport = false;
       sdlSupport = false;
@@ -37,7 +37,10 @@ in rec {
       pulseSupport = false;
       smartcardSupport = false;
       hostCpuTargets = [ "riscv64-softmmu" ];
-    };
+    }).overrideAttrs (old : {
+      # Fix a bug that the SBI triggers. This should be fixed after 5.1.0.
+      patches = old.patches ++ [ ./nix/0001-riscv-sifive_test-Allow-16-bit-writes-to-memory-regi.patch ];
+    });
 
     bootScript = pkgs.writeShellScriptBin "boot" ''
       exec ${qemuHeadless}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio -bios default $*
