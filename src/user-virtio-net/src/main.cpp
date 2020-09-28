@@ -365,7 +365,8 @@ public:
     for (packet_buffer *packet :
          (ranges::views::generate([dma_alloc] { return dma_alloc->allocate<packet_buffer>(); }) |
           ranges::views::take(rx_virtq::queue_size - 1))) {
-      rx_ring.add_buf({packet->data(), static_cast<uint32_t>(packet->size())});
+      rx_ring.add_buf({packet->data(), static_cast<uint32_t>(packet->size())},
+                      virtio::VIRTQ_DESC_F_WRITE);
     }
   }
 };
@@ -393,10 +394,12 @@ int main()
 
   uip_ipaddr_t ipaddr;
 
-  uip_ipaddr(ipaddr, 192, 168, 0, 2);
+  // The 10.0.2.x addresses are Qemu's default (see -netdev user).
+  uip_ipaddr(ipaddr, 10, 0, 2, 4);
   uip_sethostaddr(ipaddr);
 
-  uip_ipaddr(ipaddr, 192, 168, 0, 1);
+  // The default router. This is also the Qemu default.
+  uip_ipaddr(ipaddr, 10, 0, 2, 2);
   uip_setdraddr(ipaddr);
 
   uip_ipaddr(ipaddr, 255, 255, 255, 0);
