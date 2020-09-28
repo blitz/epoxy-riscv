@@ -224,4 +224,29 @@ struct virtq {
   alignas(4) struct virtq_used<QUEUE_SIZE> used;
 };
 
+// Virtio-net definitions
+
+enum : u8 {
+  VIRTIO_NET_HDR_F_NEEDS_CSUM = 1,
+  VIRTIO_NET_HDR_F_DATA_VALID = 2,
+  VIRTIO_NET_HDR_F_RSC_INFO = 4,
+};
+
+enum : u8 {
+  VIRTIO_NET_HDR_GSO_NONE = 0,
+  VIRTIO_NET_HDR_GSO_TCPV4 = 1,
+  VIRTIO_NET_HDR_GSO_UDP = 3,
+  VIRTIO_NET_HDR_GSO_TCPV6 = 4,
+  VIRTIO_NET_HDR_GSO_ECN = 0x80,
+};
+
+struct virtio_net_hdr {
+  u8 flags;
+  u8 gso_type;
+  le16 hdr_len;
+  le16 gso_size;
+  le16 csum_start;
+  le16 csum_offset;
+  le16 num_buffers;
+};
 }  // namespace virtio
