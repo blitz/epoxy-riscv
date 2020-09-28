@@ -87,9 +87,9 @@ typedef unsigned short uip_stats_t;
 /* Here we include the header file for the application(s) we use in
    our project. */
 /*#include "smtp.h"*/
-#include "hello-world.h"
+/*#include "hello-world.h"*/
 /*#include "telnetd.h"*/
-/*#include "webserver.h"*/
+#include "webserver.h"
 /*#include "dhcpc.h"*/
 /*#include "resolv.h"*/
 /*#include "webclient.h"*/

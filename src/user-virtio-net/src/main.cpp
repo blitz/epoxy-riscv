@@ -461,6 +461,13 @@ public:
 
 extern "C" {
 #include <uip.h>
+#include <uip_arp.h>
+#include <uipopt.h>
+}
+
+void uip_log(char *msg)
+{
+  pprintf("UIP: {s}\n", msg);
 }
 
 int main()
@@ -477,6 +484,7 @@ int main()
   pprintf("Initializing uIP...\n");
 
   uip_init();
+  uip_arp_init();
 
   uip_ipaddr_t ipaddr;
 
@@ -491,10 +499,9 @@ int main()
   uip_ipaddr(ipaddr, 255, 255, 255, 0);
   uip_setnetmask(ipaddr);
 
-  hello_world_init();
+  httpd_init();
 
-  // TODO Implement me
-  // pprintf("Starting packet loop.\n");
+  // TODO Packet loop
 
   return 0;
 }

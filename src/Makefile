@@ -100,10 +100,10 @@ hello.user.elf: $(USER_HELLO_OBJ)
 hello.user.elf: USER_CXXFLAGS += -Iuser-hello/include
 
 # UIP
-UIP_CFLAGS := -Iuser-uip/include -Iuser-uip/src/uip -Iuser-uip/src/apps/hello-world
+UIP_CFLAGS := -Iuser-uip/include -Iuser-uip/src/uip -Iuser-uip/src/apps/webserver
 USER_UIP_OBJ := $(addsuffix .user.o, \
                   $(addprefix user-uip/src/uip/, psock timer uip_arp uip uiplib) \
-                  $(addprefix user-uip/src/apps/hello-world/, hello-world))
+                  $(addprefix user-uip/src/apps/webserver/, httpd httpd-cgi httpd-fs http-strings))
 
 # Virtio-net application
 USER_VIRTIO_NET_OBJ := $(USER_OBJ) $(USER_UIP_OBJ) $(addsuffix .user.o, $(addprefix user-virtio-net/src/, main))
@@ -120,7 +120,7 @@ qemu-example-hello.elf: $(BINARIES) $(MACHINE_DESC) $(APPLICATION_DESC)
 
 .PHONY: qemu-boot-hello
 qemu-boot-hello: qemu-example-hello.elf
-	boot -display none -netdev user,id=u,hostfwd=tcp::10000-10.0.2.4:1000 \
+	boot -display none -netdev user,id=u,hostfwd=tcp::8000-10.0.2.4:80 \
              -device virtio-net-pci,netdev=u -device loader,file=$<
 
 -include api/src/*.d
