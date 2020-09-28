@@ -161,6 +161,14 @@ public:
   }
 };
 
+class virtio_notify_pci_cap : public virtio_vendor_pci_cap
+{
+public:
+  uint32_t get_notify_off_multiplier() const { return get_u32(16); }
+
+  using virtio_vendor_pci_cap::virtio_vendor_pci_cap;
+};
+
 class virtio_net_device : public pci_device
 {
 private:
@@ -172,6 +180,12 @@ private:
 
   // MMIO registers for the network specific part.
   virtio::virtio_net_config volatile *mmio_net_config;
+
+  // MMIO region for queue notifications.
+  char volatile *mmio_queue_notify;
+
+  // Used to calculate where a queue's notification region is.
+  uint32_t notify_off_multiplier;
 
   void initialize_bars()
   {
@@ -226,7 +240,15 @@ private:
           static_cast<virtio::virtio_net_config volatile *>(mmio_region_from_cap(*opt_cap));
     }
 
-    if (not mmio_pci_common or not mmio_net_config) {
+    if (auto opt_cap {find_mmio_region(virtio::PCI_CAP_NOTIFY_CFG)}; opt_cap) {
+      virtio_notify_pci_cap notify_cap {static_cast<virtio_notify_pci_cap>(*opt_cap)};
+
+      mmio_queue_notify = static_cast<char volatile *>(mmio_region_from_cap(notify_cap));
+
+      notify_off_multiplier = notify_cap.get_notify_off_multiplier();
+    }
+
+    if (not mmio_pci_common or not mmio_net_config or not mmio_queue_notify) {
       pprintf("Failed to find MMIO regions?!\n");
       abort();
     }
@@ -276,8 +298,9 @@ private:
     }
   }
 
+  // Sets up a queue and returns its notification register.
   template <size_t QUEUE_SIZE>
-  void setup_queue(size_t queue_no, virtio::virtq<QUEUE_SIZE> *vq)
+  char volatile *setup_queue(size_t queue_no, virtio::virtq<QUEUE_SIZE> *vq)
   {
     assert(queue_no < mmio_pci_common->num_queues);
 
@@ -299,6 +322,8 @@ private:
     pprintf("Enabling queue{}: vq={}\n", queue_no, vq);
 
     mmio_pci_common->queue_enable = 1;
+
+    return mmio_queue_notify + mmio_pci_common->queue_notify_off * notify_off_multiplier;
   }
 
   using rx_virtq = virtio::virtq<32>;
@@ -308,14 +333,70 @@ private:
   tx_virtq *tx;
 
   vring<rx_virtq::queue_size> rx_ring {rx};
+  vring<tx_virtq::queue_size> tx_ring {tx};
+
+  char volatile *tx_ring_notify;
 
   using packet_buffer = std::array<uint8_t, 2048>;
+
+  // A set of TX buffers that are available to be used.
+  std::vector<packet_buffer *> avail_tx_bufs;
 
 public:
   void print_device_info()
   {
     pprintf("virtio-net {s}: device_features={#x} num_queues={}\n", get_mac().to_string().c_str(),
             mmio_pci_common->device_feature, mmio_pci_common->num_queues);
+  }
+
+  // Receive a single packet and place it in a buffer.
+  //
+  // If the buffer is too small, the packet will be truncated! The
+  // virtio-net packet header is discarded.
+  size_t recv_into(void *b, size_t len)
+  {
+    size_t const hdr_size {sizeof(virtio::virtio_net_hdr)};
+
+    if (auto opt_buf {rx_ring.get_buf()}; opt_buf && opt_buf->length > hdr_size) {
+      size_t copy_size {std::min<size_t>(len, opt_buf->length - hdr_size)};
+
+      memcpy(static_cast<char *>(b), static_cast<char *>(opt_buf->data) + hdr_size, copy_size);
+
+      rx_ring.add_buf({opt_buf->data, std::tuple_size<packet_buffer>::value},
+                      virtio::VIRTQ_DESC_F_WRITE);
+
+      pprintf("Received {} bytes.\n", copy_size);
+      return copy_size;
+    } else {
+      return 0;
+    }
+  }
+
+  void send_from(void *b, size_t len)
+  {
+    pprintf("Sending {} bytes.\n", len);
+
+    // Grab all buffers that have sent successfully.
+    std::optional<dma_buf> completed_buf;
+
+    while ((completed_buf = tx_ring.get_buf()).has_value()) {
+      avail_tx_bufs.push_back(static_cast<packet_buffer *>(completed_buf->data));
+    }
+
+    auto opt_tx_buf {try_pop_back(avail_tx_bufs)};
+    if (not opt_tx_buf) {
+      pprintf("Dropping packet. No TX buffer available.\n");
+      return;
+    }
+
+    packet_buffer *tx_buf {*opt_tx_buf};
+
+    memset(tx_buf->data(), 0, sizeof(virtio::virtio_net_hdr));
+    memcpy(tx_buf->data() + sizeof(virtio::virtio_net_hdr), b, len);
+
+    tx_ring.add_buf({tx_buf->data(), static_cast<uint32_t>(sizeof(virtio::virtio_net_hdr) + len)});
+
+    *tx_ring_notify = 0;
   }
 
   virtio_net_device(uint32_t volatile *cfg_space, dma_allocator *dma_alloc)
@@ -357,7 +438,7 @@ public:
     // size_t const ctrl_queue_no = nqueues - 1;
 
     setup_queue(rx_queue_no, rx);
-    setup_queue(tx_queue_no, tx);
+    tx_ring_notify = setup_queue(tx_queue_no, tx);
 
     mmio_pci_common->device_status |= virtio::DRIVER_OK;
 
@@ -368,6 +449,11 @@ public:
       rx_ring.add_buf({packet->data(), static_cast<uint32_t>(packet->size())},
                       virtio::VIRTQ_DESC_F_WRITE);
     }
+
+    // Pre-allocate some TX buffers.
+    avail_tx_bufs =
+        ranges::views::generate([dma_alloc] { return dma_alloc->allocate<packet_buffer>(); }) |
+        ranges::views::take(tx_virtq::queue_size - 1) | ranges::to<std::vector>();
   }
 };
 
