@@ -120,7 +120,7 @@ qemu-example-hello.elf: $(BINARIES) $(MACHINE_DESC) $(APPLICATION_DESC)
 
 .PHONY: qemu-boot-hello
 qemu-boot-hello: qemu-example-hello.elf
-	boot -display none -netdev user,id=u,hostfwd=tcp::10000-:1000 \
+	boot -display none -netdev user,id=u,hostfwd=tcp::10000-10.0.2.4:1000 \
              -device virtio-net-pci,netdev=u -device loader,file=$<
 
 -include api/src/*.d
