@@ -1,20 +1,32 @@
 # Epoxy RISC-V
 
-**Nothing to see here yet.**
+[![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)](https://github.com/emersion/stability-badges#experimental)
+![GitHub](https://img.shields.io/github/license/blitz/epoxy-riscv.svg)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/blitz/epoxy-riscv)
 
-To build:
+🚧 **Nothing to see here yet.** 🚧
+
+This code compiles using [Nix](https://nixos.org). The first compilation is going to take a long
+time, because it compiles a RISC-V toolchain. You can use my [cachix](https://cachix.org/) repo to
+fetch precompiled dependencies:
 
 ```
-% nix build -f . kernel.gcc9
+% cachix use blitz # optional
+```
+
+To build the demo application:
+
+```
+% nix-build
 ```
 
 To run (with qemu >= 4.1):
 
 ```
 % qemu-system-riscv64 -M virt -m 256M -serial stdio \
-     -bios default -device loader,file=result/kernel
-# Or if lorri/direnv is available:
-% boot -device loader,file=result/kernel
+     -bios default -device loader,file=result/qemu-example-hello.elf
+# Or if direnv is available:
+% boot -serial stdio -device loader,file=result/qemu-example-hello.elf
 ```
 
 # Resources
