@@ -26,7 +26,7 @@ To run (with qemu >= 4.1):
 % qemu-system-riscv64 -M virt -m 256M -serial stdio \
      -bios default -device loader,file=result/qemu-example-hello.elf
 # Or if direnv is available:
-% boot -serial stdio -device loader,file=result/qemu-example-hello.elf
+% boot -device loader,file=result/qemu-example-hello.elf
 ```
 
 # Resources

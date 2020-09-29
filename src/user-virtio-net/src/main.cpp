@@ -501,7 +501,40 @@ int main()
 
   httpd_init();
 
-  // TODO Packet loop
+  pprintf("Starting packet polling loop.\n");
+
+  while (true) {
+    uip_len = virtio_net.recv_into(uip_buf, UIP_BUFSIZE);
+
+    auto const hdr {reinterpret_cast<struct uip_eth_hdr *>(&uip_buf[0])};
+
+    if (uip_len >= sizeof(*hdr)) {
+      if (hdr->type == htons(UIP_ETHTYPE_IP)) {
+        uip_arp_ipin();
+        uip_input();
+
+        if (uip_len > 0) {
+          uip_arp_out();
+          virtio_net.send_from(uip_buf, uip_len);
+        }
+      } else if (hdr->type == htons(UIP_ETHTYPE_ARP)) {
+        uip_arp_arpin();
+        if (uip_len > 0) {
+          virtio_net.send_from(uip_buf, uip_len);
+        }
+      } else {
+        // Periodic processing
+        for (size_t i = 0; i < UIP_CONNS; ++i) {
+          uip_periodic(i);
+
+          if (uip_len > 0) {
+            uip_arp_out();
+            virtio_net.send_from(uip_buf, uip_len);
+          }
+        }
+      }
+    }
+  }
 
   return 0;
 }
