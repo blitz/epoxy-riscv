@@ -3,7 +3,7 @@
 
 let
   lib = pkgs.lib;
-  epoxyHardenSrc = import "${sources.epoxy-harden}/nix/ci.nix";
+  epoxyHardenSrc = import "${sources.epoxy-harden}/nix/ci.nix" {};
 
   newlibOverlay = self: super: {
     newlibCross = super.newlibCross.overrideAttrs (attrs: {
