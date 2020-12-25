@@ -14,8 +14,14 @@ asm_paged_entry:
 ctor_call_loop:
         beq s0, s1, ctor_call_done
 
+#if __riscv_xlen == 64
         ld a0, (s0)
-        addi s0, s0, 8
+#elif __riscv_xlen == 32
+        lw a0, (s0)
+#else
+# error Unknown platform
+#endif
+        addi s0, s0, __SIZEOF_POINTER__
         jalr a0
 
         j ctor_call_loop

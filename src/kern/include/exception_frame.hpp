@@ -43,4 +43,4 @@ protected:
 
 // These offsets are used from assembly (see exc_entry.S).
 static_assert(offsetof(exception_frame, regs_) == 0);
-static_assert(offsetof(exception_frame, pc_) == 31 * 8);
+static_assert(offsetof(exception_frame, pc_) == 31 * __SIZEOF_POINTER__);

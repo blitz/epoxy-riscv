@@ -23,7 +23,7 @@ enum : mword_t {
   SSTATUS_SUM = 1UL << 18,
   SSTATUS_MXR = 1UL << 19,
 
-  SCAUSE_IRQ = 1UL << 63,
+  SCAUSE_IRQ = 1UL << (__riscv_xlen - 1),
 
   SIE_STIE = 1UL << 5,  // Timer enable
   SIP_STIP = 1UL << 5,  // Timer pending

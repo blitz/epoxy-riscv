@@ -14,7 +14,7 @@ let
 
   riscvPkgs = (import nixpkgs {
     overlays = [ newlibOverlay ];
-  }).pkgsCross.riscv64-embedded;
+  }).pkgsCross.riscv32-embedded;
 
   testConfigurations = {
     "gcc8" = { stdenv = riscvPkgs.gcc8Stdenv; };
@@ -39,14 +39,14 @@ in rec {
       spiceSupport = false;
       pulseSupport = false;
       smartcardSupport = false;
-      hostCpuTargets = [ "riscv64-softmmu" ];
+      hostCpuTargets = [ "riscv32-softmmu" "riscv64-softmmu" ];
     }).overrideAttrs (old : {
       # Fix a bug that the SBI triggers. This should be fixed after 5.1.0.
       patches = old.patches ++ [ ./0001-riscv-sifive_test-Allow-16-bit-writes-to-memory-regi.patch ];
     });
 
     bootScript = pkgs.writeShellScriptBin "boot" ''
-      exec ${qemuHeadless}/bin/qemu-system-riscv64 -M virt -m 256M -serial stdio -bios default $*
+      exec ${qemuHeadless}/bin/qemu-system-riscv32 -M virt -m 256M -serial stdio -bios default $*
     '';
 
     inherit (pkgs) clang-tools niv nixfmt;

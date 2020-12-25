@@ -6,7 +6,9 @@
 
 process *process::active_ = nullptr;
 
-extern "C" mword_t const USER_SATPS[];
+// This will always be 64-bit values due to limitations in
+// epoxy-harden.
+extern "C" uint64_t const USER_SATPS[];
 
 kobject *process::lookup(cap_t capability)
 {

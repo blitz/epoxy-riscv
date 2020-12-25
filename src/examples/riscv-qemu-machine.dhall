@@ -33,8 +33,11 @@ let virtioNetBar4Base = 0x40000000
 let virtioNetBar4Size = 0x00010000
 
 in  { memoryMap =
-      [ { baseAddress = 0x80200000
-        , memoryLength = 0x2000000
+      [
+        -- The baseAddress has to be this for 32-bit RISC-V Qemu. For some reason, Qemu ignores the
+        -- ELFs entry address. See also KERNEL_BOOT_ADDRESS in Qemu v5.1.0.
+        { baseAddress = 0x80400000
+        , memoryLength = 0x1000000
         , memoryType = MemoryType.Available
         }
       , { baseAddress = 0x82200000
