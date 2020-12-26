@@ -14,20 +14,17 @@ fetch precompiled dependencies:
 % cachix use blitz # optional
 ```
 
-To build the demo application:
+To build the demo application enter a Nix shell to get the right dependencies and use the demo make
+target. This will build and execute the demo.
 
 ```
-% nix-build
+% nix-shell
+% make qemu-boot-hello
 ```
 
-To run (with qemu >= 4.1):
+If everything goes well it looks like this:
 
-```
-% qemu-system-riscv64 -M virt -m 256M -serial stdio \
-     -bios default -device loader,file=result/qemu-example-hello.elf
-# Or if direnv is available:
-% boot -device loader,file=result/qemu-example-hello.elf
-```
+[![asciicast](https://asciinema.org/a/381274.svg)](https://asciinema.org/a/381274)
 
 # Resources
 
