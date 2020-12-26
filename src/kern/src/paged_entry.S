@@ -4,6 +4,12 @@
         .global asm_paged_entry
         .align 2
 asm_paged_entry:
+
+        // Give a sign of life on the console.
+        li a7, 1
+        li a0, 'p'
+        ecall
+
         // We come in without a stack pointer set.
         la sp, kern_stack_end
 

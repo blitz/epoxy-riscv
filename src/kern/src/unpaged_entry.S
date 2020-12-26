@@ -11,6 +11,11 @@
         .global asm_unpaged_entry
 asm_unpaged_entry:
 
+        // Give a sign of life on the console.
+        li a7, 1
+        li a0, 'u'
+        ecall
+
 #if __riscv_xlen == 64
         ld a0, BOOT_STVEC
         ld a1, BOOT_SATP
