@@ -87,7 +87,7 @@
 
 #pragma once
 
-#include <types.hpp>
+#include <cstdint>
 
 namespace virtio
 {

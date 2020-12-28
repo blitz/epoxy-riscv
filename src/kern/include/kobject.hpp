@@ -1,8 +1,7 @@
 #pragma once
 
-#include "api.hpp"
-#include "likely.hpp"
-#include "types.hpp"
+#include <epoxy-api/api.hpp>
+#include <epoxy-api/likely.hpp>
 
 class thread;
 class syscall_args;

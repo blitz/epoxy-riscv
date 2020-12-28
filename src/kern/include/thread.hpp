@@ -1,7 +1,6 @@
 #pragma once
 
-#include <api.hpp>
-#include <types.hpp>
+#include <epoxy-api/api.hpp>
 
 #include "exception_frame.hpp"
 

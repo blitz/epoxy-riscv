@@ -1,6 +1,6 @@
 #pragma once
 
-#include "likely.hpp"
+#include <epoxy-api/likely.hpp>
 
 #ifndef NDEBUG
 

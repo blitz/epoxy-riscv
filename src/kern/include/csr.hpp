@@ -1,7 +1,7 @@
 #pragma once
 
-#include <c_types.hpp>
-#include <types.hpp>
+#include <epoxy-api/c_types.hpp>
+#include <epoxy-api/types.hpp>
 
 enum class csr : uint16_t {
   SSTATUS = 0x100U,

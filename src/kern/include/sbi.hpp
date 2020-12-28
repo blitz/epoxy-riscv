@@ -1,6 +1,6 @@
 #pragma once
 
-#include <types.hpp>
+#include <epoxy-api/types.hpp>
 
 // Supervisor Binary Interface v0.2
 // https://github.com/riscv/riscv-sbi-doc/blob/master/riscv-sbi.adoc

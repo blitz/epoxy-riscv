@@ -1,8 +1,7 @@
 #pragma once
 
-#include "api.hpp"
+#include <epoxy-api/api.hpp>
 #include "kobject.hpp"
-#include "types.hpp"
 
 struct capability_set {
   cap_t length;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <assert.hpp>
-#include <c_types.hpp>
-#include <types.hpp>
+#include <epoxy-api/c_types.hpp>
+#include <epoxy-api/types.hpp>
+#include "assert.hpp"
 
 // General-purpose registers.
 class gp_regs

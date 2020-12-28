@@ -1,6 +1,6 @@
 #pragma once
 
-#include <types.hpp>
+#include <epoxy-api/types.hpp>
 
 #include "csr.hpp"
 

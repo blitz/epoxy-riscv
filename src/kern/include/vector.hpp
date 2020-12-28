@@ -1,7 +1,7 @@
 #pragma once
 
-#include "likely.hpp"
-#include "types.hpp"
+#include <epoxy-api/likely.hpp>
+#include <epoxy-api/types.hpp>
 
 // A vector with statically allocating backing store and a compile-time maximum
 // length.
