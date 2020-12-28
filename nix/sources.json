@@ -12,15 +12,15 @@
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "epoxy-newlib": {
-        "branch": "epoxy-riscv",
+        "branch": "epoxy-riscv-4.1.0",
         "description": "Newlib fork for RISC-V Epoxy",
         "homepage": null,
         "owner": "blitz",
         "repo": "epoxy-newlib",
-        "rev": "46b3d487600dbe4ba227f26c7432882658336a42",
-        "sha256": "09gwnb96gm8ghidndjaxgyksmybrq5ar9xcmdndsvvwsvv0vzwlp",
+        "rev": "ad2fc629d4f0e865258483843d1a95c0a9751b97",
+        "sha256": "0l7n5jfx3wpwf6xc8my8bly3gg1h6800499ssxrs8xq770bvvhfd",
         "type": "tarball",
-        "url": "https://github.com/blitz/epoxy-newlib/archive/46b3d487600dbe4ba227f26c7432882658336a42.tar.gz",
+        "url": "https://github.com/blitz/epoxy-newlib/archive/ad2fc629d4f0e865258483843d1a95c0a9751b97.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "gitignore": {
