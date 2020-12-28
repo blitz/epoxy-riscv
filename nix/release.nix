@@ -37,7 +37,7 @@ let
   cleanSrc = gitignoreSource ../src;
 
 in rec {
-  inherit riscvPkgs;
+  inherit pkgs riscvPkgs;
 
   shellDependencies = rec {
     inherit (epoxyHardenSrc) dhall epoxy-dtb;
@@ -81,4 +81,8 @@ in rec {
       inherit (shellDependencies) bootScript;
       qemuBootImage = "${kernel}/qemu-example-hello.elf";
     }) kernel;
+
+  newWorld = {
+    api = riscvPkgs.callPackage ./epoxy-api.nix {};
+  };
 }
