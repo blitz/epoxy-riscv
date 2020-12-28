@@ -76,9 +76,5 @@ in rec {
   in builtins.mapAttrs (_: overrides: kernelDrv.override overrides)
   testConfigurations;
 
-  test = builtins.mapAttrs (_: kernel:
-    pkgs.callPackage ./test.nix {
-      inherit (shellDependencies) bootScript;
-      qemuBootImage = "${kernel}/qemu-example-hello.elf";
-    }) kernel;
+  test = builtins.mapAttrs (_: kernel: kernel) kernel;
 }

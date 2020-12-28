@@ -3,8 +3,8 @@ TARGET   ?= output
 USER_BINARIES := hello.user.elf virtio-net.user.elf fbdemo.user.elf
 BINARIES      := $(USER_BINARIES) epoxy.kern.elf
 
-MACHINE_DESC     ?= examples/riscv-qemu-machine.dhall
-APPLICATION_DESC ?= examples/user-hello.dhall
+MACHINE_DESC     ?= examples/ulx3s-saxonsoc-machine.dhall
+APPLICATION_DESC ?= examples/user-fbdemo.dhall
 
 .PHONY: all
 all: qemu-example-hello.elf
