@@ -83,6 +83,7 @@ in rec {
     }) kernel;
 
   newWorld = {
-    api = riscvPkgs.callPackage ./epoxy-api.nix {};
+    epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
+    epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix {};
   };
 }
