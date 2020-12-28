@@ -1,5 +1,6 @@
 #pragma once
 
+#include <c_types.hpp>
 #include <types.hpp>
 
 struct exception_frame;
@@ -37,11 +38,27 @@ inline void wait_for_interrupt()
 }
 
 // Return the value of the current wall-clock time.
-inline mword_t rdtime()
+inline uint64_t rdtime()
 {
+#if __riscv_xlen == 32
+  mword_t time_lo;
+  mword_t time_hi_before;
+  mword_t time_hi_after;
+
+  // Repeat reading the two parts of the timer register if the low
+  // part wrapped.
+  do {
+    asm volatile("rdtimeh %0\n"
+		 "rdtime %1\n"
+		 "rdtimeh %2\n"
+		 : "=r" (time_hi_before), "=r" (time_lo), "=r" (time_hi_after));
+  } while (time_hi_after != time_hi_before);
+
+  return static_cast<uint64_t>(time_hi_before) << 32 | time_lo;
+
+#else
   mword_t time;
-
   asm volatile("rdtime %0" : "=r"(time));
-
   return time;
+#endif
 }

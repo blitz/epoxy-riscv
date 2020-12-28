@@ -30,9 +30,10 @@ void schedule()
       auto const candidate {*thread_cur};
 
       if (candidate->is_runnable()) {
-        // TODO Use a decent time slice length.
+        // TODO Use a decent time slice length. We currently use
+        // excessively long time slices to demonstrate scheduling.
         csr_rs<csr::SIE>(SIE_STIE);
-        sbi_set_timer(rdtime() + 100000);
+        sbi_set_timer(rdtime() + 10000000);
         candidate->activate();
       }
     }

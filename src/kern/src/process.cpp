@@ -23,7 +23,10 @@ void process::activate()
   if (active_ != this) {
     active_ = this;
 
-    csr_w<csr::SATP>(USER_SATPS[pid()]);
+    uint64_t const satp {USER_SATPS[pid()]};
+    assert(satp != 0 and static_cast<mword_t>(satp) == satp);
+
+    csr_w<csr::SATP>(static_cast<mword_t>(satp));
 
     // TODO We could optimize this by using ASIDs.
     asm volatile("sfence.vma" ::: "memory");
