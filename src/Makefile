@@ -21,7 +21,7 @@ install: qemu-example-hello.elf
 	mkdir -p $(TARGET)
 	install -m 0755 $^ $(TARGET)/
 
-COMMON_CFLAGS   = -g -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -march=rv32gc
+COMMON_CFLAGS   = -g -flto -Iapi/include/ -MD -Os -fno-common -fomit-frame-pointer -march=rv32ima
 COMMON_CXXFLAGS = -std=c++17 -Wall -Wunused-parameter
 COMMON_LDFLAGS  = -g -flto -static
 

@@ -9,6 +9,7 @@
 #include "scheduler.hpp"
 #include "syscall_args.hpp"
 #include "thread.hpp"
+#include "util.hpp"
 
 namespace
 {
@@ -127,7 +128,7 @@ void start()
 {
   format(
       "\n"
-      ">> Epoxy (RISC-V 64-bit, "
+      ">> Epoxy (RISC-V " STR(__riscv_xlen) "-bit, "
 #ifdef __clang__
       "clang " __clang_version__
 #elif __GNUC__

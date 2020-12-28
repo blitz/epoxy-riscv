@@ -13,8 +13,19 @@ let
   };
 
   riscvPkgs = (import nixpkgs {
+    # Patch the libc that the riscv32-embedded target uses to do system calls our way.
     overlays = [ newlibOverlay ];
-  }).pkgsCross.riscv32-embedded;
+
+    # Disabled floating point and compressed instructions to make SaxonSoc happy.
+    crossSystem = pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded
+      {
+        platform = {
+          gcc = {
+            arch = "rv32ima";
+          };
+        };
+      };
+  });
 
   testConfigurations = {
     "gcc8" = { stdenv = riscvPkgs.gcc8Stdenv; };
