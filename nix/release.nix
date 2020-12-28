@@ -40,7 +40,7 @@ in rec {
   inherit riscvPkgs;
 
   shellDependencies = rec {
-    inherit (epoxyHardenSrc) dhall;
+    inherit (epoxyHardenSrc) dhall epoxy-dtb;
 
     # Use a ncurses-only qemu to reduce closure size.
     qemuHeadless = (pkgs.qemu.override {
@@ -64,7 +64,7 @@ in rec {
   };
 
   dependencies = {
-    inherit (epoxyHardenSrc) epoxy-harden;
+    inherit (epoxyHardenSrc) epoxy-harden epoxy-dtb;
 
     pprintpp = riscvPkgs.callPackage ./pprintpp.nix { };
     range-v3 = riscvPkgs.callPackage ./range-v3.nix { };

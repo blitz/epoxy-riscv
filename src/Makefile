@@ -1,6 +1,6 @@
 TARGET   ?= output
 
-USER_BINARIES := hello.user.elf virtio-net.user.elf
+USER_BINARIES := hello.user.elf virtio-net.user.elf fbdemo.user.elf
 BINARIES      := $(USER_BINARIES) epoxy.kern.elf
 
 MACHINE_DESC     ?= examples/riscv-qemu-machine.dhall
@@ -103,6 +103,12 @@ USER_HELLO_OBJ := $(USER_OBJ) $(addsuffix .user.o, $(addprefix user-hello/src/, 
 
 hello.user.elf: $(USER_HELLO_OBJ)
 hello.user.elf: USER_CXXFLAGS += -Iuser-hello/include
+
+# Framebuffer demo application
+USER_FBDEMO_OBJ := $(USER_OBJ) $(addsuffix .user.o, $(addprefix user-fbdemo/src/, main))
+
+fbdemo.user.elf: $(USER_FBDEMO_OBJ)
+fbdemo.user.elf: USER_CXXFLAGS += -Iuser-fbdemo/include
 
 # UIP
 UIP_CFLAGS := -Iuser-uip/include -Iuser-uip/src/uip -Iuser-uip/src/apps/webserver

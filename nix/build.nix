@@ -1,4 +1,4 @@
-{ stdenv, dhall-json, epoxy-harden, pprintpp, range-v3, src }:
+{ stdenv, dhall-json, epoxy-harden, epoxy-dtb, pprintpp, range-v3, src }:
 
 stdenv.mkDerivation {
   pname = "epoxy";
