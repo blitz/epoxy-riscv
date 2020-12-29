@@ -11,9 +11,9 @@ all: qemu-example-hello.elf
 
 .PHONY: clean
 clean:
-	rm -f *.elf {api,kern,user,user-hello,user-uip,user-virtio-net}/src/*.[do]
-	rm -f user-uip/src/apps/*/*.[do]
-	rm -f user-uip/src/uip/*.[do]
+	rm -f *.elf {api,kern,user,user-hello,user-virtio-net}/src/*.[do]
+	rm -f user-virtio-net/src/apps/*/*.[do]
+	rm -f user-virtio-net/src/uip/*.[do]
 	rm -f kern/include/state.hpp kern/src/state.cpp
 
 .PHONY: install
@@ -110,10 +110,10 @@ fbdemo.user.elf: $(USER_FBDEMO_OBJ)
 fbdemo.user.elf: USER_CXXFLAGS += -Iuser-fbdemo/include
 
 # UIP
-UIP_CFLAGS := -Iuser-uip/include -Iuser-uip/src/uip -Iuser-uip/src/apps/webserver
+UIP_CFLAGS := -Iuser-virtio-net/include -Iuser-virtio-net/src/uip -Iuser-virtio-net/src/apps/webserver
 USER_UIP_OBJ := $(addsuffix .user.o, \
-                  $(addprefix user-uip/src/uip/, psock timer uip_arp uip uiplib) \
-                  $(addprefix user-uip/src/apps/webserver/, httpd httpd-cgi httpd-fs http-strings))
+                  $(addprefix user-virtio-net/src/uip/, psock timer uip_arp uip uiplib) \
+                  $(addprefix user-virtio-net/src/apps/webserver/, httpd httpd-cgi httpd-fs http-strings))
 
 # Virtio-net application
 USER_VIRTIO_NET_OBJ := $(USER_OBJ) $(USER_UIP_OBJ) $(addsuffix .user.o, $(addprefix user-virtio-net/src/, main))
@@ -140,5 +140,5 @@ qemu-boot-hello: qemu-example-hello.elf
 -include user/src/*.d
 -include user-hello/src/*.d
 -include user-virtio-net/src/*.d
--include user-uip/src/uip/*.d
--include user-uip/src/apps/*/*.d
+-include user-virtio-net/src/uip/*.d
+-include user-virtio-net/src/apps/*/*.d
