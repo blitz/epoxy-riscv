@@ -82,13 +82,27 @@ in rec {
       qemuBootImage = "${kernel}/qemu-example-hello.elf";
     }) kernel;
 
-  newWorld = {
+  newWorld = rec {
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
     epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix {};
     epoxy-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {};
 
     epoxy-virtio-net = riscvPkgs.callPackage ./epoxy-virtio-net.nix {
       inherit (dependencies) pprintpp range-v3;
+    };
+
+    epoxy-boot-hello = riscvPkgs.callPackage ./epoxy-kern.nix {
+      inherit epoxy-api;
+      inherit (dependencies) epoxy-harden;
+
+      applicationDesc = "${../applications}/hello.dhall";
+      machineDesc = ../machines/qemu-riscv32.dhall;
+
+      # TODO We should only join paths that are actually referenced in the application description.
+      userBinaries = riscvPkgs.symlinkJoin {
+        name = "user-binaries";
+        paths = [ epoxy-hello epoxy-fbdemo epoxy-virtio-net ];
+      };
     };
   };
 }
