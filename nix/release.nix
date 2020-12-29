@@ -86,5 +86,9 @@ in rec {
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
     epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix {};
     epoxy-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {};
+
+    epoxy-virtio-net = riscvPkgs.callPackage ./epoxy-virtio-net.nix {
+      inherit (dependencies) pprintpp range-v3;
+    };
   };
 }

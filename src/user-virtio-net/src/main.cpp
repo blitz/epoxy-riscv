@@ -463,11 +463,23 @@ extern "C" {
 #include <uip.h>
 #include <uip_arp.h>
 #include <uipopt.h>
+#include <clock.h>
 }
 
 void uip_log(char *msg)
 {
   pprintf("UIP: {s}\n", msg);
+}
+
+void clock_init()
+{
+  // Nothing to do.
+}
+
+clock_time_t clock_time()
+{
+  // XXX We probably want to implement a real clock.
+  return 0;
 }
 
 int main()
