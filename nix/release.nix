@@ -85,5 +85,6 @@ in rec {
   newWorld = {
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
     epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix {};
+    epoxy-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {};
   };
 }
