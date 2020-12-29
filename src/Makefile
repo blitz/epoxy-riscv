@@ -119,7 +119,7 @@ USER_UIP_OBJ := $(addsuffix .user.o, \
 USER_VIRTIO_NET_OBJ := $(USER_OBJ) $(USER_UIP_OBJ) $(addsuffix .user.o, $(addprefix user-virtio-net/src/, main))
 
 virtio-net.user.elf: $(USER_VIRTIO_NET_OBJ)
-virtio-net.user.elf: USER_CXXFLAGS += -Iuser-virtio-net/include $(UIP_CFLAGS)
+virtio-net.user.elf: USER_CXXFLAGS += $(UIP_CFLAGS)
 virtio-net.user.elf: USER_CFLAGS += $(UIP_CFLAGS)
 
 # Booting convenience
