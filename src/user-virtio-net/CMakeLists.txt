@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.12)
 project("epoxy-virtio-net" VERSION 1.0.0
   DESCRIPTION "Run a simple HTTP server via a virtio-net device and uIP.")
 
+# The uIP code is definitely not clean.
+set(CMAKE_CXX_FLAGS "-fno-strict-aliasing")
+set(CMAKE_C_FLAGS "-fno-strict-aliasing")
+
 include(GNUInstallDirs)
 
 find_package(pprintpp REQUIRED)

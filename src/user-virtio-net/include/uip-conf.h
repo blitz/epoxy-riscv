@@ -62,7 +62,7 @@ typedef unsigned short uip_stats_t;
 /**
  * CPU byte order.
  */
-#define UIP_CONF_BYTE_ORDER      LITTLE_ENDIAN
+#define UIP_CONF_BYTE_ORDER      UIP_LITTLE_ENDIAN
 
 /**
  * Logging on or off

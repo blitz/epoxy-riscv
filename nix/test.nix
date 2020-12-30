@@ -1,10 +1,11 @@
-{ stdenv, qemuBootImage, bootScript, curl }:
+{ stdenv, curl, epoxy-qemu-boot
+,  bootElf }:
 
 stdenv.mkDerivation {
   pname = "epoxy-qemu-test";
   version = "0.0.0";
 
-  nativeBuildInputs = [ bootScript curl ];
+  nativeBuildInputs = [ epoxy-qemu-boot curl ];
   src = null;
 
   phases = [ "buildPhase" "checkPhase" "installPhase" ];
@@ -15,10 +16,11 @@ stdenv.mkDerivation {
   #
   # TODO This should probably be an expect script.
   buildPhase = ''
-    timeout 20 boot -display none \
+    timeout 20 epoxy-qemu-boot \
+                    -display none \
                     -netdev user,id=u,hostfwd=tcp::8000-10.0.2.4:80 \
                     -device virtio-net-pci,netdev=u \
-                    -device loader,file=${qemuBootImage} &
+                    -device loader,file=${bootElf} &
 
     # Give the system a bit to boot.
     sleep 2

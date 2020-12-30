@@ -478,8 +478,8 @@ void clock_init()
 
 clock_time_t clock_time()
 {
-  // XXX We probably want to implement a real clock.
-  return 0;
+  pprintf("Implement clock_time()!\n");
+  abort();
 }
 
 int main()

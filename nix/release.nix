@@ -1,86 +1,29 @@
 { sources ? import ./sources.nix, nixpkgs ? sources.nixpkgs
 , pkgs ? import nixpkgs { } }:
-
 let
-  lib = pkgs.lib;
-  epoxyHardenSrc = import "${sources.epoxy-harden}/nix/ci.nix" {};
+  dependencies = import ./dependencies.nix { inherit sources nixpkgs pkgs; };
 
-  newlibOverlay = self: super: {
-    newlibCross = super.newlibCross.overrideAttrs (attrs: {
-      version = "epoxy";
-      src = sources.epoxy-newlib;
-    });
-  };
+  riscvPkgs = dependencies.riscvPkgs;
+  
+  mkEpoxyBoot = { userBinaries, epoxy-api, applicationDesc, machineDesc }:
+    riscvPkgs.callPackage ./epoxy-kern.nix {
+      inherit epoxy-api applicationDesc machineDesc;
+      inherit (dependencies) epoxy-harden;
 
-  riscvPkgs = (import nixpkgs {
-    # Patch the libc that the riscv32-embedded target uses to do system calls our way.
-    overlays = [ newlibOverlay ];
-
-    # Disabled floating point and compressed instructions to make SaxonSoc happy.
-    crossSystem = pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded
-      {
-        platform = {
-          gcc = {
-            arch = "rv32ima";
-          };
-        };
+      # TODO We should only join paths that are actually referenced in the application description.
+      userBinaries = riscvPkgs.symlinkJoin {
+        name = "user-binaries";
+        paths = userBinaries;
       };
-  });
-
-  testConfigurations = {
-    "gcc8" = { stdenv = riscvPkgs.gcc8Stdenv; };
-    "gcc9" = { stdenv = riscvPkgs.gcc9Stdenv; };
-    "gcc10" = { stdenv = riscvPkgs.gcc10Stdenv; };
-  };
-
-  gitignoreSource = (import sources.gitignore { inherit (pkgs) lib; }).gitignoreSource;
-  cleanSrc = gitignoreSource ../src;
-
-in rec {
-  inherit pkgs riscvPkgs;
+    };
+in {
+  # This is for convenience to build RISC-V apps from the CLI with nix-build.
+  inherit riscvPkgs;
 
   shellDependencies = rec {
-    inherit (epoxyHardenSrc) dhall epoxy-dtb;
-
-    # Use a ncurses-only qemu to reduce closure size.
-    qemuHeadless = (pkgs.qemu.override {
-      gtkSupport = false;
-      vncSupport = false;
-      sdlSupport = false;
-      spiceSupport = false;
-      pulseSupport = false;
-      smartcardSupport = false;
-      hostCpuTargets = [ "riscv32-softmmu" "riscv64-softmmu" ];
-    }).overrideAttrs (old : {
-      # Fix a bug that the SBI triggers. This should be fixed after 5.1.0.
-      patches = old.patches ++ [ ./0001-riscv-sifive_test-Allow-16-bit-writes-to-memory-regi.patch ];
-    });
-
-    bootScript = pkgs.writeShellScriptBin "boot" ''
-      exec ${qemuHeadless}/bin/qemu-system-riscv32 -M virt -m 256M -serial stdio -bios default $*
-    '';
-
+    inherit (dependencies) dhall epoxy-dtb epoxy-qemu-boot qemuHeadless pprintpp range-v3;
     inherit (pkgs) clang-tools niv nixfmt;
   };
-
-  dependencies = {
-    inherit (epoxyHardenSrc) epoxy-harden epoxy-dtb;
-
-    pprintpp = riscvPkgs.callPackage ./pprintpp.nix { };
-    range-v3 = riscvPkgs.callPackage ./range-v3.nix { };
-
-    src = cleanSrc;
-  };
-
-  kernel = let kernelDrv = riscvPkgs.callPackage ./build.nix dependencies;
-  in builtins.mapAttrs (_: overrides: kernelDrv.override overrides)
-  testConfigurations;
-
-  test = builtins.mapAttrs (_: kernel:
-    pkgs.callPackage ./test.nix {
-      inherit (shellDependencies) bootScript;
-      qemuBootImage = "${kernel}/qemu-example-hello.elf";
-    }) kernel;
 
   newWorld = rec {
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
@@ -91,18 +34,27 @@ in rec {
       inherit (dependencies) pprintpp range-v3;
     };
 
-    epoxy-boot-hello = riscvPkgs.callPackage ./epoxy-kern.nix {
+    epoxy-boot-hello = mkEpoxyBoot {
       inherit epoxy-api;
-      inherit (dependencies) epoxy-harden;
 
       applicationDesc = "${../applications}/hello.dhall";
       machineDesc = ../machines/qemu-riscv32.dhall;
 
-      # TODO We should only join paths that are actually referenced in the application description.
-      userBinaries = riscvPkgs.symlinkJoin {
-        name = "user-binaries";
-        paths = [ epoxy-hello epoxy-fbdemo epoxy-virtio-net ];
-      };
+      userBinaries = [ epoxy-hello ];
+    };
+
+    epoxy-boot-virtio-net = mkEpoxyBoot {
+      inherit epoxy-api;
+
+      applicationDesc = "${../applications}/virtio-net.dhall";
+      machineDesc = ../machines/qemu-riscv32.dhall;
+
+      userBinaries = [ epoxy-virtio-net ];
+    };
+
+    test = pkgs.callPackage ./test.nix {
+      inherit (dependencies) epoxy-qemu-boot;
+      bootElf = "${epoxy-boot-virtio-net}/bin/epoxy-boot";
     };
   };
 }
