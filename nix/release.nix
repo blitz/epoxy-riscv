@@ -38,6 +38,13 @@ in {
       #buildInputs = [ pkgs.openssl ];
     };
 
+    new-harden-test = pkgs.runCommandNoCC "new-harden-verify-test" {
+      nativeBuildInputs = [ new-harden ];
+    }
+      ''
+        harden -r ${../config} -s ulx3s-saxonsoc-fbdemo -vvv verify 2>&1 | tee $out
+      '';
+
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
     epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix {};
     epoxy-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {};
