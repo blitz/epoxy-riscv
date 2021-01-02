@@ -36,7 +36,7 @@ let Application
       , -- | A list of resources that an application needs to run.
         needs : List NamedResourceType
       , -- | The Nix expression that builds this application.
-        program : Text
+        binary : Text
       }
 
 let Machine
@@ -50,7 +50,7 @@ let System
     : Type
     = { name : Text
       , machine : Text
-      , processes : List { proc_name : Text, program : Text }
+      , processes : List { name : Text, program : Text }
       , mappings : List { from : Text, to : Text }
       }
 

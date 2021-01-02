@@ -11,8 +11,66 @@ use std::path::Path;
 mod cfgfile;
 mod cfgtypes;
 
-fn epoxy_verify(_root: &Path, _system: &cfgtypes::System) -> Result<(), Error> {
-    // TODO Actually try to find the machine and all application descriptions.
+#[derive(Debug)]
+struct InternalizedProcess {
+    name: String,
+    program: cfgtypes::Application,
+}
+
+#[derive(Debug)]
+struct InternalizedSystem {
+    name: String,
+    machine: cfgtypes::Machine,
+    processes: Vec<InternalizedProcess>,
+}
+
+fn internalize_process(
+    root: &Path,
+    process: &cfgtypes::Process,
+) -> Result<InternalizedProcess, Error> {
+    let app_cfg_file = cfgfile::find(cfgfile::Type::Application, root, &process.program);
+    debug!(
+        "Using {} as configuration file for process {}",
+        app_cfg_file.display(),
+        process.name
+    );
+
+    let program: cfgtypes::Application = serde_dhall::from_file(app_cfg_file)
+        .parse()
+        .context("Failed to parse machine description")?;
+
+    Ok(InternalizedProcess {
+        name: process.name.clone(),
+        program,
+    })
+}
+
+/// Take a system description as it comes in from the config files and read all other configurations
+/// it refernces.
+fn internalize_system(root: &Path, system: &cfgtypes::System) -> Result<InternalizedSystem, Error> {
+    let machine: cfgtypes::Machine =
+        serde_dhall::from_file(cfgfile::find(cfgfile::Type::Machine, root, &system.machine))
+            .parse()
+            .context("Failed to parse machine description")?;
+
+    let processes: Vec<InternalizedProcess> = system
+        .processes
+        .iter()
+        .map(|p| internalize_process(root, p))
+        .collect::<Result<Vec<InternalizedProcess>, Error>>()?;
+
+    Ok(InternalizedSystem {
+        name: system.name.clone(),
+        machine,
+        processes,
+    })
+}
+
+fn epoxy_verify(root: &Path, system: &cfgtypes::System) -> Result<(), Error> {
+    let internalized = internalize_system(root, system)?;
+
+    debug!("Internalized system description: {:?}", internalized);
+
     Ok(())
 }
 

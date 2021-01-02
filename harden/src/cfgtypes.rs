@@ -5,28 +5,28 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Process {
-    proc_name: String,
-    program: String,
+    pub name: String,
+    pub program: String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Mapping {
-    from: String,
-    to: String,
+    pub from: String,
+    pub to: String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct System {
-    name: String,
-    machine: String,
-    processes: Vec<Process>,
-    mappings: Vec<Mapping>,
+    pub name: String,
+    pub machine: String,
+    pub processes: Vec<Process>,
+    pub mappings: Vec<Mapping>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct MemoryRegion {
-    start: u64,
-    size: u64,
+    pub start: u64,
+    pub size: u64,
 }
 
 #[derive(Deserialize, Debug)]
@@ -52,26 +52,26 @@ pub enum Resource {
 
 #[derive(Deserialize, Debug)]
 pub struct NamedResource {
-    name: String,
-    resource: Resource,
+    pub name: String,
+    pub resource: Resource,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct NamedResourceType {
-    name: String,
-    r#type: ResourceType,
+    pub name: String,
+    pub r#type: ResourceType,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Machine {
-    name: String,
-    available_memory: Vec<MemoryRegion>,
-    devices: Vec<NamedResource>,
+    pub name: String,
+    pub available_memory: Vec<MemoryRegion>,
+    pub devices: Vec<NamedResource>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Application {
-    name: String,
-    needs: Vec<NamedResourceType>,
-    program: String,
+    pub name: String,
+    pub needs: Vec<NamedResourceType>,
+    pub binary: String,
 }

@@ -1,14 +1,22 @@
+//! Configuration file lookup functions.
+
 use std::path::{Path, PathBuf};
 
+/// The type of a configuration file.
 pub enum Type {
-    System
+    System,
+    Application,
+    Machine
 }
 
+/// Find a configuration file in the configuration root directory.
 pub fn find(t: Type, root: &Path, name: &str) -> PathBuf
 {
-    let mut p : PathBuf =  match t {
-        Type::System => [root, Path::new("systems"), Path::new(name)].iter().collect()
-    };
+    let mut p : PathBuf = [root, Path::new(match t {
+        Type::System => "systems",
+        Type::Application => "apps",
+        Type::Machine => "machines"
+    }), Path::new(name)].iter().collect();
 
     p.set_extension("dhall");
     p
