@@ -15,6 +15,10 @@ mod cfgtypes;
 struct InternalizedProcess {
     name: String,
     program: cfgtypes::Application,
+
+    // TODO Maybe it's better to directly refer to the resources here instead of having a
+    // redirection via the resource name.
+    resources: Vec<cfgtypes::Mapping>,
 }
 
 #[derive(Debug)]
@@ -24,12 +28,42 @@ struct InternalizedSystem {
     processes: Vec<InternalizedProcess>,
 }
 
+/// Convert the global list of resource mappings to a per-process list of mappings.
+///
+/// This removes all mappings that do not refer to the process. It also removes the process name
+/// prefixes in the `to` member.
+fn to_process_mappings(
+    process_name: &str,
+    mappings: &[cfgtypes::Mapping],
+) -> Result<Vec<cfgtypes::Mapping>, Error> {
+    let split_mappings = mappings
+        .iter()
+        .map(|m| -> Result<(String, String, String), Error> {
+            // TODO There is `split_once` in Nightly.
+            let dot_pos =
+                m.to.find('.')
+                    .ok_or_else(|| format_err!("Missing '.' in mapping destination: {}", m.to))?;
+            let before = &m.to[..dot_pos];
+            let after = &m.to[dot_pos + 1..];
+
+            Ok((m.from.clone(), before.to_string(), after.to_string()))
+        })
+        .collect::<Result<Vec<(String, String, String)>, Error>>()?;
+
+    Ok(split_mappings
+        .into_iter()
+        .filter(|(_, to_proc, _)| to_proc == process_name)
+        .map(|(from, _, to_input)| cfgtypes::Mapping { to: to_input, from })
+        .collect())
+}
+
 fn internalize_process(
     root: &Path,
     process: &cfgtypes::Process,
+    mappings: &[cfgtypes::Mapping],
 ) -> Result<InternalizedProcess, Error> {
     let app_cfg_file = cfgfile::find(cfgfile::Type::Application, root, &process.program);
-    debug!(
+    info!(
         "Using {} as configuration file for process {}",
         app_cfg_file.display(),
         process.name
@@ -41,6 +75,8 @@ fn internalize_process(
 
     Ok(InternalizedProcess {
         name: process.name.clone(),
+        resources: to_process_mappings(&process.name, mappings)
+            .context("Failed to read resource mappings")?,
         program,
     })
 }
@@ -56,7 +92,7 @@ fn internalize_system(root: &Path, system: &cfgtypes::System) -> Result<Internal
     let processes: Vec<InternalizedProcess> = system
         .processes
         .iter()
-        .map(|p| internalize_process(root, p))
+        .map(|p| internalize_process(root, p, &system.mappings))
         .collect::<Result<Vec<InternalizedProcess>, Error>>()?;
 
     Ok(InternalizedSystem {
@@ -69,7 +105,20 @@ fn internalize_system(root: &Path, system: &cfgtypes::System) -> Result<Internal
 fn epoxy_verify(root: &Path, system: &cfgtypes::System) -> Result<(), Error> {
     let internalized = internalize_system(root, system)?;
 
-    debug!("Internalized system description: {:?}", internalized);
+    debug!("Internalized system description: {:#?}", internalized);
+
+    // TODO Check that process names are unique.
+
+    // TODO Check that resource names are unique.
+
+    // TODO Check that `needs` names are unique.
+
+    // TODO Check if every `needs` element is satisfied.
+
+    // TODO Check if every `to` actually matches a need. (This is not the same as the check above,
+    // because we could have extra mappings to non-existent needs).
+
+    // TODO Check that resources are not used multiple times.
 
     Ok(())
 }
@@ -127,7 +176,7 @@ fn epoxy_main() -> Result<(), Error> {
         .parse()
         .context("Failed to parse system description")?;
 
-    debug!("System description is: {:?}", system_spec);
+    debug!("System description is: {:#?}", system_spec);
 
     if let Some(_system_matches) = matches.subcommand_matches("verify") {
         epoxy_verify(cfg_root, &system_spec)
