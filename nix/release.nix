@@ -22,15 +22,22 @@ in {
   # This is for convenience to build RISC-V apps from the CLI with nix-build.
   inherit riscvPkgs;
 
-  shellDependencies = rec {
+  shellDependencies = {
     inherit (dependencies) dhall epoxy-dtb epoxy-qemu-boot qemuHeadless pprintpp range-v3;
     inherit (pkgs) clang-tools niv nixfmt;
+
+    # This is to make cargo build happy when it builds openssl-sys.
+    inherit (pkgs) openssl pkgconfig;
   };
 
   newWorld = rec {
 
     # This is the new harden binary that needs quite a bit of work to be useful.
-    new-harden = naersk.buildPackage ../harden;
+    new-harden = naersk.buildPackage {
+      root = ../harden;
+      nativeBuildInputs = [ pkgs.pkgconfig ];
+      buildInputs = [ pkgs.openssl ];
+    };
 
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
     epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix {};

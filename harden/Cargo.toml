@@ -3,7 +3,15 @@ name = "harden"
 version = "0.1.0"
 authors = ["Julian Stecklina <js@alien8.de>"]
 edition = "2018"
+license = "AGPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde_dhall = "0.9.0"
+elf = "0.0.10"
+clap = "2.33.3"
+failure = "0.1.8"
+failure_derive = "0.1.8"
+log = "0.4.11"
+stderrlog = "0.5.0"
