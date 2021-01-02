@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate failure;
 
-use clap::{App, Arg, SubCommand};
+use clap::{App, AppSettings, Arg, SubCommand};
 use failure::Error;
 use failure::ResultExt;
 use log::{debug, error, info};
@@ -10,6 +10,11 @@ use std::path::Path;
 
 mod cfgfile;
 mod cfgtypes;
+
+fn epoxy_verify(_root: &Path, _system: &cfgtypes::System) -> Result<(), Error> {
+    // TODO Actually try to find the machine and all application descriptions.
+    Ok(())
+}
 
 fn epoxy_main() -> Result<(), Error> {
     let matches = App::new("Epoxy Harden System Configuration")
@@ -32,8 +37,9 @@ fn epoxy_main() -> Result<(), Error> {
              .value_name("SYSTEM")
              .required(true)
              .help("The system name that should be used. This should match a Dhall file in CFGROOT/systems."))
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("verify")
-                    .about("Verify the system configuration."))
+                    .about("Verify the system configuration"))
         .get_matches();
 
     let verbose = matches.occurrences_of("verbosity") as usize;
@@ -65,7 +71,11 @@ fn epoxy_main() -> Result<(), Error> {
 
     debug!("System description is: {:?}", system_spec);
 
-    Ok(())
+    if let Some(_system_matches) = matches.subcommand_matches("verify") {
+        epoxy_verify(cfg_root, &system_spec)
+    } else {
+        Err(format_err!("Unknown subcommand"))
+    }
 }
 
 fn main() {
