@@ -8,10 +8,15 @@ license = "AGPL-3.0-or-later"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde_dhall = "0.9.0"
+serde_dhall = { version = "0.9.0", default-features = false }
 elf = "0.0.10"
-clap = "2.33.3"
 failure = "0.1.8"
 failure_derive = "0.1.8"
 log = "0.4.11"
 stderrlog = "0.5.0"
+serde = "1.0.118"
+
+[dependencies.clap]
+version = "2.33.3"
+default-features = false
+features = [ "color" ]

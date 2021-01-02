@@ -1,5 +1,4 @@
 use std::path::{Path, PathBuf};
-use failure::Error;
 
 pub enum Type {
     System
@@ -8,7 +7,7 @@ pub enum Type {
 pub fn find(t: Type, root: &Path, name: &str) -> PathBuf
 {
     let mut p : PathBuf =  match t {
-        System => [root, Path::new("systems"), Path::new(name)].iter().collect()
+        Type::System => [root, Path::new("systems"), Path::new(name)].iter().collect()
     };
 
     p.set_extension("dhall");

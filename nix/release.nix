@@ -25,9 +25,6 @@ in {
   shellDependencies = {
     inherit (dependencies) dhall epoxy-dtb epoxy-qemu-boot qemuHeadless pprintpp range-v3;
     inherit (pkgs) clang-tools niv nixfmt;
-
-    # This is to make cargo build happy when it builds openssl-sys.
-    inherit (pkgs) openssl pkgconfig;
   };
 
   newWorld = rec {
@@ -35,8 +32,10 @@ in {
     # This is the new harden binary that needs quite a bit of work to be useful.
     new-harden = naersk.buildPackage {
       root = ../harden;
-      nativeBuildInputs = [ pkgs.pkgconfig ];
-      buildInputs = [ pkgs.openssl ];
+
+      # These are necessary when openssl-sys is included.
+      #nativeBuildInputs = [ pkgs.pkgconfig ];
+      #buildInputs = [ pkgs.openssl ];
     };
 
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};

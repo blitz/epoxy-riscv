@@ -50,7 +50,7 @@ let System
     : Type
     = { name : Text
       , machine : Text
-      , processes : List { procName : Text, program : Text }
+      , processes : List { proc_name : Text, program : Text }
       , mappings : List { from : Text, to : Text }
       }
 
