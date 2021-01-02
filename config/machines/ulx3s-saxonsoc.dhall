@@ -1,7 +1,7 @@
 let Epoxy = ../types/Epoxy.dhall
 
 in    { name = "ulx3s-saxonsoc"
-      , availableMemory = [ { start = 0x81000000, size = 0x1000000 } ]
+      , available_memory = [ { start = 0x81000000, size = 0x1000000 } ]
       , devices =
         [ { name = "hdmi-fb"
           , resource =

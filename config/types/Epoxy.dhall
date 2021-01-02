@@ -42,7 +42,7 @@ let Application
 let Machine
     : Type
     = { name : Text
-      , availableMemory : List MemoryRegion
+      , available_memory : List MemoryRegion
       , devices : List NamedResource
       }
 
