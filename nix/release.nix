@@ -4,7 +4,7 @@ let
   dependencies = import ./dependencies.nix { inherit sources nixpkgs pkgs; };
 
   riscvPkgs = dependencies.riscvPkgs;
-  
+
   mkEpoxyBoot = { userBinaries, epoxy-api, applicationDesc, machineDesc }:
     riscvPkgs.callPackage ./epoxy-kern.nix {
       inherit epoxy-api applicationDesc machineDesc;
@@ -16,6 +16,8 @@ let
         paths = userBinaries;
       };
     };
+
+  naersk = pkgs.callPackage sources.naersk {};
 in {
   # This is for convenience to build RISC-V apps from the CLI with nix-build.
   inherit riscvPkgs;
@@ -26,6 +28,10 @@ in {
   };
 
   newWorld = rec {
+
+    # This is the new harden binary that needs quite a bit of work to be useful.
+    new-harden = naersk.buildPackage ../harden;
+
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
     epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix {};
     epoxy-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {};
