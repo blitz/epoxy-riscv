@@ -12,6 +12,7 @@ use std::path::Path;
 mod cfgfile;
 mod cfgtypes;
 
+type ProcessMap = BTreeMap<String, AssignedProcess>;
 type ResourceMap = BTreeMap<String, cfgtypes::Resource>;
 
 #[derive(Debug)]
@@ -28,7 +29,7 @@ struct AssignedProcess {
 struct RuntimeConfiguration {
     name: String,
     available_memory: Vec<cfgtypes::MemoryRegion>,
-    processes: Vec<AssignedProcess>,
+    processes: ProcessMap,
 }
 
 /// Take resource mappings and resolve them into named resources.
@@ -112,7 +113,10 @@ fn configure_system(root: &Path, system: &cfgtypes::System) -> Result<RuntimeCon
     Ok(RuntimeConfiguration {
         name: system.name.clone(),
         available_memory: machine.available_memory.clone(),
-        processes,
+        processes: processes
+            .into_iter()
+            .map(|p| -> (String, AssignedProcess) { (p.name.clone(), p) })
+            .collect(),
     })
 }
 
@@ -124,19 +128,29 @@ fn epoxy_verify(system: &RuntimeConfiguration) -> Result<(), Error> {
 }
 
 fn epoxy_list_processes(system: &RuntimeConfiguration) -> Result<(), Error> {
-    for proc in &system.processes {
-        println!("{}", proc.name);
+    for pname in system.processes.keys() {
+        println!("{}", pname);
     }
 
     Ok(())
 }
 
 fn epoxy_configure_process(
-    _system: &RuntimeConfiguration,
-    _process: &str,
+    system: &RuntimeConfiguration,
+    pname: &str,
     _lang: &str,
 ) -> Result<(), Error> {
+    let process = system
+        .processes
+        .get(pname)
+        .ok_or_else(|| format_err!("Failed to find processes {}", pname))?;
+
     println!("// XXX Implement me!");
+    for rname in process.resources.keys() {
+        println!("// TODO Resource {}", rname);
+
+        // For the simple framebuffer we probably want to generate: volatile uint16_t array[height][stride]
+    }
 
     Ok(())
 }
