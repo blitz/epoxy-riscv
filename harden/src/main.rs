@@ -72,7 +72,7 @@ fn to_process_resources(
 
 fn internalize_process(
     root: &Path,
-    machine : &cfgtypes::Machine,
+    machine: &cfgtypes::Machine,
     process: &cfgtypes::Process,
     mappings: &[cfgtypes::Mapping],
 ) -> Result<AssignedProcess, Error> {
@@ -116,11 +116,27 @@ fn configure_system(root: &Path, system: &cfgtypes::System) -> Result<RuntimeCon
     })
 }
 
-fn epoxy_verify(root: &Path, system: &cfgtypes::System) -> Result<(), Error> {
-    let internalized = configure_system(root, system)?;
-
+fn epoxy_verify(system: &RuntimeConfiguration) -> Result<(), Error> {
     info!("Everything is fine!");
-    debug!("Resolved runtime configuration: {:#?}", internalized);
+    debug!("Resolved runtime configuration: {:#?}", system);
+
+    Ok(())
+}
+
+fn epoxy_list_processes(system: &RuntimeConfiguration) -> Result<(), Error> {
+    for proc in &system.processes {
+        println!("{}", proc.name);
+    }
+
+    Ok(())
+}
+
+fn epoxy_configure_process(
+    _system: &RuntimeConfiguration,
+    _process: &str,
+    _lang: &str,
+) -> Result<(), Error> {
+    println!("// XXX Implement me!");
 
     Ok(())
 }
@@ -149,6 +165,19 @@ fn epoxy_main() -> Result<(), Error> {
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("verify")
                     .about("Verify the system configuration"))
+        .subcommand(SubCommand::with_name("list-processes")
+                    .about("List all processes"))
+        .subcommand(SubCommand::with_name("configure-process")
+                    .about("Generate configuration code for one process")
+                    .arg(Arg::with_name("process")
+                         .value_name("PROC")
+                         .required(true)
+                         .help("The process to generate code for"))
+                    .arg(Arg::with_name("language")
+                         .short("l")
+                         .long("language")
+                         .value_name("LANG")
+                         .default_value("c++")))
         .get_matches();
 
     let verbose = matches.occurrences_of("verbosity") as usize;
@@ -180,8 +209,22 @@ fn epoxy_main() -> Result<(), Error> {
 
     debug!("System description is: {:#?}", system_spec);
 
-    if let Some(_system_matches) = matches.subcommand_matches("verify") {
-        epoxy_verify(cfg_root, &system_spec)
+    let configured_system = configure_system(cfg_root, &system_spec)?;
+
+    if let Some(_) = matches.subcommand_matches("verify") {
+        epoxy_verify(&configured_system)
+    } else if let Some(_) = matches.subcommand_matches("list-processes") {
+        epoxy_list_processes(&configured_system)
+    } else if let Some(cfg_proc_matches) = matches.subcommand_matches("configure-process") {
+        epoxy_configure_process(
+            &configured_system,
+            cfg_proc_matches
+                .value_of("process")
+                .expect("required option missing"),
+            cfg_proc_matches
+                .value_of("language")
+                .expect("option with default value missing"),
+        )
     } else {
         Err(format_err!("Unknown subcommand"))
     }
