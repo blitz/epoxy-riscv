@@ -8,6 +8,7 @@ use log::{debug, error, info};
 use serde_dhall;
 use std::path::Path;
 
+mod framebuffer;
 mod cfgfile;
 mod cfgtypes;
 mod codegen;

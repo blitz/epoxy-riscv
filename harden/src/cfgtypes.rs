@@ -3,6 +3,8 @@
 
 use serde::Deserialize;
 
+use crate::framebuffer;
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Process {
     pub name: String,
@@ -34,18 +36,10 @@ pub enum ResourceType {
     Framebuffer,
 }
 
-#[derive(Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
-pub enum PixelFormat {
-    R5G6B5,
-}
-
 #[derive(Deserialize, Debug, Clone)]
 pub enum Resource {
     Framebuffer {
-        height: u32,
-        width: u32,
-        stride: u32,
-        format: PixelFormat,
+        format: framebuffer::Format,
         region: MemoryRegion,
     },
 }

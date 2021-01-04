@@ -6,10 +6,12 @@ in    { name = "ulx3s-saxonsoc"
         [ { name = "hdmi-fb"
           , resource =
               Epoxy.Resource.Framebuffer
-                { height = 480
-                , width = 640
-                , stride = 1280
-                , format = Epoxy.PixelFormat.R5G6B5
+                { format =
+                  { height = 480
+                  , width = 640
+                  , stride = 1280
+                  , pixel = Epoxy.PixelFormat.R5G6B5
+                  }
                 , region = { start = 0x80e00000, size = 0x96000 }
                 }
           }

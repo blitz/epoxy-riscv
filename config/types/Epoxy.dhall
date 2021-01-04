@@ -10,16 +10,17 @@ let PixelFormat
     : Type
     = < R5G6B5 >
 
+let FramebufferFormat
+    : Type
+    = { height : Natural
+      , width : Natural
+      , stride : Natural
+      , pixel : PixelFormat
+      }
+
 let Resource
     : Type
-    = < Framebuffer :
-          { height : Natural
-          , width : Natural
-          , stride : Natural
-          , format : PixelFormat
-          , region : MemoryRegion
-          }
-      >
+    = < Framebuffer : { format : FramebufferFormat, region : MemoryRegion } >
 
 let NamedResource
     : Type
@@ -56,6 +57,7 @@ let System
 
 in  { ResourceType
     , MemoryRegion
+    , FramebufferFormat
     , PixelFormat
     , Resource
     , NamedResource
