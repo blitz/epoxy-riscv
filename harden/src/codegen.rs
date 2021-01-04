@@ -3,9 +3,8 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use crate::cfgtypes;
-use crate::runtypes;
 use crate::framebuffer;
+use crate::runtypes;
 
 /// The supported programming languages for code generation output.
 #[derive(Copy, Clone)]
@@ -54,9 +53,9 @@ impl FromStr for Language {
     }
 }
 
-fn generate_cpp_res(name: &str, resource: &runtypes::Resource) -> String {
-    match resource {
-        cfgtypes::Resource::Framebuffer { format, region } => {
+fn generate_cpp_res(name: &str, resource: &runtypes::MemoryResource) -> String {
+    match &resource.meta {
+        runtypes::ResourceMetaInfo::Framebuffer { format } => {
             if format.pixel != framebuffer::PixelFormat::R5G6B5 {
                 todo!("Implement different pixel formats");
             };
@@ -68,7 +67,7 @@ fn generate_cpp_res(name: &str, resource: &runtypes::Resource) -> String {
             format!("
 static inline uint16_t volatile (&{}_pixels)[{}][{}] {{*reinterpret_cast<uint16_t volatile (*)[{}][{}]>({:#x})}};
 static inline size_t {}_width {{{}}};
-", name, format.height, format.stride / 2, format.height, format.stride / 2, region.start, name, format.width)
+", name, format.height, format.stride / 2, format.height, format.stride / 2, resource.region.virt_start, name, format.width)
         }
     }
 }

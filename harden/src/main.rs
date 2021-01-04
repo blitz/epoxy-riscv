@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate failure;
 
+use crate::cfgtypes::Resource::Framebuffer;
 use clap::{App, AppSettings, Arg, SubCommand};
 use failure::Error;
 use failure::ResultExt;
@@ -8,19 +9,36 @@ use log::{debug, error, info};
 use serde_dhall;
 use std::path::Path;
 
-mod framebuffer;
 mod cfgfile;
 mod cfgtypes;
 mod codegen;
+mod framebuffer;
 mod runtypes;
 
+/// The virtual address in processes where mappings of resources start.
+///
+/// TODO This should be configurable, because it might conflict with the addresses at which the
+/// binaries are linked.
+const VIRT_RESOURCE_START: u64 = 0x40000000;
+
+/// The default page size.
+const PAGE_SIZE: u64 = 0x1000;
+
+fn page_align_up(v: u64) -> u64 {
+    (v + PAGE_SIZE - 1) & !(PAGE_SIZE - 1)
+}
+
 /// Take resource mappings and resolve them into named resources.
+///
+/// TODO This is needlessly long/unmodular/ugly.
 fn to_process_resources(
     proc_name: &str,
     needs: &[cfgtypes::NamedResourceType],
     mappings: &[cfgtypes::Mapping],
     devices: &[cfgtypes::NamedResource],
 ) -> Result<runtypes::ResourceMap, Error> {
+    let mut vstart = VIRT_RESOURCE_START;
+
     needs
         .iter()
         .map(|need| -> Result<(String, cfgtypes::Resource), Error> {
@@ -49,6 +67,24 @@ fn to_process_resources(
 
             info!("Mapping {} to {}", source_name, mapping_to);
             Ok((need.name.clone(), source_res.resource.clone()))
+        })
+        .map(|v| {
+            v.map(|(name, res)| match res {
+                Framebuffer { format, region } => (
+                    name,
+                    runtypes::MemoryResource {
+                        region: runtypes::VirtualMemoryRegion {
+                            virt_start: {
+                                let old = vstart;
+                                vstart = page_align_up(vstart + region.size);
+                                old
+                            },
+                            phys: region.clone(),
+                        },
+                        meta: runtypes::ResourceMetaInfo::Framebuffer { format: format },
+                    },
+                ),
+            })
         })
         .collect()
 }
