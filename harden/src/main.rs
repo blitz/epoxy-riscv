@@ -6,31 +6,12 @@ use failure::Error;
 use failure::ResultExt;
 use log::{debug, error, info};
 use serde_dhall;
-use std::collections::BTreeMap;
 use std::path::Path;
 
 mod cfgfile;
 mod cfgtypes;
-
-type ProcessMap = BTreeMap<String, AssignedProcess>;
-type ResourceMap = BTreeMap<String, cfgtypes::Resource>;
-
-#[derive(Debug)]
-struct AssignedProcess {
-    name: String,
-    binary: String,
-
-    /// A mapping from resource name (the one specified as `needs` in the application description)
-    /// to an actual resource.
-    resources: ResourceMap,
-}
-
-#[derive(Debug)]
-struct RuntimeConfiguration {
-    name: String,
-    available_memory: Vec<cfgtypes::MemoryRegion>,
-    processes: ProcessMap,
-}
+mod codegen;
+mod runtypes;
 
 /// Take resource mappings and resolve them into named resources.
 fn to_process_resources(
@@ -38,7 +19,7 @@ fn to_process_resources(
     needs: &[cfgtypes::NamedResourceType],
     mappings: &[cfgtypes::Mapping],
     devices: &[cfgtypes::NamedResource],
-) -> Result<ResourceMap, Error> {
+) -> Result<runtypes::ResourceMap, Error> {
     needs
         .iter()
         .map(|need| -> Result<(String, cfgtypes::Resource), Error> {
@@ -76,7 +57,7 @@ fn internalize_process(
     machine: &cfgtypes::Machine,
     process: &cfgtypes::Process,
     mappings: &[cfgtypes::Mapping],
-) -> Result<AssignedProcess, Error> {
+) -> Result<runtypes::Process, Error> {
     let app_cfg_file = cfgfile::find(cfgfile::Type::Application, root, &process.program);
     info!(
         "Using {} as configuration file for process {}",
@@ -88,7 +69,7 @@ fn internalize_process(
         .parse()
         .context("Failed to parse machine description")?;
 
-    Ok(AssignedProcess {
+    Ok(runtypes::Process {
         name: process.name.clone(),
         binary: program.binary,
         resources: to_process_resources(&process.name, &program.needs, mappings, &machine.devices)
@@ -98,36 +79,39 @@ fn internalize_process(
 
 /// Take a system description as it comes in from the config files and read all other configurations
 /// it refernces.
-fn configure_system(root: &Path, system: &cfgtypes::System) -> Result<RuntimeConfiguration, Error> {
+fn configure_system(
+    root: &Path,
+    system: &cfgtypes::System,
+) -> Result<runtypes::Configuration, Error> {
     let machine: cfgtypes::Machine =
         serde_dhall::from_file(cfgfile::find(cfgfile::Type::Machine, root, &system.machine))
             .parse()
             .context("Failed to parse machine description")?;
 
-    let processes: Vec<AssignedProcess> = system
+    let processes: Vec<runtypes::Process> = system
         .processes
         .iter()
         .map(|p| internalize_process(root, &machine, p, &system.mappings))
-        .collect::<Result<Vec<AssignedProcess>, Error>>()?;
+        .collect::<Result<Vec<runtypes::Process>, Error>>()?;
 
-    Ok(RuntimeConfiguration {
+    Ok(runtypes::Configuration {
         name: system.name.clone(),
         available_memory: machine.available_memory.clone(),
         processes: processes
             .into_iter()
-            .map(|p| -> (String, AssignedProcess) { (p.name.clone(), p) })
+            .map(|p| -> (String, runtypes::Process) { (p.name.clone(), p) })
             .collect(),
     })
 }
 
-fn epoxy_verify(system: &RuntimeConfiguration) -> Result<(), Error> {
+fn epoxy_verify(system: &runtypes::Configuration) -> Result<(), Error> {
     info!("Everything is fine!");
     debug!("Resolved runtime configuration: {:#?}", system);
 
     Ok(())
 }
 
-fn epoxy_list_processes(system: &RuntimeConfiguration) -> Result<(), Error> {
+fn epoxy_list_processes(system: &runtypes::Configuration) -> Result<(), Error> {
     for pname in system.processes.keys() {
         println!("{}", pname);
     }
@@ -136,21 +120,19 @@ fn epoxy_list_processes(system: &RuntimeConfiguration) -> Result<(), Error> {
 }
 
 fn epoxy_configure_process(
-    system: &RuntimeConfiguration,
+    system: &runtypes::Configuration,
     pname: &str,
-    _lang: &str,
+    lang: &str,
 ) -> Result<(), Error> {
     let process = system
         .processes
         .get(pname)
         .ok_or_else(|| format_err!("Failed to find processes {}", pname))?;
 
-    println!("// XXX Implement me!");
-    for rname in process.resources.keys() {
-        println!("// TODO Resource {}", rname);
-
-        // For the simple framebuffer we probably want to generate: volatile uint16_t array[height][stride]
-    }
+    print!(
+        "{}",
+        codegen::generate(lang.parse::<codegen::Language>()?, &process)
+    );
 
     Ok(())
 }

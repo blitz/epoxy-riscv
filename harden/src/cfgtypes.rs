@@ -29,12 +29,12 @@ pub struct MemoryRegion {
     pub size: u64,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ResourceType {
     Framebuffer,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PixelFormat {
     R5G6B5,
 }
