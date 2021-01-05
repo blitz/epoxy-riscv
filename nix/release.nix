@@ -32,10 +32,6 @@ in {
     # This is the new harden binary that needs quite a bit of work to be useful.
     new-harden = naersk.buildPackage {
       root = ../harden;
-
-      # These are necessary when openssl-sys is included.
-      #nativeBuildInputs = [ pkgs.pkgconfig ];
-      #buildInputs = [ pkgs.openssl ];
     };
 
     new-harden-test = pkgs.runCommandNoCC "new-harden-verify-test" {
