@@ -8,6 +8,7 @@ mod cfgtypes;
 mod codegen;
 mod epoxy;
 mod framebuffer;
+mod kernel_codegen;
 mod runtypes;
 
 fn main() {

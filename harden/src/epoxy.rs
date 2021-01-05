@@ -10,6 +10,7 @@ use std::path::Path;
 use crate::cfgfile;
 use crate::cfgtypes;
 use crate::codegen;
+use crate::kernel_codegen;
 use crate::runtypes;
 
 /// The virtual address in processes where mappings of resources start.
@@ -39,7 +40,7 @@ fn to_process_resources(
     needs
         .iter()
         .map(|need| -> Result<(String, cfgtypes::Resource), Error> {
-            // A needed resource dev for process hello means we need to look for a mapping to
+            // A needed resource "dev" for process "hello" means we need to look for a mapping to
             // "hello.dev".
             let mapping_to = proc_name.to_owned() + "." + &need.name;
 
@@ -171,6 +172,19 @@ fn epoxy_configure_process(
     Ok(())
 }
 
+fn epoxy_configure_kernel(system: &runtypes::Configuration, do_header: bool) -> Result<(), Error> {
+    print!(
+        "{}",
+        if do_header {
+            kernel_codegen::generate_hpp(&system)?
+        } else {
+            kernel_codegen::generate_cpp(&system)?
+        }
+    );
+
+    Ok(())
+}
+
 pub fn main() -> Result<(), Error> {
     let matches = App::new("Epoxy Harden System Configuration")
         .arg(Arg::with_name("verbosity")
@@ -208,6 +222,10 @@ pub fn main() -> Result<(), Error> {
                          .long("language")
                          .value_name("LANG")
                          .default_value("c++")))
+        .subcommand(SubCommand::with_name("configure-kernel")
+                    .about("Generate configuration code for the kernel (C++ only)")
+                    .arg(Arg::with_name("header")
+                         .help("Generate the header instead of the C++ source")))
         .get_matches();
 
     let verbose = matches.occurrences_of("verbosity") as usize;
@@ -255,6 +273,8 @@ pub fn main() -> Result<(), Error> {
                 .value_of("language")
                 .expect("option with default value missing"),
         )
+    } else if let Some(cfg_kern_matches) = matches.subcommand_matches("configure-kernel") {
+        epoxy_configure_kernel(&configured_system, cfg_kern_matches.is_present("header"))
     } else {
         Err(format_err!("Unknown subcommand"))
     }
