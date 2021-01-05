@@ -2,6 +2,6 @@ let Epoxy = ../types/Epoxy.dhall
 
 in    { name = "fbdemo"
       , needs = [ { name = "fb0", type = Epoxy.ResourceType.Framebuffer } ]
-      , binary = "fbdemo"
+      , binary = "epoxy-fbdemo"
       }
     : Epoxy.Application

@@ -172,7 +172,11 @@ fn epoxy_configure_process(
     Ok(())
 }
 
-fn epoxy_configure_kernel(system: &runtypes::Configuration, do_header: bool) -> Result<(), Error> {
+fn epoxy_configure_kernel(
+    system: &runtypes::Configuration,
+    do_header: bool,
+    _user_root: &str,
+) -> Result<(), Error> {
     print!(
         "{}",
         if do_header {
@@ -224,6 +228,9 @@ pub fn main() -> Result<(), Error> {
                          .default_value("c++")))
         .subcommand(SubCommand::with_name("configure-kernel")
                     .about("Generate configuration code for the kernel (C++ only)")
+                    .arg(Arg::with_name("user-binaries")
+                         .required(true)
+                         .help("The path where user binaries can be found"))
                     .arg(Arg::with_name("header")
                          .short("h")
                          .long("header")
@@ -276,7 +283,13 @@ pub fn main() -> Result<(), Error> {
                 .expect("option with default value missing"),
         )
     } else if let Some(cfg_kern_matches) = matches.subcommand_matches("configure-kernel") {
-        epoxy_configure_kernel(&configured_system, cfg_kern_matches.is_present("header"))
+        epoxy_configure_kernel(
+            &configured_system,
+            cfg_kern_matches.is_present("header"),
+            cfg_kern_matches
+                .value_of("user-binaries")
+                .expect("required option missing"),
+        )
     } else {
         Err(format_err!("Unknown subcommand"))
     }
