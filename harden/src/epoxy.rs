@@ -225,6 +225,8 @@ pub fn main() -> Result<(), Error> {
         .subcommand(SubCommand::with_name("configure-kernel")
                     .about("Generate configuration code for the kernel (C++ only)")
                     .arg(Arg::with_name("header")
+                         .short("h")
+                         .long("header")
                          .help("Generate the header instead of the C++ source")))
         .get_matches();
 

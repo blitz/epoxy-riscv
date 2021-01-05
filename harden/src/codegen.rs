@@ -2,6 +2,7 @@
 
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use itertools::Itertools;
 
 use crate::framebuffer;
 use crate::runtypes;
@@ -86,7 +87,6 @@ pub fn generate(language: Language, process: &runtypes::Process) -> String {
                 .resources
                 .iter()
                 .map(|(name, res)| generate_cpp_res(name, res))
-                .collect::<Vec<String>>()
                 .join("\n")
         ),
     }

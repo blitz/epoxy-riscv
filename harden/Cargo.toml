@@ -12,6 +12,7 @@ serde_dhall = { version = "0.9.0", default-features = false }
 elf = "0.0.10"
 failure = "0.1.8"
 failure_derive = "0.1.8"
+itertools = "0.9.0"
 log = "0.4.11"
 stderrlog = "0.5.0"
 serde = "1.0.118"

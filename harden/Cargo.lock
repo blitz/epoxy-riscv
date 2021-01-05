@@ -340,6 +340,7 @@ dependencies = [
  "elf",
  "failure",
  "failure_derive",
+ "itertools",
  "log",
  "serde",
  "serde_dhall",
