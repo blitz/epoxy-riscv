@@ -1,5 +1,8 @@
 use failure::Error;
+use failure::ResultExt;
 use itertools::Itertools;
+use elfy::Elf;
+use std::convert::TryInto;
 
 use crate::runtypes;
 
@@ -173,9 +176,11 @@ fn pointer_to(s: &str) -> Expression {
     Expression::AddressOf(Box::new(Expression::Identifier(s.to_string())))
 }
 
-fn process_entry(_process: &runtypes::Process) -> u64 {
-    // TODO Returning bogus process entry point!
-    0xDEADBEEF
+fn process_entry(process: &runtypes::Process) -> Result<u64, Error> {
+    let elf = Elf::load(&process.binary).context("Failed to load process ELF")?;
+
+    // The try_into cannot fail, because we header() returns usize and usize always fits into u64.
+    Ok(elf.header().entry().try_into().expect("Integer conversion error"))
 }
 
 fn process_stack_ptr(process: &runtypes::Process) -> u64 {
@@ -223,7 +228,7 @@ fn process_kobjects(
                 name: thread_name,
                 init_args: vec![
                     pointer_to(&proc_name),
-                    Expression::LiteralUnsigned(process_entry(&process)),
+                    Expression::LiteralUnsigned(process_entry(&process)?),
                     Expression::LiteralUnsigned(process_stack_ptr(&process)),
                 ],
             },
