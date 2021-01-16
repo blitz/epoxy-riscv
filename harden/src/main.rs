@@ -10,6 +10,7 @@ mod epoxy;
 mod framebuffer;
 mod kernel_codegen;
 mod runtypes;
+mod bump_ptr_alloc;
 
 fn main() {
     std::process::exit(match epoxy::main() {
