@@ -12,6 +12,7 @@ use crate::cfgtypes;
 use crate::codegen;
 use crate::kernel_codegen;
 use crate::runtypes;
+use crate::bump_ptr_alloc::BumpPointerAlloc;
 
 /// The virtual address in processes where mappings of resources start.
 ///
@@ -19,25 +20,58 @@ use crate::runtypes;
 /// binaries are linked.
 const VIRT_RESOURCE_START: u64 = 0x40000000;
 
+/// The end of the resource area in processes.
+const VIRT_RESOURCE_END: u64 = 0x50000000;
+
+/// The default stack size for user programs.
+const USER_STACK_SIZE: u64 = 0x4000;
+
 /// The default page size.
 const PAGE_SIZE: u64 = 0x1000;
 
-fn page_align_up(v: u64) -> u64 {
-    (v + PAGE_SIZE - 1) & !(PAGE_SIZE - 1)
+/// Flatten a nested result.
+///
+/// TODO: Nightly has a `.flatten()` method that replaces this function.
+fn rflatten<T>(r: Result<Result<T, Error>, Error>) -> Result<T, Error>
+{
+    match r {
+        Ok(v) => v,
+        Err(e) => Err(e),
+    }
+}
+
+fn make_user_stack(valloc: &mut BumpPointerAlloc) -> Result<runtypes::MemoryResource, Error>
+{
+    valloc.alloc(PAGE_SIZE).ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
+
+    let stack = runtypes::MemoryResource {
+        region: runtypes::VirtualMemoryRegion {
+            virt_start: valloc.alloc(USER_STACK_SIZE).ok_or_else(|| format_err!("Failed to allocate stack"))?,
+            phys: runtypes::MemoryRegion {
+                // TODO We a way to express anonymous mappings.
+                start: 0xDEADBEEF,
+                size: USER_STACK_SIZE,
+            }
+        },
+        meta: runtypes::ResourceMetaInfo::Stack,
+    };
+
+    valloc.alloc(PAGE_SIZE).ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
+
+    Ok(stack)
 }
 
 /// Take resource mappings and resolve them into named resources.
 ///
 /// TODO This is needlessly long/unmodular/ugly.
 fn to_process_resources(
+    valloc: &mut BumpPointerAlloc,
     proc_name: &str,
     needs: &[cfgtypes::NamedResourceType],
     mappings: &[cfgtypes::Mapping],
     devices: &[cfgtypes::NamedResource],
 ) -> Result<runtypes::ResourceMap, Error> {
-    let mut vstart = VIRT_RESOURCE_START;
-
-    needs
+    let rmap : runtypes::ResourceMap = needs
         .iter()
         .map(|need| -> Result<(String, cfgtypes::Resource), Error> {
             // A needed resource "dev" for process "hello" means we need to look for a mapping to
@@ -66,25 +100,28 @@ fn to_process_resources(
             info!("Mapping {} to {}", source_name, mapping_to);
             Ok((need.name.clone(), source_res.resource.clone()))
         })
-        .map(|v| {
-            v.map(|(name, res)| match res {
-                cfgtypes::Resource::Framebuffer { format, region } => (
-                    name,
-                    runtypes::MemoryResource {
-                        region: runtypes::VirtualMemoryRegion {
-                            virt_start: {
-                                let old = vstart;
-                                vstart = page_align_up(vstart + region.size);
-                                old
+        .map(|v| -> Result<(String, runtypes::MemoryResource), Error> {
+            rflatten(v.map(|(name, res)| -> Result<(String, runtypes::MemoryResource), Error> {
+                Ok(match res {
+                    cfgtypes::Resource::Framebuffer { format, region } => (
+                        name.clone(),
+                        runtypes::MemoryResource {
+                            region: runtypes::VirtualMemoryRegion {
+                                // TODO This should return an error.
+                                virt_start: valloc.alloc(region.size).ok_or_else(|| {
+                                    format_err!("Failed to allocate virtual memory for resource {} in process {}",
+                                                name, proc_name)
+                                })?,
+                                phys: region.clone(),
                             },
-                            phys: region.clone(),
+                            meta: runtypes::ResourceMetaInfo::Framebuffer { format: format },
                         },
-                        meta: runtypes::ResourceMetaInfo::Framebuffer { format: format },
-                    },
-                ),
-            })
+                    ),
+                })}))
         })
-        .collect()
+        .collect::<Result<runtypes::ResourceMap, Error>>()?;
+
+    Ok(rmap)
 }
 
 fn internalize_process(
@@ -104,10 +141,13 @@ fn internalize_process(
         .parse()
         .context("Failed to parse machine description")?;
 
+    let mut valloc = BumpPointerAlloc::new(VIRT_RESOURCE_START, VIRT_RESOURCE_END, PAGE_SIZE);
+
     Ok(runtypes::Process {
         name: process.name.clone(),
         binary: program.binary,
-        resources: to_process_resources(&process.name, &program.needs, mappings, &machine.devices)
+        stack: make_user_stack(&mut valloc)?,
+        resources: to_process_resources(&mut valloc, &process.name, &program.needs, mappings, &machine.devices)
             .context("Failed to resolve process resources for process")?,
     })
 }

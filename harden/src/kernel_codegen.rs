@@ -178,9 +178,8 @@ fn process_entry(_process: &runtypes::Process) -> u64 {
     0xDEADBEEF
 }
 
-fn process_stack_ptr(_process: &runtypes::Process) -> u64 {
-    // TODO Returning bogus stack pointer!
-    0xCAFED00D
+fn process_stack_ptr(process: &runtypes::Process) -> u64 {
+    process.stack.region.virt_start + process.stack.size()
 }
 
 /// Returns the name of the thread that is created in addition to all statements that need to go

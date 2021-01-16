@@ -16,6 +16,7 @@ pub struct VirtualMemoryRegion {
 
 #[derive(Debug)]
 pub enum ResourceMetaInfo {
+    Stack,
     Framebuffer { format: framebuffer::Format },
 }
 
@@ -27,6 +28,12 @@ pub struct MemoryResource {
 
     /// Metainformation about this resource.
     pub meta: ResourceMetaInfo,
+}
+
+impl MemoryResource {
+    pub fn size(&self) -> u64 {
+        self.region.phys.size
+    }
 }
 
 pub type ProcessMap = BTreeMap<String, Process>;
@@ -41,6 +48,9 @@ pub struct Process {
     /// A mapping from resource name (the one specified as `needs` in the application description)
     /// to an actual resource.
     pub resources: ResourceMap,
+
+    /// The stack of the single thread in the process.
+    pub stack: MemoryResource,
 }
 
 #[derive(Debug)]

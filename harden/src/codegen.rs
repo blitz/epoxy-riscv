@@ -56,6 +56,7 @@ impl FromStr for Language {
 
 fn generate_cpp_res(name: &str, resource: &runtypes::MemoryResource) -> String {
     match &resource.meta {
+        runtypes::ResourceMetaInfo::Stack => "".to_string(),
         runtypes::ResourceMetaInfo::Framebuffer { format } => {
             if format.pixel != framebuffer::PixelFormat::R5G6B5 {
                 todo!("Implement different pixel formats");
