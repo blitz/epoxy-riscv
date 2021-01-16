@@ -47,9 +47,7 @@ fn make_user_stack(valloc: &mut BumpPointerAlloc) -> Result<runtypes::MemoryReso
     let stack = runtypes::MemoryResource {
         region: runtypes::VirtualMemoryRegion {
             virt_start: valloc.alloc(USER_STACK_SIZE).ok_or_else(|| format_err!("Failed to allocate stack"))?,
-            phys: runtypes::MemoryRegion {
-                // TODO We a way to express anonymous mappings.
-                start: 0xDEADBEEF,
+            phys: runtypes::MemoryRegion::AnonymousZeroes {
                 size: USER_STACK_SIZE,
             }
         },
@@ -112,7 +110,7 @@ fn to_process_resources(
                                     format_err!("Failed to allocate virtual memory for resource {} in process {}",
                                                 name, proc_name)
                                 })?,
-                                phys: region.clone(),
+                                phys: runtypes::MemoryRegion::from(&region),
                             },
                             meta: runtypes::ResourceMetaInfo::Framebuffer { format: format },
                         },

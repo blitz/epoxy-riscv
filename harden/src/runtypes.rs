@@ -3,9 +3,33 @@
 
 use std::collections::BTreeMap;
 
-// Re-export config types that are re-used.
-pub use crate::cfgtypes::MemoryRegion;
 use crate::framebuffer;
+use crate::cfgtypes;
+
+#[derive(Debug)]
+
+pub enum MemoryRegion {
+    AnonymousZeroes { size: u64 },
+    Phys { size: u64, start: u64 },
+}
+
+impl MemoryRegion {
+    pub fn size(&self) -> u64 {
+        match self {
+            MemoryRegion::AnonymousZeroes { size } => *size,
+            MemoryRegion::Phys { size, .. } => *size,
+        }
+    }
+}
+
+impl From<&cfgtypes::MemoryRegion> for MemoryRegion {
+    fn from(cmem: &cfgtypes::MemoryRegion) -> Self {
+        MemoryRegion::Phys {
+            start: cmem.start,
+            size: cmem.size,
+        }
+    }
+}
 
 /// A memory mapping in a process.
 #[derive(Debug)]
@@ -32,7 +56,7 @@ pub struct MemoryResource {
 
 impl MemoryResource {
     pub fn size(&self) -> u64 {
-        self.region.phys.size
+        self.region.phys.size()
     }
 }
 
@@ -56,6 +80,6 @@ pub struct Process {
 #[derive(Debug)]
 pub struct Configuration {
     pub name: String,
-    pub available_memory: Vec<MemoryRegion>,
+    pub available_memory: Vec<cfgtypes::MemoryRegion>,
     pub processes: ProcessMap,
 }
