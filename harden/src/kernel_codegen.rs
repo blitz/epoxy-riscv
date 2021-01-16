@@ -1,7 +1,7 @@
+use elfy::Elf;
 use failure::Error;
 use failure::ResultExt;
 use itertools::Itertools;
-use elfy::Elf;
 use std::convert::TryInto;
 
 use crate::runtypes;
@@ -180,7 +180,11 @@ fn process_entry(process: &runtypes::Process) -> Result<u64, Error> {
     let elf = Elf::load(&process.binary).context("Failed to load process ELF")?;
 
     // The try_into cannot fail, because we header() returns usize and usize always fits into u64.
-    Ok(elf.header().entry().try_into().expect("Integer conversion error"))
+    Ok(elf
+        .header()
+        .entry()
+        .try_into()
+        .expect("Integer conversion error"))
 }
 
 fn process_stack_ptr(process: &runtypes::Process) -> u64 {

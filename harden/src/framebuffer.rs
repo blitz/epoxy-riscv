@@ -14,4 +14,3 @@ pub struct Format {
     pub stride: u32,
     pub pixel: PixelFormat,
 }
-        

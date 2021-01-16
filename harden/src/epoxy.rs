@@ -7,12 +7,12 @@ use log::{debug, info};
 use serde_dhall;
 use std::path::Path;
 
+use crate::bump_ptr_alloc::BumpPointerAlloc;
 use crate::cfgfile;
 use crate::cfgtypes;
 use crate::codegen;
 use crate::kernel_codegen;
 use crate::runtypes;
-use crate::bump_ptr_alloc::BumpPointerAlloc;
 
 /// The virtual address in processes where mappings of resources start.
 ///
@@ -32,29 +32,33 @@ const PAGE_SIZE: u64 = 0x1000;
 /// Flatten a nested result.
 ///
 /// TODO: Nightly has a `.flatten()` method that replaces this function.
-fn rflatten<T>(r: Result<Result<T, Error>, Error>) -> Result<T, Error>
-{
+fn rflatten<T>(r: Result<Result<T, Error>, Error>) -> Result<T, Error> {
     match r {
         Ok(v) => v,
         Err(e) => Err(e),
     }
 }
 
-fn make_user_stack(valloc: &mut BumpPointerAlloc) -> Result<runtypes::MemoryResource, Error>
-{
-    valloc.alloc(PAGE_SIZE).ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
+fn make_user_stack(valloc: &mut BumpPointerAlloc) -> Result<runtypes::MemoryResource, Error> {
+    valloc
+        .alloc(PAGE_SIZE)
+        .ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
 
     let stack = runtypes::MemoryResource {
         region: runtypes::VirtualMemoryRegion {
-            virt_start: valloc.alloc(USER_STACK_SIZE).ok_or_else(|| format_err!("Failed to allocate stack"))?,
+            virt_start: valloc
+                .alloc(USER_STACK_SIZE)
+                .ok_or_else(|| format_err!("Failed to allocate stack"))?,
             phys: runtypes::MemoryRegion::AnonymousZeroes {
                 size: USER_STACK_SIZE,
-            }
+            },
         },
         meta: runtypes::ResourceMetaInfo::Stack,
     };
 
-    valloc.alloc(PAGE_SIZE).ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
+    valloc
+        .alloc(PAGE_SIZE)
+        .ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
 
     Ok(stack)
 }
@@ -145,8 +149,14 @@ fn internalize_process(
         name: process.name.clone(),
         binary: program.binary,
         stack: make_user_stack(&mut valloc)?,
-        resources: to_process_resources(&mut valloc, &process.name, &program.needs, mappings, &machine.devices)
-            .context("Failed to resolve process resources for process")?,
+        resources: to_process_resources(
+            &mut valloc,
+            &process.name,
+            &program.needs,
+            mappings,
+            &machine.devices,
+        )
+        .context("Failed to resolve process resources for process")?,
     })
 }
 

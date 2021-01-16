@@ -1,8 +1,8 @@
 //! Generate process configuration code from resource descriptions.
 
+use itertools::Itertools;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-use itertools::Itertools;
 
 use crate::framebuffer;
 use crate::runtypes;

@@ -1,4 +1,3 @@
-
 /// A simple bump pointer allocator that can be used to quickly allocate regions that never have to
 /// be freed.
 pub struct BumpPointerAlloc {
@@ -18,10 +17,11 @@ impl BumpPointerAlloc {
         assert!(min_align > 0);
         assert!(is_power_of_two(min_align));
         assert_eq!(start & (min_align - 1), 0);
-        
+
         BumpPointerAlloc {
             current: start,
-            min_align, end
+            min_align,
+            end,
         }
     }
 
@@ -31,7 +31,10 @@ impl BumpPointerAlloc {
         assert_eq!(self.current & (self.min_align - 1), 0);
 
         let cur = self.current;
-        let next_aligned = self.current.checked_add(size.checked_add(self.min_align - 1)?)? & !(self.min_align - 1);
+        let next_aligned = self
+            .current
+            .checked_add(size.checked_add(self.min_align - 1)?)?
+            & !(self.min_align - 1);
 
         if next_aligned <= self.end {
             self.current = next_aligned;

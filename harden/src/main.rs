@@ -3,6 +3,7 @@ extern crate failure;
 
 use log::error;
 
+mod bump_ptr_alloc;
 mod cfgfile;
 mod cfgtypes;
 mod codegen;
@@ -10,7 +11,6 @@ mod epoxy;
 mod framebuffer;
 mod kernel_codegen;
 mod runtypes;
-mod bump_ptr_alloc;
 
 fn main() {
     std::process::exit(match epoxy::main() {

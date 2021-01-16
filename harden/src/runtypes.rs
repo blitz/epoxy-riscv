@@ -3,8 +3,8 @@
 
 use std::collections::BTreeMap;
 
-use crate::framebuffer;
 use crate::cfgtypes;
+use crate::framebuffer;
 
 #[derive(Debug)]
 
