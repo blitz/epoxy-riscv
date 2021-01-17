@@ -28,19 +28,6 @@ in {
   };
 
   newWorld = rec {
-
-    # This is the new harden binary that needs quite a bit of work to be useful.
-    new-harden = naersk.buildPackage {
-      root = ../harden;
-    };
-
-    new-harden-test = pkgs.runCommandNoCC "new-harden-verify-test" {
-      nativeBuildInputs = [ new-harden ];
-    }
-      ''
-        harden -r ${../config} -s ulx3s-saxonsoc-fbdemo -vvv verify 2>&1 | tee $out
-      '';
-
     epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix {};
     epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix {};
     epoxy-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {};
@@ -72,4 +59,26 @@ in {
       bootElf = "${epoxy-boot-virtio-net}/bin/epoxy-boot";
     };
   };
+
+  # This is the playground for the new Rust-based harden implementation.
+  new-harden =
+    let
+      hardenCmd = "harden -r ${../config} -s ulx3s-saxonsoc-fbdemo -vvvv";
+    in rec {
+      # This is the new harden binary that needs quite a bit of work to be useful.
+      new-harden = naersk.buildPackage {
+        root = ../harden;
+      };
+
+      new-harden-test = pkgs.runCommandNoCC "new-harden-verify-test"
+        { nativeBuildInputs = [ new-harden ]; }
+        "${hardenCmd} verify 2>&1 | tee $out";
+
+      new-harden-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {
+        resourceHeader = pkgs.runCommandNoCC "fbdemo-resources.hpp"
+          { nativeBuildInputs = [ new-harden ]; }
+          "${hardenCmd} configure-process fbdemo > $out";
+      };
+    };
+
 }

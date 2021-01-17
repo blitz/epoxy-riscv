@@ -3,9 +3,24 @@ cmake_minimum_required(VERSION 3.12)
 project("epoxy-fbdemo" VERSION 1.0.0
   DESCRIPTION "Render a 1980s style text to a framebuffer.")
 
+set(RESOURCE_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/default-resources.hpp" CACHE FILEPATH "The Epoxy resource header")
+
 include(GNUInstallDirs)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/resources.hpp
+  COMMAND cp -v ${RESOURCE_HEADER} ${CMAKE_CURRENT_BINARY_DIR}/src/resources.hpp
+  )
+
+add_executable(${PROJECT_NAME}
+  src/main.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/src/resources.hpp)
+
+target_include_directories(${PROJECT_NAME}
+          INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src
+          PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src
+          )
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
