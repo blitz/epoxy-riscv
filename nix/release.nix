@@ -77,6 +77,8 @@ in
           nativeBuildInputs = [ new-harden ];
         } "${hardenCmd} verify 2>&1 | tee $out";
 
+      new-harden-api = riscvPkgs.callPackage ./epoxy-api.nix { };
+
       new-harden-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {
         resourceHeader = pkgs.runCommandNoCC "fbdemo-resources.hpp"
           {
@@ -97,5 +99,10 @@ in
         ${hardenCmd} configure-kernel --header ${new-harden-user-binaries} > $out/state.hpp
         ${hardenCmd} configure-kernel ${new-harden-user-binaries} > $out/state.cpp
       '';
+
+      new-harden-kern = riscvPkgs.callPackage ./epoxy-kern-new.nix {
+        epoxy-api = new-harden-api;
+        epoxy-kern-state = new-harden-kern-state;
+      };
     };
 }

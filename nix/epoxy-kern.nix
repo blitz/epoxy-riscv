@@ -1,4 +1,4 @@
-{ stdenv, cmake, ninja, epoxy-harden, epoxy-api, applicationDesc, machineDesc, userBinaries }:
+{ stdenv, epoxy-harden, epoxy-api, applicationDesc, machineDesc, userBinaries }:
 
 stdenv.mkDerivation {
   pname = "epoxy-kern";

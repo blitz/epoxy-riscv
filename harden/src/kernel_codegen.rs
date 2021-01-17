@@ -227,7 +227,7 @@ fn process_kobjects(
             Statement::VariableDefinition {
                 r#type: "process".to_string(),
                 name: proc_name.to_string(),
-                init_args: vec![Expression::LiteralUnsigned(pid), pointer_to(&capset_name)],
+                init_args: vec![Expression::LiteralUnsigned(pid), Expression::Identifier(capset_name)],
             },
             Statement::VariableDefinition {
                 r#type: "thread".to_string(),
