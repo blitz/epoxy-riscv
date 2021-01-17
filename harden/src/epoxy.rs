@@ -7,6 +7,7 @@ use log::{debug, info};
 use serde_dhall;
 use std::path::Path;
 
+use crate::boot_image;
 use crate::bump_ptr_alloc::BumpPointerAlloc;
 use crate::cfgfile;
 use crate::cfgtypes;
@@ -237,6 +238,14 @@ fn epoxy_configure_kernel(
     Ok(())
 }
 
+fn epoxy_boot_image(
+    system: &runtypes::Configuration,
+    kernel_binary: &Path,
+    user_binaries: &Path,
+) -> Result<(), Error> {
+    boot_image::generate(system, kernel_binary, user_binaries)
+}
+
 pub fn main() -> Result<(), Error> {
     let matches = App::new("Epoxy Harden System Configuration")
         .arg(Arg::with_name("verbosity")
@@ -283,6 +292,14 @@ pub fn main() -> Result<(), Error> {
                          .short("h")
                          .long("header")
                          .help("Generate the header instead of the C++ source")))
+        .subcommand(SubCommand::with_name("boot-image")
+                    .about("Generate a bootable image for the target platform")
+                    .arg(Arg::with_name("kernel-binary")
+                         .required(true)
+                         .help("The kernel binary to use"))
+                    .arg(Arg::with_name("user-binaries")
+                         .required(true)
+                         .help("The path where user binaries can be found")))
         .get_matches();
 
     let verbose = matches.occurrences_of("verbosity") as usize;
@@ -336,6 +353,20 @@ pub fn main() -> Result<(), Error> {
             cfg_kern_matches.is_present("header"),
             Path::new(
                 cfg_kern_matches
+                    .value_of("user-binaries")
+                    .expect("required option missing"),
+            ),
+        )
+    } else if let Some(boot_image_matches) = matches.subcommand_matches("boot-image") {
+        epoxy_boot_image(
+            &configured_system,
+            Path::new(
+                boot_image_matches
+                    .value_of("kernel-binary")
+                    .expect("required option missing"),
+            ),
+            Path::new(
+                boot_image_matches
                     .value_of("user-binaries")
                     .expect("required option missing"),
             ),
