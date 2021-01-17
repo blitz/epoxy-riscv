@@ -223,14 +223,14 @@ fn epoxy_configure_process(
 fn epoxy_configure_kernel(
     system: &runtypes::Configuration,
     do_header: bool,
-    _user_root: &str,
+    user_root: &Path,
 ) -> Result<(), Error> {
     print!(
         "{}",
         if do_header {
             kernel_codegen::generate_hpp(&system)?
         } else {
-            kernel_codegen::generate_cpp(&system)?
+            kernel_codegen::generate_cpp(&system, user_root)?
         }
     );
 
@@ -334,9 +334,11 @@ pub fn main() -> Result<(), Error> {
         epoxy_configure_kernel(
             &configured_system,
             cfg_kern_matches.is_present("header"),
-            cfg_kern_matches
-                .value_of("user-binaries")
-                .expect("required option missing"),
+            Path::new(
+                cfg_kern_matches
+                    .value_of("user-binaries")
+                    .expect("required option missing"),
+            ),
         )
     } else {
         Err(format_err!("Unknown subcommand"))

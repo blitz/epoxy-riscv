@@ -1,8 +1,8 @@
 use elfy::Elf;
-use failure::Error;
-use failure::ResultExt;
+use failure::{Error, ResultExt};
 use itertools::Itertools;
 use std::convert::TryInto;
+use std::path::{Path, PathBuf};
 
 use crate::runtypes;
 
@@ -176,8 +176,9 @@ fn pointer_to(s: &str) -> Expression {
     Expression::AddressOf(Box::new(Expression::Identifier(s.to_string())))
 }
 
-fn process_entry(process: &runtypes::Process) -> Result<u64, Error> {
-    let elf = Elf::load(&process.binary).context("Failed to load process ELF")?;
+fn process_entry(user_root: &Path, process: &runtypes::Process) -> Result<u64, Error> {
+    let binary_path: PathBuf = [user_root, Path::new(&process.binary)].iter().collect();
+    let elf = Elf::load(&binary_path).context("Failed to load process ELF")?;
 
     // The try_into cannot fail, because we header() returns usize and usize always fits into u64.
     Ok(elf
@@ -194,6 +195,7 @@ fn process_stack_ptr(process: &runtypes::Process) -> u64 {
 /// Returns the name of the thread that is created in addition to all statements that need to go
 /// into the state file to create the necessary kernel options.
 fn process_kobjects(
+    user_root: &Path,
     id_iter: &mut IdentifierIterator,
     pid: u64,
     process: &runtypes::Process,
@@ -232,7 +234,7 @@ fn process_kobjects(
                 name: thread_name,
                 init_args: vec![
                     pointer_to(&proc_name),
-                    Expression::LiteralUnsigned(process_entry(&process)?),
+                    Expression::LiteralUnsigned(process_entry(user_root, &process)?),
                     Expression::LiteralUnsigned(process_stack_ptr(&process)),
                 ],
             },
@@ -260,13 +262,13 @@ fn process_kobjects(
 /// }
 /// thread * const threads[1] {&(kobject_3)};
 /// ```
-pub fn generate_cpp(system: &runtypes::Configuration) -> Result<String, Error> {
+pub fn generate_cpp(system: &runtypes::Configuration, user_root: &Path) -> Result<String, Error> {
     let mut id_iter = IdentifierIterator::default();
     let procs: Vec<(String, Vec<Statement>)> = system
         .processes
         .values()
         .zip(0..)
-        .map(|(p, pid)| process_kobjects(&mut id_iter, pid, p))
+        .map(|(p, pid)| process_kobjects(user_root, &mut id_iter, pid, p))
         .collect::<Result<Vec<(String, Vec<Statement>)>, Error>>()?;
 
     let proc_stm: Vec<Statement> = procs.iter().map(|(_, s)| s).flatten().cloned().collect();
