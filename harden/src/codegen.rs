@@ -67,9 +67,14 @@ fn generate_cpp_res(name: &str, resource: &runtypes::MemoryResource) -> String {
             }
 
             format!("
-static inline uint16_t volatile (&{}_pixels)[{}][{}] {{*reinterpret_cast<uint16_t volatile (*)[{}][{}]>({:#x})}};
-static inline size_t {}_width {{{}}};
-", name, format.height, format.stride / 2, format.height, format.stride / 2, resource.region.virt_start, name, format.width)
+constexpr size_t {}_width {{{}}};
+constexpr size_t {}_height {{{}}};
+inline uint16_t volatile (&{}_pixels)[{}_height][{}] {{*reinterpret_cast<uint16_t volatile (*)[{}_height][{}]>({:#x})}};
+
+",
+                    name, format.width,
+                    name, format.height,
+                    name, name, format.stride / 2, name, format.stride / 2, resource.region.virt_start)
         }
     }
 }
