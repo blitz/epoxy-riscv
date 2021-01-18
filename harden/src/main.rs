@@ -3,6 +3,7 @@ extern crate failure;
 
 use log::error;
 
+mod address_space;
 mod boot_image;
 mod bump_ptr_alloc;
 mod cfgfile;
