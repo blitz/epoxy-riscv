@@ -104,5 +104,11 @@ in
         epoxy-api = new-harden-api;
         epoxy-kern-state = new-harden-kern-state;
       };
+
+      # This is only convenience for developing the Rust harden code. Remove later.
+      new-harden-boot-image-input = riscvPkgs.symlinkJoin {
+        name = "all-binaries";
+        paths = [ new-harden-user-binaries new-harden-kern ];
+      };
     };
 }

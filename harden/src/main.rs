@@ -9,6 +9,7 @@ mod bump_ptr_alloc;
 mod cfgfile;
 mod cfgtypes;
 mod codegen;
+mod constants;
 mod epoxy;
 mod framebuffer;
 mod kernel_codegen;
