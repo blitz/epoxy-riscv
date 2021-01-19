@@ -40,6 +40,9 @@ pub fn generate(
     let kernel_as = AddressSpace::from(&kernel_elf);
     debug!("Kernel address space is: {:#?}", kernel_as);
 
+    // TODO Write kernel segments into memory and turn InitializedData mappings in kernel_as into
+    // Phys mappings.
+
     let _user_ass = system
         .processes
         .iter()
