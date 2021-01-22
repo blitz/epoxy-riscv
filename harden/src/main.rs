@@ -12,6 +12,7 @@ mod codegen;
 mod constants;
 mod epoxy;
 mod framebuffer;
+mod interval;
 mod kernel_codegen;
 mod runtypes;
 
