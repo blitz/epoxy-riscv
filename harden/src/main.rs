@@ -10,6 +10,7 @@ mod cfgfile;
 mod cfgtypes;
 mod codegen;
 mod constants;
+mod elf;
 mod epoxy;
 mod framebuffer;
 mod interval;

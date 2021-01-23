@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use crate::address_space::AddressSpace;
 use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc};
 use crate::constants::PAGE_SIZE;
+use crate::elf;
 use crate::interval::Interval;
 use crate::phys_mem::PhysMemory;
 use crate::runtypes;
