@@ -1,4 +1,5 @@
 use std::iter::FromIterator;
+use crate::interval::Interval;
 
 pub trait SimpleAlloc {
     /// Allocate a piece of memory from the allocator. The actual allocator type determines the
@@ -9,10 +10,8 @@ pub trait SimpleAlloc {
 /// A simple bump pointer allocator that can be used to quickly allocate regions that never have to
 /// be freed.
 pub struct BumpPointerAlloc {
-    current: u64,
-
+    free: Interval,
     min_align: u64,
-    end: u64,
 }
 
 fn is_power_of_two(n: u64) -> bool {
@@ -20,16 +19,14 @@ fn is_power_of_two(n: u64) -> bool {
 }
 
 impl BumpPointerAlloc {
-    pub fn new(start: u64, end: u64, min_align: u64) -> Self {
-        assert!(start <= end);
+    pub fn new(free: Interval, min_align: u64) -> Self {
+        assert!(!free.empty());
         assert!(min_align > 0);
         assert!(is_power_of_two(min_align));
-        assert_eq!(start & (min_align - 1), 0);
+        assert_eq!(free.from & (min_align - 1), 0);
 
         BumpPointerAlloc {
-            current: start,
-            min_align,
-            end,
+            free, min_align
         }
     }
 }
@@ -38,16 +35,16 @@ impl SimpleAlloc for BumpPointerAlloc {
     /// Allocate a region of the given size. The region will be allocated according to the alignment
     /// specified when the allocator was created.
     fn alloc(&mut self, size: u64) -> Option<u64> {
-        assert_eq!(self.current & (self.min_align - 1), 0);
+        assert_eq!(self.free.from & (self.min_align - 1), 0);
 
-        let cur = self.current;
+        let cur = self.free.from;
         let next_aligned = self
-            .current
+            .free.from
             .checked_add(size.checked_add(self.min_align - 1)?)?
             & !(self.min_align - 1);
 
-        if next_aligned <= self.end {
-            self.current = next_aligned;
+        if next_aligned <= self.free.to {
+            self.free.from = next_aligned;
             Some(cur)
         } else {
             None
@@ -100,7 +97,7 @@ mod tests {
 
     #[test]
     fn test_alloc() {
-        let mut a = BumpPointerAlloc::new(0x1000, 0x2000, 0x10);
+        let mut a = BumpPointerAlloc::new(Interval::new_with_size(0x1000, 0x1000), 0x10);
 
         assert_eq!(a.alloc(0x10), Some(0x1000));
         assert_eq!(a.alloc(0x1), Some(0x1010));
@@ -111,8 +108,8 @@ mod tests {
     #[test]
     fn test_chained_alloc() {
         let mut a = vec![
-            BumpPointerAlloc::new(0x1000, 0x1040, 0x10),
-            BumpPointerAlloc::new(0x2000, 0x2020, 0x10),
+            BumpPointerAlloc::new(Interval::new_with_size(0x1000, 0x40), 0x10),
+            BumpPointerAlloc::new(Interval::new_with_size(0x2000, 0x20), 0x10),
         ]
         .into_iter()
         .collect::<ChainedAlloc<_>>();

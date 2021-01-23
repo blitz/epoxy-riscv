@@ -13,6 +13,7 @@ use crate::cfgfile;
 use crate::cfgtypes;
 use crate::codegen;
 use crate::constants::*;
+use crate::interval::Interval;
 use crate::kernel_codegen;
 use crate::runtypes;
 
@@ -130,7 +131,13 @@ fn internalize_process(
         .parse()
         .context("Failed to parse machine description")?;
 
-    let mut valloc = BumpPointerAlloc::new(VIRT_RESOURCE_START, VIRT_RESOURCE_END, PAGE_SIZE);
+    let mut valloc = BumpPointerAlloc::new(
+        Interval {
+            from: VIRT_RESOURCE_START,
+            to: VIRT_RESOURCE_END,
+        },
+        PAGE_SIZE,
+    );
 
     Ok(runtypes::Process {
         name: process.name.clone(),
