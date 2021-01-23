@@ -6,9 +6,9 @@ use std::convert::{From, TryInto};
 use crate::interval::Interval;
 
 #[derive(Debug)]
-struct Chunk {
-    paddr: u64,
-    data: Vec<u8>,
+pub struct Chunk {
+    pub paddr: u64,
+    pub data: Vec<u8>,
 }
 
 impl From<&Chunk> for Interval {
@@ -19,8 +19,8 @@ impl From<&Chunk> for Interval {
 
 /// A memory abstraction that allows reading and writing to it.
 #[derive(Default, Debug)]
-struct Memory {
-    chunks: Vec<Chunk>,
+pub struct Memory {
+    pub chunks: Vec<Chunk>,
 }
 
 /// A recursive helper function for `Memory::read()`.
@@ -103,6 +103,46 @@ impl Memory {
             Interval::new_with_size(paddr, size),
         )
     }
+
+    /// Simplify the internal representation by combining all previous writes.
+    fn flattened(&self) -> Memory {
+        let mut all_ivls = self
+            .chunks
+            .iter()
+            .map(|c| c.into())
+            .collect::<Vec<Interval>>();
+
+        all_ivls.sort_by(|a, b| a.from.cmp(&b.from));
+
+        // The list of all intervals that contain data.
+        let joined_ivls = all_ivls
+            .into_iter()
+            .fold(vec![], |mut acc: Vec<Interval>, c| {
+                if let Some(last_ivl) = acc.pop() {
+                    if last_ivl.joinable(c) {
+                        acc.push(last_ivl.hull(c));
+                    } else {
+                        acc.push(last_ivl);
+                        acc.push(c);
+                    }
+                } else {
+                    acc.push(c);
+                };
+
+                acc
+            });
+
+        // Just re-read the populated intervals to get join all underlying chunks.
+        Memory {
+            chunks: joined_ivls
+                .iter()
+                .map(|i| Chunk {
+                    paddr: i.from,
+                    data: self.read(i.from, i.size()),
+                })
+                .collect(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -128,5 +168,8 @@ mod tests {
 
         m.write(0x0FFF, &[7, 8]);
         assert_eq!(m.read(0x0FFF, 3), vec![7, 8, 2]);
+
+        let flattened = m.flattened();
+        assert_eq!(flattened.read(0x0fff, 3), vec![7, 8, 2]);
     }
 }

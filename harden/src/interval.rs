@@ -61,8 +61,16 @@ impl Interval {
         }
     }
 
+    /// Returns true if the intervals overlaied over another are contiguous.
     pub fn joinable(&self, other: Interval) -> bool {
         self.adjacent(other) || self.intersects(other)
+    }
+
+    pub fn hull(&self, other: Interval) -> Interval {
+        Interval {
+            from: u64::min(self.from, other.from),
+            to: u64::max(self.to, other.to),
+        }
     }
 }
 
