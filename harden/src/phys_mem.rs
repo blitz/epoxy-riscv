@@ -139,7 +139,7 @@ impl Memory {
                 acc
             });
 
-        // Just re-read the populated intervals to get join all underlying chunks.
+        // Just re-read the populated intervals to join all underlying chunks.
         Memory {
             chunks: joined_ivls
                 .iter()
