@@ -1,10 +1,27 @@
 use elfy::Elf;
 use failure::{Error, ResultExt};
-use log::{debug, info};
+use log::{debug, info, warn};
 use std::path::{Path, PathBuf};
 
 use crate::address_space::AddressSpace;
+use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc};
+use crate::constants::PAGE_SIZE;
+use crate::interval::Interval;
+use crate::phys_mem::PhysMemory;
 use crate::runtypes;
+
+impl From<&runtypes::Configuration> for PhysMemory {
+    fn from(system: &runtypes::Configuration) -> Self {
+        PhysMemory::new(
+            system
+                .available_memory
+                .iter()
+                .map(|fm| Interval::new_with_size(fm.start, fm.size))
+                .map(|i| BumpPointerAlloc::new(i, PAGE_SIZE))
+                .collect::<ChainedAlloc<_>>(),
+        )
+    }
+}
 
 fn to_user_as(
     process: &runtypes::Process,
@@ -25,6 +42,12 @@ fn to_user_as(
         process.name, user_as
     );
 
+    for res in &process.resources {
+        warn!("NOT IMPLEMENTED: Need to map {}!", res.0);
+    }
+
+    warn!("NOT IMPLEMENTED: Need to map stack");
+
     user_as.merge_from(kernel_as);
     Ok(user_as)
 }
@@ -37,8 +60,15 @@ pub fn generate(
     info!("Using {} as kernel", kernel_binary.display());
 
     let kernel_elf = Elf::load(kernel_binary).context("Failed to load kernel ELF")?;
-    let kernel_as = AddressSpace::from(&kernel_elf);
+    let mut kernel_as = AddressSpace::from(&kernel_elf);
+    let mut pmem: PhysMemory = system.into();
+
     debug!("Kernel address space is: {:#?}", kernel_as);
+
+    // We allocate backing store for the kernel once, so we do not re-allocate it for every user
+    // address space.
+    kernel_as.fixate(&mut pmem)?;
+    debug!("Kernel address space fixated to: {:#?}", kernel_as);
 
     // TODO Write kernel segments into memory and turn InitializedData mappings in kernel_as into
     // Phys mappings.

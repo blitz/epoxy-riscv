@@ -3,10 +3,11 @@
 
 use std::convert::{From, TryInto};
 
+use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc, SimpleAlloc};
 use crate::interval::Interval;
 
 #[derive(Debug)]
-pub struct Chunk {
+struct Chunk {
     pub paddr: u64,
     pub data: Vec<u8>,
 }
@@ -19,8 +20,14 @@ impl From<&Chunk> for Interval {
 
 /// A memory abstraction that allows reading and writing to it.
 #[derive(Default, Debug)]
-pub struct Memory {
+struct Memory {
     pub chunks: Vec<Chunk>,
+}
+
+/// A representation of physical memory as it will be written into the boot image.
+pub struct PhysMemory {
+    memory: Memory,
+    free_memory: ChainedAlloc<BumpPointerAlloc>,
 }
 
 /// A recursive helper function for `Memory::read()`.
@@ -90,14 +97,14 @@ where
 }
 
 impl Memory {
-    pub fn write(&mut self, paddr: u64, data: &[u8]) {
+    fn write(&mut self, paddr: u64, data: &[u8]) {
         self.chunks.push(Chunk {
             paddr,
             data: data.to_vec(),
         })
     }
 
-    pub fn read(&self, paddr: u64, size: u64) -> Vec<u8> {
+    fn read(&self, paddr: u64, size: u64) -> Vec<u8> {
         read_rec(
             self.chunks.iter().rev(),
             Interval::new_with_size(paddr, size),
@@ -142,6 +149,35 @@ impl Memory {
                 })
                 .collect(),
         }
+    }
+}
+
+impl PhysMemory {
+    pub fn new(free_memory: ChainedAlloc<BumpPointerAlloc>) -> PhysMemory {
+        PhysMemory {
+            memory: Memory::default(),
+            free_memory,
+        }
+    }
+
+    /// Writes memory to a specific location in physical memory.
+    pub fn write(&mut self, paddr: u64, data: &[u8]) {
+        self.memory.write(paddr, data)
+    }
+
+    /// Places data at a page aligned and free location in physical memory. Returns the address at
+    /// which it was written.
+    pub fn place(&mut self, data: &[u8]) -> Option<u64> {
+        let addr = self.free_memory.alloc(data.len().try_into().unwrap())?;
+
+        self.write(addr, data);
+        Some(addr)
+    }
+
+    /// Reads memory from physical memory. Returns zeros for locations that have never been written
+    /// before.
+    pub fn read(&self, paddr: u64, size: u64) -> Vec<u8> {
+        self.memory.read(paddr, size)
     }
 }
 

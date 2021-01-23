@@ -1,10 +1,12 @@
 use elfy::types::ProgramHeaderFlags;
 use elfy::Elf;
+use failure::Error;
 use std::convert::TryInto;
 use std::fmt;
 use std::iter;
 
 use crate::constants::PAGE_SIZE;
+use crate::phys_mem::PhysMemory;
 
 #[derive(Clone, PartialEq)]
 pub enum Backing {
@@ -203,6 +205,33 @@ impl AddressSpace {
     /// Merge another address space into this one.
     pub fn merge_from(&mut self, o: &AddressSpace) {
         self.mappings.extend(o.iter().cloned());
+    }
+
+    /// Fixate all initialized memory by writing it into the provided physical memory structure. Any
+    /// InitializedData mapping will replaced by a Phys mapping.
+    pub fn fixate(&mut self, pmem: &mut PhysMemory) -> Result<(), Error> {
+        self.mappings = self
+            .mappings
+            .iter()
+            .map(|m| -> Result<Mapping, Error> {
+                match &m.backing {
+                    Backing::InitializedData { data } => Ok(Mapping {
+                        backing: Backing::Phys {
+                            size: data.len().try_into()?,
+                            phys: pmem.place(&data).ok_or_else(|| {
+                                format_err!(
+                                    "Unable to fixate initialized data section at {:#x} in memory",
+                                    m.vstart
+                                )
+                            })?,
+                        },
+                        ..*m
+                    }),
+                    Backing::Phys { .. } => Ok(m.clone()),
+                }
+            })
+            .collect::<Result<Vec<Mapping>, Error>>()?;
+        Ok(())
     }
 }
 

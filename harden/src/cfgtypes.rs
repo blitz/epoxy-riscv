@@ -25,6 +25,7 @@ pub struct System {
     pub mappings: Vec<Mapping>,
 }
 
+// TODO Use Interval for this.
 #[derive(Deserialize, Debug, Clone)]
 pub struct MemoryRegion {
     pub start: u64,

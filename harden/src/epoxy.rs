@@ -97,7 +97,6 @@ fn to_process_resources<T: SimpleAlloc>(
                         name.clone(),
                         runtypes::MemoryResource {
                             region: runtypes::VirtualMemoryRegion {
-                                // TODO This should return an error.
                                 virt_start: valloc.alloc(region.size).ok_or_else(|| {
                                     format_err!("Failed to allocate virtual memory for resource {} in process {}",
                                                 name, proc_name)
