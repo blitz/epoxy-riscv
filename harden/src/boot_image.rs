@@ -3,7 +3,7 @@ use failure::{Error, ResultExt};
 use log::{debug, info, warn};
 use std::path::{Path, PathBuf};
 
-use crate::address_space::AddressSpace;
+use crate::address_space::{AddressSpace, Mapping};
 use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc};
 use crate::constants::PAGE_SIZE;
 use crate::interval::Interval;
@@ -37,16 +37,13 @@ fn to_user_as(
 
     let mut user_as = AddressSpace::from(&Elf::load(user_path).context("Failed to load user ELF")?);
 
+    user_as.add((&process.stack).into());
+    user_as.extend(process.resources.iter().map(|(_, r)| r.into()));
+
     debug!(
         "User address space for process {} is: {:#?}",
         process.name, user_as
     );
-
-    for res in &process.resources {
-        warn!("NOT IMPLEMENTED: Need to map {}!", res.0);
-    }
-
-    warn!("NOT IMPLEMENTED: Need to map stack");
 
     user_as.merge_from(kernel_as);
     Ok(user_as)

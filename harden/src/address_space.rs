@@ -7,6 +7,7 @@ use std::iter;
 
 use crate::constants::PAGE_SIZE;
 use crate::phys_mem::PhysMemory;
+use crate::runtypes;
 
 #[derive(Clone, PartialEq)]
 pub enum Backing {
@@ -74,6 +75,12 @@ pub struct Permissions {
 
 // This is a bit unfortunate.
 impl Permissions {
+    pub fn read_write() -> Permissions {
+        Permissions {
+            elf_perm: ProgramHeaderFlags::ReadWrite,
+        }
+    }
+
     pub fn can_read(&self) -> bool {
         match self.elf_perm {
             ProgramHeaderFlags::Read => true,
@@ -146,6 +153,21 @@ impl Mapping {
             vstart: self.vstart - offset,
             perm: self.perm,
             backing: self.backing.moved_left(offset).extended(pad_bytes),
+        }
+    }
+}
+
+impl From<&runtypes::MemoryResource> for Mapping {
+    fn from(mres: &runtypes::MemoryResource) -> Self {
+        Mapping {
+            vstart: mres.region.virt_start,
+            perm: Permissions::read_write(),
+            backing: match mres.region.phys {
+                runtypes::MemoryRegion::Phys { size, start } => Backing::Phys { phys: start, size },
+                runtypes::MemoryRegion::AnonymousZeroes { size } => Backing::InitializedData {
+                    data: vec![0; size.try_into().unwrap()],
+                },
+            },
         }
     }
 }
@@ -232,6 +254,17 @@ impl AddressSpace {
             })
             .collect::<Result<Vec<Mapping>, Error>>()?;
         Ok(())
+    }
+
+    pub fn add(&mut self, mapping: Mapping) {
+        self.mappings.push(mapping)
+    }
+
+    /// Extend the address space with all mappings that the iterator produces.
+    pub fn extend<T: Iterator<Item = Mapping>>(&mut self, iter: T) {
+        for m in iter {
+            self.add(m)
+        }
     }
 }
 

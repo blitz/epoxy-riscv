@@ -32,6 +32,8 @@ impl From<&cfgtypes::MemoryRegion> for MemoryRegion {
 }
 
 /// A memory mapping in a process.
+///
+/// TODO: This also needs to model permissions.
 #[derive(Debug)]
 pub struct VirtualMemoryRegion {
     pub virt_start: u64,
