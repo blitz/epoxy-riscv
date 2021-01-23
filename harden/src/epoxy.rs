@@ -8,7 +8,7 @@ use serde_dhall;
 use std::path::Path;
 
 use crate::boot_image;
-use crate::bump_ptr_alloc::{SimpleAlloc, BumpPointerAlloc};
+use crate::bump_ptr_alloc::{BumpPointerAlloc, SimpleAlloc};
 use crate::cfgfile;
 use crate::cfgtypes;
 use crate::codegen;
@@ -53,7 +53,7 @@ fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::MemoryRes
 /// Take resource mappings and resolve them into named resources.
 ///
 /// TODO This is needlessly long/unmodular/ugly.
-fn to_process_resources<T: SimpleAlloc> (
+fn to_process_resources<T: SimpleAlloc>(
     valloc: &mut T,
     proc_name: &str,
     needs: &[cfgtypes::NamedResourceType],
@@ -148,7 +148,7 @@ fn internalize_process(
 }
 
 /// Take a system description as it comes in from the config files and read all other configurations
-/// it refernces.
+/// it references.
 fn configure_system(
     root: &Path,
     system: &cfgtypes::System,
