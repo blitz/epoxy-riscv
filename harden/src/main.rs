@@ -14,6 +14,7 @@ mod epoxy;
 mod framebuffer;
 mod interval;
 mod kernel_codegen;
+mod phys_mem;
 mod runtypes;
 
 fn main() {

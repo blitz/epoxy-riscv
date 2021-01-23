@@ -1,11 +1,11 @@
 /// A half-open interval.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Default, Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Interval {
     /// The first value of the interval.
-    from: u64,
+    pub from: u64,
 
     /// The first non-valid value of the interval.
-    to: u64,
+    pub to: u64,
 }
 
 impl Interval {
@@ -50,6 +50,17 @@ impl Interval {
         }
     }
 
+    pub fn intersection(&self, other: Interval) -> Interval {
+        if self.intersects(other) {
+            Interval {
+                from: u64::max(self.from, other.from),
+                to: u64::min(self.to, other.to),
+            }
+        } else {
+            Interval::default()
+        }
+    }
+
     pub fn joinable(&self, other: Interval) -> bool {
         self.adjacent(other) || self.intersects(other)
     }
@@ -65,6 +76,9 @@ mod tests {
         let i2 = Interval::new_with_size(0, 5);
         let i3 = Interval { from: 5, to: 6 };
         let i4 = Interval { from: 5, to: 5 };
+        let i5 = Interval::new_with_size(1, 2);
+
+        assert!(Interval::default().empty());
 
         assert_eq!(i1, i2);
         assert_eq!(i1.size(), 5);
@@ -76,5 +90,8 @@ mod tests {
 
         assert!(i1.intersects(i1));
         assert!(!i1.intersects(i3));
+
+        assert!(i1.intersection(i3).empty());
+        assert_eq!(i1.intersection(i5), i5);
     }
 }
