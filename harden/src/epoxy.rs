@@ -26,7 +26,7 @@ fn rflatten<T>(r: Result<Result<T, Error>, Error>) -> Result<T, Error> {
     }
 }
 
-fn make_user_stack(valloc: &mut BumpPointerAlloc) -> Result<runtypes::MemoryResource, Error> {
+fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::MemoryResource, Error> {
     valloc
         .alloc(PAGE_SIZE)
         .ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
@@ -53,8 +53,8 @@ fn make_user_stack(valloc: &mut BumpPointerAlloc) -> Result<runtypes::MemoryReso
 /// Take resource mappings and resolve them into named resources.
 ///
 /// TODO This is needlessly long/unmodular/ugly.
-fn to_process_resources(
-    valloc: &mut BumpPointerAlloc,
+fn to_process_resources<T: SimpleAlloc> (
+    valloc: &mut T,
     proc_name: &str,
     needs: &[cfgtypes::NamedResourceType],
     mappings: &[cfgtypes::Mapping],
