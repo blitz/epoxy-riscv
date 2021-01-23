@@ -1,9 +1,9 @@
 use elfy::Elf;
 use failure::{Error, ResultExt};
-use log::{debug, info, warn};
+use log::{debug, info};
 use std::path::{Path, PathBuf};
 
-use crate::address_space::{AddressSpace, Mapping};
+use crate::address_space::AddressSpace;
 use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc};
 use crate::constants::PAGE_SIZE;
 use crate::interval::Interval;
@@ -67,14 +67,14 @@ pub fn generate(
     kernel_as.fixate(&mut pmem)?;
     debug!("Kernel address space fixated to: {:#?}", kernel_as);
 
-    // TODO Write kernel segments into memory and turn InitializedData mappings in kernel_as into
-    // Phys mappings.
-
     let _user_ass = system
         .processes
         .iter()
-        .map(|(_, p)| to_user_as(p, user_binaries, &kernel_as))
+        .map(|(_, p)| -> Result<AddressSpace, Error> {
+            to_user_as(p, user_binaries, &kernel_as)?.fixated(&mut pmem)
+        })
         .collect::<Result<Vec<AddressSpace>, Error>>()?;
 
-    todo!()
+    todo!("generate page tables and patch them into pmem");
+    todo!("generate ELF boot image")
 }

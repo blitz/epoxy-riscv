@@ -256,6 +256,13 @@ impl AddressSpace {
         Ok(())
     }
 
+    pub fn fixated(&self, pmem: &mut PhysMemory) -> Result<AddressSpace, Error> {
+        let mut copy = self.clone();
+
+        copy.fixate(pmem)?;
+        Ok(copy)
+    }
+
     pub fn add(&mut self, mapping: Mapping) {
         self.mappings.push(mapping)
     }
