@@ -8,7 +8,7 @@ use serde_dhall;
 use std::path::Path;
 
 use crate::boot_image;
-use crate::bump_ptr_alloc::BumpPointerAlloc;
+use crate::bump_ptr_alloc::{SimpleAlloc, BumpPointerAlloc};
 use crate::cfgfile;
 use crate::cfgtypes;
 use crate::codegen;
