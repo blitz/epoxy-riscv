@@ -1,3 +1,4 @@
+use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{Error, ResultExt};
 use log::{debug, info};
 use std::path::{Path, PathBuf};
@@ -50,6 +51,17 @@ fn to_user_as(
     Ok(user_as)
 }
 
+/// Convert a vector of page table pointers to byte data.
+fn pts_to_data(pts: &[u64]) -> Result<Vec<u8>, Error> {
+    let mut data = vec![];
+
+    for &satp in pts {
+        data.write_u64::<LittleEndian>(satp)?;
+    }
+
+    Ok(data)
+}
+
 pub fn generate(
     system: &runtypes::Configuration,
     kernel_binary: &Path,
@@ -91,12 +103,11 @@ pub fn generate(
         .lookup_phys(pt_vaddr)
         .ok_or_else(|| format_err!("Failed to resolve vaddr {}", pt_vaddr))?;
     debug!(
-        "Page tables need to be patched at vaddr {:#x} paddr {:#x}",
-        pt_vaddr, pt_paddr
+        "Page tables need to be patched at vaddr {:#x} paddr {:#x}: {:#x?}",
+        pt_vaddr, pt_paddr, user_satps
     );
 
-    // TODO Use byteorder crate to serialize SATPs into [u8].
+    pmem.write(pt_paddr, &pts_to_data(&user_satps)?);
 
-    todo!("generate page tables and patch them into pmem");
     todo!("generate ELF boot image")
 }
