@@ -64,6 +64,23 @@ fn pts_to_data(pts: &[u64]) -> Result<Vec<u8>, Error> {
     Ok(data)
 }
 
+/// Return the physical address of a symbol.
+fn sym_paddr(name: &str, elf: &Elf, addr_space: &AddressSpace) -> Result<u64, Error> {
+    let vaddr = elf
+        .symbols
+        .get(name)
+        .cloned()
+        .ok_or_else(|| format_err!("Failed to look up virtual address of symbol '{}'", name))?;
+
+    addr_space.lookup_phys(vaddr).ok_or_else(|| {
+        format_err!(
+            "Failed to look up physical address of symbol '{}' (vaddr {:#x})",
+            name,
+            vaddr
+        )
+    })
+}
+
 pub fn generate(
     system: &runtypes::Configuration,
     kernel_binary: &Path,
@@ -95,21 +112,18 @@ pub fn generate(
         .map(|a| page_table::generate(page_table::Format::RiscvSv32, a, &mut pmem))
         .collect::<Result<Vec<u64>, Error>>()?;
 
-    let pt_sym = "USER_SATPS";
-    let pt_vaddr = kernel_elf
-        .symbols
-        .get(pt_sym)
-        .cloned()
-        .ok_or_else(|| format_err!("Failed to find location to patch page table pointers"))?;
-    let pt_paddr = kernel_as
-        .lookup_phys(pt_vaddr)
-        .ok_or_else(|| format_err!("Failed to resolve vaddr {}", pt_vaddr))?;
-    debug!(
-        "Page tables need to be patched at vaddr {:#x} paddr {:#x}: {:#x?}",
-        pt_vaddr, pt_paddr, user_satps
+    // Patch the page table pointer the kernel boots with.
+    pmem.write(
+        sym_paddr("BOOT_SATP", &kernel_elf, &kernel_as).context("Failed to patch kernel SATP")?,
+        &pts_to_data(&user_satps[0..1])?,
     );
 
-    pmem.write(pt_paddr, &pts_to_data(&user_satps)?);
+    // Patch the page tables of each user process.
+    pmem.write(
+        sym_paddr("USER_SATPS", &kernel_elf, &kernel_as)
+            .context("Failed to patch user process SATPs")?,
+        &pts_to_data(&user_satps)?,
+    );
 
     if atty::is(atty::Stream::Stdout) {
         Err(format_err!(
