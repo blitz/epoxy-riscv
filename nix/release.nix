@@ -79,6 +79,8 @@ in
 
       new-harden-api = riscvPkgs.callPackage ./epoxy-api.nix { };
 
+      new-harden-hello = riscvPkgs.callPackage ./epoxy-hello.nix { };
+
       new-harden-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix {
         resourceHeader = pkgs.runCommandNoCC "fbdemo-resources.hpp"
           {
@@ -88,7 +90,7 @@ in
 
       new-harden-user-binaries = riscvPkgs.symlinkJoin {
         name = "user-binaries";
-        paths = [ new-harden-fbdemo ];
+        paths = [ new-harden-fbdemo new-harden-hello ];
       };
 
       new-harden-kern-state = pkgs.runCommandNoCC "kern-state"
@@ -110,5 +112,14 @@ in
         name = "all-binaries";
         paths = [ new-harden-user-binaries new-harden-kern ];
       };
+
+      new-harden-boot-image = pkgs.runCommandNoCC "boot-image"
+        {
+          nativeBuildInputs = [ new-harden ];
+        } ''
+        mkdir -p $out/bin
+
+        ${hardenCmd} boot-image ${new-harden-kern}/bin/epoxy-kern ${new-harden-user-binaries} > $out/bin/epoxy-boot
+      '';
     };
 }
