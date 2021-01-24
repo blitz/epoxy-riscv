@@ -16,7 +16,7 @@
 //! 0            +----------------------------+
 //!              | EHDR                       |
 //!              |  points to PHDRs below     |
-//! ehdrSize     +----------------------------+
+//! ehdr_len     +----------------------------+
 //!              | PHDR 0                     |
 //!              |  points to segment0        |
 //!              |  initialized data          |
@@ -26,7 +26,7 @@
 //!              |  initialized data          |
 //!              +----------------------------+
 //!              | ... more PHDRs ...         |
-//! beHeaderSize +----------------------------+
+//! data_start   +----------------------------+
 //!              | Segment 0 initialized data |
 //!              +----------------------------+
 //!              | Segment 1 initialized data |
@@ -38,11 +38,10 @@
 
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use failure::Error;
-use log::error;
 use std::convert::TryInto;
 use std::io::Write;
 
-use crate::phys_mem::PhysMemory;
+use crate::phys_mem::{Chunk, PhysMemory};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Format {
@@ -76,6 +75,14 @@ fn shdr_len(format: Format) -> u64 {
         Format::Elf32 => 0x28,
         Format::Elf64 => 0x40,
     }
+}
+
+/// The offset at which the segment data is serialized into the resulting ELF. This is right after
+/// all headers.
+fn data_start(format: Format, chunks: &[Chunk]) -> u64 {
+    let clen: u64 = chunks.len().try_into().unwrap();
+
+    ehdr_len(format) + phdr_len(format) * clen
 }
 
 fn write_ehdr<T: Write>(
@@ -130,6 +137,8 @@ pub fn write<T: Write>(
     let chunks = pmem.chunks();
 
     write_ehdr(buf, format, entry, chunks.len())?;
+
+    // TODO
 
     Ok(())
 }
