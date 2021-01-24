@@ -7,7 +7,7 @@ use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc, SimpleAlloc};
 use crate::interval::Interval;
 
 #[derive(Debug)]
-struct Chunk {
+pub struct Chunk {
     pub paddr: u64,
     pub data: Vec<u8>,
 }
@@ -178,6 +178,11 @@ impl PhysMemory {
     /// before.
     pub fn read(&self, paddr: u64, size: u64) -> Vec<u8> {
         self.memory.read(paddr, size)
+    }
+
+    /// Return a list of memory chunks.
+    pub fn chunks(&self) -> Vec<Chunk> {
+        self.memory.flattened().chunks
     }
 }
 
