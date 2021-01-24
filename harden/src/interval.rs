@@ -30,6 +30,14 @@ impl Interval {
         }
     }
 
+    pub fn contains(&self, p: u64) -> bool {
+        if self.empty() {
+            false
+        } else {
+            self.from <= p && p < self.to
+        }
+    }
+
     /// Returns true, if both intervals are adjacent. Empty intervals are adjacent to nothing.
     pub fn adjacent(&self, other: Interval) -> bool {
         if self.empty() || other.empty() {

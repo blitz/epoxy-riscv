@@ -4,9 +4,10 @@ use std::fmt;
 use std::iter;
 
 use crate::constants::PAGE_SIZE;
+use crate::elf::{Elf, Permissions};
+use crate::interval::Interval;
 use crate::phys_mem::PhysMemory;
 use crate::runtypes;
-use crate::elf::{Elf, Permissions};
 
 #[derive(Clone, PartialEq)]
 pub enum Backing {
@@ -69,7 +70,7 @@ impl Backing {
 
 #[derive(Clone)]
 pub struct Mapping {
-    vstart: u64,
+    vaddr: u64,
     perm: Permissions,
     backing: Backing,
 }
@@ -78,7 +79,7 @@ impl fmt::Debug for Mapping {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad(&format!(
             "< {:#08x} {:?}: {:#?}>",
-            self.vstart, self.perm, self.backing
+            self.vaddr, self.perm, self.backing
         ))
     }
 }
@@ -88,26 +89,35 @@ impl Mapping {
     /// zero padded when required.
     pub fn page_aligned(&self) -> Self {
         // The amount of bytes the start of the mapping is beyond a page boundary.
-        let offset = (PAGE_SIZE - (self.vstart % PAGE_SIZE)) % PAGE_SIZE;
+        let offset = (PAGE_SIZE - (self.vaddr % PAGE_SIZE)) % PAGE_SIZE;
 
         // The amount of bytes missing at the end to let the mapping end on a page boundary.
         let pad_bytes = (PAGE_SIZE - ((self.backing.size() + offset) % PAGE_SIZE)) % PAGE_SIZE;
 
-        assert_eq!((self.vstart - offset) % PAGE_SIZE, 0);
+        assert_eq!((self.vaddr - offset) % PAGE_SIZE, 0);
         assert_eq!((self.backing.size() + pad_bytes) % PAGE_SIZE, 0);
 
         Mapping {
-            vstart: self.vstart - offset,
+            vaddr: self.vaddr - offset,
             perm: self.perm,
             backing: self.backing.moved_left(offset).extended(pad_bytes),
         }
+    }
+
+    pub fn size(&self) -> u64 {
+        self.backing.size()
+    }
+
+    /// Return the virtual address interval covered by the mapping.
+    pub fn virt_ivl(&self) -> Interval {
+        Interval::new_with_size(self.vaddr, self.size())
     }
 }
 
 impl From<&runtypes::MemoryResource> for Mapping {
     fn from(mres: &runtypes::MemoryResource) -> Self {
         Mapping {
-            vstart: mres.region.virt_start,
+            vaddr: mres.region.virt_start,
             perm: Permissions::read_write(),
             backing: match mres.region.phys {
                 runtypes::MemoryRegion::Phys { size, start } => Backing::Phys { phys: start, size },
@@ -132,15 +142,14 @@ impl From<&Elf> for AddressSpace {
     fn from(elf: &Elf) -> Self {
         AddressSpace {
             mappings: elf
-                .segments.iter()
-                .map(|s| {
-                    Mapping {
-                        vstart: s.vaddr,
-                        perm: s.permissions,
-                        backing: Backing::InitializedData {
-                            data: s.data.clone(),
-                        },
-                    }
+                .segments
+                .iter()
+                .map(|s| Mapping {
+                    vaddr: s.vaddr,
+                    perm: s.permissions,
+                    backing: Backing::InitializedData {
+                        data: s.data.clone(),
+                    },
                 })
                 .map(|m| m.page_aligned())
                 .collect(),
@@ -163,6 +172,19 @@ impl AddressSpace {
         self.mappings.iter()
     }
 
+    pub fn lookup_phys(&self, vaddr: u64) -> Option<u64> {
+        let m = self
+            .mappings
+            .iter()
+            .find(|m| m.virt_ivl().contains(vaddr))?;
+        let offset = vaddr - m.vaddr;
+
+        match &m.backing {
+            Backing::Phys { phys, .. } => Some(phys + offset),
+            _ => None,
+        }
+    }
+
     /// Merge another address space into this one.
     pub fn merge_from(&mut self, o: &AddressSpace) {
         self.mappings.extend(o.iter().cloned());
@@ -182,7 +204,7 @@ impl AddressSpace {
                             phys: pmem.place(&data).ok_or_else(|| {
                                 format_err!(
                                     "Unable to fixate initialized data section at {:#x} in memory",
-                                    m.vstart
+                                    m.vaddr
                                 )
                             })?,
                         },

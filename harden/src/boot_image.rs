@@ -79,9 +79,15 @@ pub fn generate(
     let pt_vaddr = kernel_elf
         .symbols
         .get(pt_sym)
+        .cloned()
         .ok_or_else(|| format_err!("Failed to find location to patch page table pointers"))?;
-
-    debug!("Page tables need to be patched at vaddr {:#x}", pt_vaddr);
+    let pt_paddr = kernel_as
+        .lookup_phys(pt_vaddr)
+        .ok_or_else(|| format_err!("Failed to resolve vaddr {}", pt_vaddr))?;
+    debug!(
+        "Page tables need to be patched at vaddr {:#x} paddr {:#x}",
+        pt_vaddr, pt_paddr
+    );
 
     todo!("generate page tables and patch them into pmem");
     todo!("generate ELF boot image")
