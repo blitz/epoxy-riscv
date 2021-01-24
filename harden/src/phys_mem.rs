@@ -174,6 +174,14 @@ impl PhysMemory {
         Some(addr)
     }
 
+    /// Similar to `place` but allows for deduplication. Placing the same shareable data twice will
+    /// result in the same address being returned. This is useful for read-only memory to save
+    /// space.
+    pub fn place_shareable(&mut self, data: &[u8]) -> Option<u64> {
+        // TODO Implement me.
+        self.place(data)
+    }
+
     /// Reads memory from physical memory. Returns zeros for locations that have never been written
     /// before.
     #[allow(dead_code)]

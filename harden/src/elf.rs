@@ -14,6 +14,7 @@ pub struct Permissions {
     pub read: bool,
     pub write: bool,
     pub execute: bool,
+    pub user: bool,
 }
 
 impl Permissions {
@@ -22,6 +23,7 @@ impl Permissions {
             read: true,
             write: true,
             execute: false,
+            user: false,
         }
     }
 }
@@ -29,10 +31,11 @@ impl Permissions {
 impl fmt::Debug for Permissions {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad(&format!(
-            "{}{}{}",
+            "{}{}{}{}",
             if self.read { "R" } else { " " },
             if self.write { "W" } else { " " },
-            if self.execute { "X" } else { " " }
+            if self.execute { "X" } else { " " },
+            if self.user { "U" } else { " " }
         ))
     }
 }
@@ -43,6 +46,10 @@ impl From<&goblin::elf::program_header::ProgramHeader> for Permissions {
             read: ph.is_read(),
             write: ph.is_write(),
             execute: ph.is_executable(),
+
+            // This is a good default to avoid sadness. If we get this wrong, user code cannot
+            // access it.
+            user: false
         }
     }
 }

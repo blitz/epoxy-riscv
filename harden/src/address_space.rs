@@ -4,7 +4,8 @@ use std::fmt;
 use std::iter;
 
 use crate::constants::PAGE_SIZE;
-use crate::elf::{Elf, Permissions};
+use crate::elf::Elf;
+pub use crate::elf::Permissions;
 use crate::interval::Interval;
 use crate::phys_mem::PhysMemory;
 use crate::runtypes;
@@ -172,7 +173,8 @@ impl AddressSpace {
         self.mappings.iter()
     }
 
-    pub fn lookup_phys(&self, vaddr: u64) -> Option<u64> {
+    /// Look up the physical address and the mapping it belongs to.
+    pub fn lookup(&self, vaddr: u64) -> Option<(u64, Permissions)> {
         let m = self
             .mappings
             .iter()
@@ -180,9 +182,15 @@ impl AddressSpace {
         let offset = vaddr - m.vaddr;
 
         match &m.backing {
-            Backing::Phys { phys, .. } => Some(phys + offset),
+            Backing::Phys { phys, .. } => Some((phys + offset, m.perm)),
             _ => None,
         }
+    }
+
+    /// Look up the physical address. This is similar to `lookup`, but doesn't return the
+    /// permissions as well.
+    pub fn lookup_phys(&self, vaddr: u64) -> Option<u64> {
+        self.lookup(vaddr).map(|(paddr, _)| paddr)
     }
 
     /// Merge another address space into this one.
@@ -215,6 +223,13 @@ impl AddressSpace {
             })
             .collect::<Result<Vec<Mapping>, Error>>()?;
         Ok(())
+    }
+
+    /// Mark all mappings available to user code.
+    pub fn make_user(&mut self) {
+        for m in &mut self.mappings {
+            m.perm.user = true;
+        }
     }
 
     pub fn fixated(&self, pmem: &mut PhysMemory) -> Result<AddressSpace, Error> {

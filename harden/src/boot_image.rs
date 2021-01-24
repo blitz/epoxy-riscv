@@ -44,12 +44,19 @@ fn to_user_as(
     user_as.add((&process.stack).into());
     user_as.extend(process.resources.iter().map(|(_, r)| r.into()));
 
+    // Make mappings available at the user privilege.
+    //
+    // BEWARE: This should not be called after merging in the kernel mappings to avoid making kernel
+    // mappings available to user code as well.
+    user_as.make_user();
+
+    user_as.merge_from(kernel_as);
+
     debug!(
         "User address space for process {} is: {:#?}",
         process.name, user_as
     );
 
-    user_as.merge_from(kernel_as);
     Ok(user_as)
 }
 
@@ -107,10 +114,14 @@ pub fn generate(
         })
         .collect::<Result<Vec<AddressSpace>, Error>>()?;
 
+    info!("Generating page tables");
+
     let user_satps = user_ass
         .iter()
         .map(|a| page_table::generate(page_table::Format::RiscvSv32, a, &mut pmem))
         .collect::<Result<Vec<u64>, Error>>()?;
+
+    info!("Patching kernel binary");
 
     // Patch the page table pointer the kernel boots with.
     pmem.write(
@@ -133,6 +144,8 @@ pub fn generate(
         let stdout = io::stdout();
         let out_buf = &mut stdout.lock();
 
+        info!("Serializing boot image");
+
         elf_writer::write(
             out_buf,
             elf_writer::Format::Elf32,
@@ -141,6 +154,8 @@ pub fn generate(
                 .ok_or_else(|| format_err!("Failed to resolve vaddr {:#x}", kernel_elf.entry))?,
             &pmem,
         )?;
+
+        info!("Finished writing boot image");
         Ok(())
     }
 }
