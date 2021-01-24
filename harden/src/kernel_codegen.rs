@@ -182,10 +182,6 @@ fn process_entry(user_root: &Path, process: &runtypes::Process) -> Result<u64, E
     Ok(elf.entry)
 }
 
-fn process_stack_ptr(process: &runtypes::Process) -> u64 {
-    process.stack.region.virt_start + process.stack.size()
-}
-
 /// Returns the name of the thread that is created in addition to all statements that need to go
 /// into the state file to create the necessary kernel options.
 fn process_kobjects(
@@ -232,7 +228,7 @@ fn process_kobjects(
                 init_args: vec![
                     pointer_to(&proc_name),
                     Expression::LiteralUnsigned(process_entry(user_root, &process)?),
-                    Expression::LiteralUnsigned(process_stack_ptr(&process)),
+                    Expression::LiteralUnsigned(process.initial_stack_pointer()),
                 ],
             },
         ],

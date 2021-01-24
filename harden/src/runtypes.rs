@@ -79,6 +79,12 @@ pub struct Process {
     pub stack: MemoryResource,
 }
 
+impl Process {
+    pub fn initial_stack_pointer(&self) -> u64 {
+        self.stack.region.virt_start + self.stack.size() - 8
+    }
+}
+
 #[derive(Debug)]
 pub struct Configuration {
     pub name: String,
