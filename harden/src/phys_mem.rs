@@ -176,6 +176,7 @@ impl PhysMemory {
 
     /// Reads memory from physical memory. Returns zeros for locations that have never been written
     /// before.
+    #[allow(dead_code)]
     pub fn read(&self, paddr: u64, size: u64) -> Vec<u8> {
         self.memory.read(paddr, size)
     }

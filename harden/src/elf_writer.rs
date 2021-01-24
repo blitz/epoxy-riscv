@@ -38,12 +38,15 @@
 
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use failure::Error;
+use itertools::Itertools;
+use log::debug;
 use std::convert::TryInto;
 use std::io::Write;
 
 use crate::phys_mem::{Chunk, PhysMemory};
 
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum Format {
     Elf32,
     Elf64,
@@ -128,6 +131,36 @@ fn write_ehdr<T: Write>(
     Ok(())
 }
 
+fn write_phdr<T: Write>(
+    buf: &mut T,
+    format: Format,
+    offset: u64,
+    chunk: &Chunk,
+) -> Result<(), Error> {
+    buf.write_u32::<LittleEndian>(1)?; // PT_LOAD
+
+    if let Format::Elf64 = format {
+        buf.write_u32::<LittleEndian>(7)?; // RWX
+    }
+
+    write_native(buf, format, offset)?; // file offset
+    write_native(buf, format, chunk.paddr)?; // vaddr (ignored)
+    write_native(buf, format, chunk.paddr)?; // paddr
+
+    // TODO It would be nice to check how many zeroes are at the end of the chunk and optimize for
+    // file size here.
+    write_native(buf, format, chunk.data.len().try_into()?)?; // file size
+    write_native(buf, format, chunk.data.len().try_into()?)?; // memory size
+
+    if let Format::Elf32 = format {
+        buf.write_u32::<LittleEndian>(7)?; // RWX (ignored)
+    }
+
+    write_native(buf, format, 1)?; // Alignment
+
+    Ok(())
+}
+
 pub fn write<T: Write>(
     buf: &mut T,
     format: Format,
@@ -138,7 +171,31 @@ pub fn write<T: Write>(
 
     write_ehdr(buf, format, entry, chunks.len())?;
 
-    // TODO
+    // The size of all data blocks.
+    let chunk_sizes = chunks
+        .iter()
+        .map(|c| -> u64 { c.data.len().try_into().unwrap() });
+
+    // The offset of each data block in the file. The last element of this vector is unused, it
+    // points to after the last memory block.
+    let data_offsets = chunk_sizes
+        .clone()
+        .fold(vec![data_start(format, &chunks)], |mut acc, s| {
+            acc.push(acc.last().unwrap() + s);
+            acc
+        });
+
+    // Write all PHDRs.
+    for (&off, chunk) in data_offsets.iter().zip(chunks.iter()) {
+        debug!(
+            "Writing chunk for paddr {:x} at file offset {:#x}",
+            chunk.paddr, off
+        );
+        write_phdr(buf, format, off, chunk)?;
+    }
+
+    // Write all payload data.
+    buf.write_all(&chunks.iter().map(|c| &c.data).cloned().concat())?;
 
     Ok(())
 }

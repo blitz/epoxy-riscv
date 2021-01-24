@@ -1,6 +1,5 @@
 use failure::{Error, ResultExt};
 use itertools::Itertools;
-use std::convert::TryInto;
 use std::path::{Path, PathBuf};
 
 use crate::elf::Elf;

@@ -1,7 +1,7 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{Error, ResultExt};
 use log::{debug, info};
-use std::io::{self, Write};
+use std::io::{self};
 use std::path::{Path, PathBuf};
 
 use crate::address_space::AddressSpace;
