@@ -332,6 +332,7 @@ checksum = "62aca2aba2d62b4a7f5b33f3712cb1b0692779a56fb510499d5c0aa594daeaf3"
 name = "harden"
 version = "0.1.0"
 dependencies = [
+ "atty",
  "byteorder",
  "clap",
  "failure",

@@ -2,6 +2,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{Error, ResultExt};
 use log::{debug, info};
 use std::path::{Path, PathBuf};
+use std::io::{self, Write};
 
 use crate::address_space::AddressSpace;
 use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc};
@@ -11,6 +12,7 @@ use crate::interval::Interval;
 use crate::page_table;
 use crate::phys_mem::PhysMemory;
 use crate::runtypes;
+use crate::elf_writer;
 
 impl From<&runtypes::Configuration> for PhysMemory {
     fn from(system: &runtypes::Configuration) -> Self {
@@ -109,5 +111,13 @@ pub fn generate(
 
     pmem.write(pt_paddr, &pts_to_data(&user_satps)?);
 
-    todo!("generate ELF boot image")
+    if atty::is(atty::Stream::Stdout) {
+        Err(format_err!("Refusing to write binary data to a terminal. Please redirect output to a stream."))
+    } else {
+        // TODO isatty
+        io::stdout().write_all(&elf_writer::write(elf_writer::Format::Elf32,
+                                                  kernel_elf.entry,
+                                                  &pmem))?;
+        Ok(())
+    }
 }

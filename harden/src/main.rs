@@ -11,6 +11,7 @@ mod cfgtypes;
 mod codegen;
 mod constants;
 mod elf;
+mod elf_writer;
 mod epoxy;
 mod framebuffer;
 mod interval;
