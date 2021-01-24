@@ -15,6 +15,7 @@ mod epoxy;
 mod framebuffer;
 mod interval;
 mod kernel_codegen;
+mod page_table;
 mod phys_mem;
 mod runtypes;
 

@@ -7,6 +7,7 @@ use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc};
 use crate::constants::PAGE_SIZE;
 use crate::elf::Elf;
 use crate::interval::Interval;
+use crate::page_table;
 use crate::phys_mem::PhysMemory;
 use crate::runtypes;
 
@@ -67,13 +68,18 @@ pub fn generate(
     kernel_as.fixate(&mut pmem)?;
     debug!("Kernel address space fixated to: {:#?}", kernel_as);
 
-    let _user_ass = system
+    let user_ass = system
         .processes
         .iter()
         .map(|(_, p)| -> Result<AddressSpace, Error> {
             to_user_as(p, user_binaries, &kernel_as)?.fixated(&mut pmem)
         })
         .collect::<Result<Vec<AddressSpace>, Error>>()?;
+
+    let user_satps = user_ass
+        .iter()
+        .map(|a| page_table::generate(page_table::Format::RiscvSv32, a, &mut pmem))
+        .collect::<Result<Vec<u64>, Error>>()?;
 
     let pt_sym = "USER_SATPS";
     let pt_vaddr = kernel_elf
@@ -88,6 +94,8 @@ pub fn generate(
         "Page tables need to be patched at vaddr {:#x} paddr {:#x}",
         pt_vaddr, pt_paddr
     );
+
+    // TODO Use byteorder crate to serialize SATPs into [u8].
 
     todo!("generate page tables and patch them into pmem");
     todo!("generate ELF boot image")
