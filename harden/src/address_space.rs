@@ -1,5 +1,3 @@
-use elfy::types::ProgramHeaderFlags;
-use elfy::Elf;
 use failure::Error;
 use std::convert::TryInto;
 use std::fmt;
@@ -8,6 +6,7 @@ use std::iter;
 use crate::constants::PAGE_SIZE;
 use crate::phys_mem::PhysMemory;
 use crate::runtypes;
+use crate::elf::{Elf, Permissions};
 
 #[derive(Clone, PartialEq)]
 pub enum Backing {
@@ -65,58 +64,6 @@ impl Backing {
                 phys: *phys,
             },
         }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct Permissions {
-    elf_perm: ProgramHeaderFlags,
-}
-
-// This is a bit unfortunate.
-impl Permissions {
-    pub fn read_write() -> Permissions {
-        Permissions {
-            elf_perm: ProgramHeaderFlags::ReadWrite,
-        }
-    }
-
-    pub fn can_read(&self) -> bool {
-        match self.elf_perm {
-            ProgramHeaderFlags::Read => true,
-            ProgramHeaderFlags::ReadWrite => true,
-            ProgramHeaderFlags::ReadExecute => true,
-            _ => false,
-        }
-    }
-
-    pub fn can_write(&self) -> bool {
-        match self.elf_perm {
-            ProgramHeaderFlags::Write => true,
-            ProgramHeaderFlags::ReadWrite => true,
-            ProgramHeaderFlags::ReadWriteExecute => true,
-            _ => false,
-        }
-    }
-
-    pub fn can_execute(&self) -> bool {
-        match self.elf_perm {
-            ProgramHeaderFlags::Execute => true,
-            ProgramHeaderFlags::ReadExecute => true,
-            ProgramHeaderFlags::ReadWriteExecute => true,
-            _ => false,
-        }
-    }
-}
-
-impl fmt::Debug for Permissions {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.pad(&format!(
-            "{}{}{}",
-            if self.can_read() { "R" } else { " " },
-            if self.can_write() { "W" } else { " " },
-            if self.can_execute() { "X" } else { " " }
-        ))
     }
 }
 
@@ -185,21 +132,13 @@ impl From<&Elf> for AddressSpace {
     fn from(elf: &Elf) -> Self {
         AddressSpace {
             mappings: elf
-                .segments()
+                .segments.iter()
                 .map(|s| {
-                    let h = s.header();
-
                     Mapping {
-                        vstart: h.virtual_address().try_into().unwrap(),
-                        perm: Permissions {
-                            elf_perm: h.flags(),
-                        },
+                        vstart: s.vaddr,
+                        perm: s.permissions,
                         backing: Backing::InitializedData {
-                            data: {
-                                let mut d = s.data().clone();
-                                d.resize(h.memory_size(), 0);
-                                d
-                            },
+                            data: s.data.clone(),
                         },
                     }
                 })

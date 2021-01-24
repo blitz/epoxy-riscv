@@ -1,9 +1,9 @@
-use elfy::Elf;
 use failure::{Error, ResultExt};
 use itertools::Itertools;
 use std::convert::TryInto;
 use std::path::{Path, PathBuf};
 
+use crate::elf::Elf;
 use crate::runtypes;
 
 type Type = String;
@@ -178,14 +178,9 @@ fn pointer_to(s: &str) -> Expression {
 
 fn process_entry(user_root: &Path, process: &runtypes::Process) -> Result<u64, Error> {
     let binary_path: PathBuf = [user_root, Path::new(&process.binary)].iter().collect();
-    let elf = Elf::load(&binary_path).context("Failed to load process ELF")?;
+    let elf = Elf::new(&binary_path).context("Failed to load process ELF")?;
 
-    // The try_into cannot fail, because we header() returns usize and usize always fits into u64.
-    Ok(elf
-        .header()
-        .entry()
-        .try_into()
-        .expect("Integer conversion error"))
+    Ok(elf.entry)
 }
 
 fn process_stack_ptr(process: &runtypes::Process) -> u64 {
@@ -227,7 +222,10 @@ fn process_kobjects(
             Statement::VariableDefinition {
                 r#type: "process".to_string(),
                 name: proc_name.to_string(),
-                init_args: vec![Expression::LiteralUnsigned(pid), Expression::Identifier(capset_name)],
+                init_args: vec![
+                    Expression::LiteralUnsigned(pid),
+                    Expression::Identifier(capset_name),
+                ],
             },
             Statement::VariableDefinition {
                 r#type: "thread".to_string(),

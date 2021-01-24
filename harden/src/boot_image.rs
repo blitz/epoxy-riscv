@@ -1,4 +1,3 @@
-use elfy::Elf;
 use failure::{Error, ResultExt};
 use log::{debug, info};
 use std::path::{Path, PathBuf};
@@ -6,7 +5,7 @@ use std::path::{Path, PathBuf};
 use crate::address_space::AddressSpace;
 use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc};
 use crate::constants::PAGE_SIZE;
-use crate::elf;
+use crate::elf::Elf;
 use crate::interval::Interval;
 use crate::phys_mem::PhysMemory;
 use crate::runtypes;
@@ -36,7 +35,7 @@ fn to_user_as(
         process.name
     );
 
-    let mut user_as = AddressSpace::from(&Elf::load(user_path).context("Failed to load user ELF")?);
+    let mut user_as = AddressSpace::from(&Elf::new(&user_path).context("Failed to load user ELF")?);
 
     user_as.add((&process.stack).into());
     user_as.extend(process.resources.iter().map(|(_, r)| r.into()));
@@ -57,7 +56,7 @@ pub fn generate(
 ) -> Result<(), Error> {
     info!("Using {} as kernel", kernel_binary.display());
 
-    let kernel_elf = Elf::load(kernel_binary).context("Failed to load kernel ELF")?;
+    let kernel_elf = Elf::new(kernel_binary).context("Failed to load kernel ELF")?;
     let mut kernel_as = AddressSpace::from(&kernel_elf);
     let mut pmem: PhysMemory = system.into();
 
@@ -75,6 +74,14 @@ pub fn generate(
             to_user_as(p, user_binaries, &kernel_as)?.fixated(&mut pmem)
         })
         .collect::<Result<Vec<AddressSpace>, Error>>()?;
+
+    let pt_sym = "USER_SATPS";
+    let pt_vaddr = kernel_elf
+        .symbols
+        .get(pt_sym)
+        .ok_or_else(|| format_err!("Failed to find location to patch page table pointers"))?;
+
+    debug!("Page tables need to be patched at vaddr {:#x}", pt_vaddr);
 
     todo!("generate page tables and patch them into pmem");
     todo!("generate ELF boot image")

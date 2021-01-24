@@ -6,13 +6,35 @@ use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::fs;
 use std::path::Path;
+use std::fmt;
 
 /// Permissions for memory regions.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Permissions {
     pub read: bool,
     pub write: bool,
     pub execute: bool,
+}
+
+impl Permissions {
+    pub fn read_write() -> Permissions {
+        Permissions {
+            read: true,
+            write: true,
+            execute: false,
+        }
+    }
+}
+
+impl fmt::Debug for Permissions {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.pad(&format!(
+            "{}{}{}",
+            if self.read { "R" } else { " " },
+            if self.write { "W" } else { " " },
+            if self.execute { "X" } else { " " }
+        ))
+    }
 }
 
 impl From<&goblin::elf::program_header::ProgramHeader> for Permissions {
@@ -27,11 +49,11 @@ impl From<&goblin::elf::program_header::ProgramHeader> for Permissions {
 
 #[derive(Debug, Clone)]
 pub struct Segment {
-    permissions: Permissions,
-    vaddr: u64,
-    paddr: u64,
+    pub permissions: Permissions,
+    pub vaddr: u64,
+    pub paddr: u64,
 
-    data: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 type SymbolMap = BTreeMap<String, u64>;
