@@ -1,4 +1,4 @@
-{ stdenv, epoxy-harden, epoxy-api, applicationDesc, machineDesc, userBinaries }:
+{ stdenv, epoxy-api, epoxy-kern-state }:
 
 stdenv.mkDerivation {
   pname = "epoxy-kern";
@@ -6,15 +6,10 @@ stdenv.mkDerivation {
 
   src = ../src/kern;
 
-  nativeBuildInputs = [
-    epoxy-harden
-  ];
-
   makeFlags = [
-    "APPLICATION_DESC=${applicationDesc}"
-    "MACHINE_DESC=${machineDesc}"
+    "-f" "Makefile.new"
     "EPOXY_API=${epoxy-api}/include"
-    "USER_BINARIES=${userBinaries}"
+    "KERN_STATE=${epoxy-kern-state}"
     "PREFIX=$(out)"
   ];
 
@@ -22,7 +17,4 @@ stdenv.mkDerivation {
   dontPatchELF = true;
   dontStrip = true;
   hardeningDisable = [ "all" ];
-
-  # This makes dhall happy, because it wants to write a cache file.
-  XDG_CACHE_HOME = "./.";
 }

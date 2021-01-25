@@ -3,7 +3,7 @@
 
 let thisPackage = import ./nix/release.nix { inherit sources nixpkgs pkgs; };
 in thisPackage.riscvPkgs.mkShell {
-  inputsFrom = [ thisPackage.newWorld.epoxy-hello ];
+  inputsFrom = [ thisPackage.ulx3s-fbdemo.hello ];
 
   nativeBuildInputs = pkgs.lib.attrsets.mapAttrsToList (_: v: v) thisPackage.shellDependencies;
   buildInputs = [ pkgs.niv ];
