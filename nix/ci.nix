@@ -1,4 +1,5 @@
 let
   release = import ./release.nix {};
-in
-release.new-harden
+in {
+  ulx3s-fbdemo = release.ulx3s-fbdemo.boot-image;
+}
