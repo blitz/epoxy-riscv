@@ -84,6 +84,7 @@ rec {
         };
     in
     {
+      # TODO Use readDir to automate this.
       qemu-hello = buildSystem "qemu-hello";
       ulx3s-saxonsoc-fbdemo = buildSystem "ulx3s-saxonsoc-fbdemo";
     };

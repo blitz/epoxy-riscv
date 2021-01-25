@@ -1,7 +1,9 @@
 let
   release = import ./release.nix { };
+
+  lib = release.riscvPkgs.lib;
+
+  bootImages = lib.mapAttrs (k: v: v.boot-image) release.systems;
 in
-{
-  qemu-hello = release.systems.qemu-hello.boot-image;
-  ulx3s-fbdemo = release.systems.ulx3s-saxonsoc-fbdemo.boot-image;
-}
+# TODO Add tests. See test.nix.
+bootImages
