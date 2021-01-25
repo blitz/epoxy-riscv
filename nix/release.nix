@@ -30,23 +30,23 @@ rec {
         let
           hardenCmd = "${new-harden}/bin/harden -r ${../config} -s ${system} -vvvv";
 
-          mkKernState = user-binaries: pkgs.runCommandNoCC "kern-state" { } ''
+          mkKernState = user-binaries: pkgs.runCommandNoCC "${system}-kern-state" { } ''
             mkdir -p $out
             ${hardenCmd} configure-kernel --header ${user-binaries} > $out/state.hpp
             ${hardenCmd} configure-kernel ${user-binaries} > $out/state.cpp
           '';
 
-          mkResourceHeader = procName: pkgs.runCommandNoCC "${procName}-resources.hpp" { }
+          mkResourceHeader = procName: pkgs.runCommandNoCC "${system}-${procName}-resources.hpp" { }
             "${hardenCmd} configure-process ${procName} > $out";
 
-          mkBootImage = kern: user-binaries: pkgs.runCommandNoCC "boot-image" { } ''
+          mkBootImage = kern: user-binaries: pkgs.runCommandNoCC "${system}-boot-image" { } ''
             mkdir -p $out/bin
 
             ${hardenCmd} boot-image ${kern}/bin/epoxy-kern ${user-binaries} > $out/bin/epoxy-boot
           '';
 
           # A file that contains all processes that are necessary to build the system.
-          list-processes-output = pkgs.runCommandNoCC "processes" { } ''
+          list-processes-output = pkgs.runCommandNoCC "${system}-processes" { } ''
             ${hardenCmd} list-processes > $out
           '';
 
@@ -54,7 +54,6 @@ rec {
           buildProcess = procName: riscvPkgs.callPackage (./epoxy- + "${procName}.nix") {
             resourceHeader = mkResourceHeader procName;
           };
-
 
         in
         rec {
