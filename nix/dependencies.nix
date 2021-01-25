@@ -7,11 +7,7 @@ let
       src = sources.epoxy-newlib;
     });
   };
-
-  epoxyHardenSrc = import "${sources.epoxy-harden}/nix/ci.nix" {};
 in rec {
-  inherit (epoxyHardenSrc) dhall epoxy-dtb epoxy-harden;
-
   epoxy-qemu-boot = pkgs.writeShellScriptBin "epoxy-qemu-boot" ''
                       exec ${qemuHeadless}/bin/qemu-system-riscv32 -M virt -m 256M -serial stdio -bios default $*
                     '';

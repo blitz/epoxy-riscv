@@ -1,16 +1,4 @@
 {
-    "epoxy-harden": {
-        "branch": "master",
-        "description": "Create bootable Epoxy images from system descriptions",
-        "homepage": null,
-        "owner": "blitz",
-        "repo": "epoxy-harden",
-        "rev": "e39a6e4a56d40f2f308526a3448df2452b221d53",
-        "sha256": "0dknmj67q23k07ig4p8w71k8lic3xbqmhsa4zjibwrd59vik1iy6",
-        "type": "tarball",
-        "url": "https://github.com/blitz/epoxy-harden/archive/e39a6e4a56d40f2f308526a3448df2452b221d53.tar.gz",
-        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
-    },
     "epoxy-newlib": {
         "branch": "epoxy-riscv-4.1.0",
         "description": "Newlib fork for RISC-V Epoxy",

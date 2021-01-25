@@ -7,18 +7,6 @@ let
 
   riscvPkgs = dependencies.riscvPkgs;
 
-  mkEpoxyBoot = { userBinaries, epoxy-api, applicationDesc, machineDesc }:
-    riscvPkgs.callPackage ./epoxy-kern.nix {
-      inherit epoxy-api applicationDesc machineDesc;
-      inherit (dependencies) epoxy-harden;
-
-      # TODO We should only join paths that are actually referenced in the application description.
-      userBinaries = riscvPkgs.symlinkJoin {
-        name = "user-binaries";
-        paths = userBinaries;
-      };
-    };
-
   naersk = pkgs.callPackage sources.naersk { };
 in
 {
@@ -27,41 +15,8 @@ in
 
   shellDependencies = {
     inherit (dependencies)
-      dhall epoxy-dtb epoxy-qemu-boot qemuHeadless pprintpp range-v3;
-    inherit (pkgs) clang-tools niv nixfmt;
-  };
-
-  newWorld = rec {
-    epoxy-api = riscvPkgs.callPackage ./epoxy-api.nix { };
-    epoxy-hello = riscvPkgs.callPackage ./epoxy-hello.nix { };
-    epoxy-fbdemo = riscvPkgs.callPackage ./epoxy-fbdemo.nix { };
-
-    epoxy-virtio-net = riscvPkgs.callPackage ./epoxy-virtio-net.nix {
-      inherit (dependencies) pprintpp range-v3;
-    };
-
-    epoxy-boot-hello = mkEpoxyBoot {
-      inherit epoxy-api;
-
-      applicationDesc = "${../applications}/hello.dhall";
-      machineDesc = ../machines/qemu-riscv32.dhall;
-
-      userBinaries = [ epoxy-hello ];
-    };
-
-    epoxy-boot-virtio-net = mkEpoxyBoot {
-      inherit epoxy-api;
-
-      applicationDesc = "${../applications}/virtio-net.dhall";
-      machineDesc = ../machines/qemu-riscv32.dhall;
-
-      userBinaries = [ epoxy-virtio-net ];
-    };
-
-    test = pkgs.callPackage ./test.nix {
-      inherit (dependencies) epoxy-qemu-boot;
-      bootElf = "${epoxy-boot-virtio-net}/bin/epoxy-boot";
-    };
+      epoxy-qemu-boot qemuHeadless pprintpp range-v3;
+    inherit (pkgs) clang-tools niv;
   };
 
   # This is the playground for the new Rust-based harden implementation.
@@ -122,4 +77,6 @@ in
         ${hardenCmd} boot-image ${new-harden-kern}/bin/epoxy-kern ${new-harden-user-binaries} > $out/bin/epoxy-boot
       '';
     };
+
+  # TODO Use test.nix
 }
