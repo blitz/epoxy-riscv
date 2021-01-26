@@ -40,9 +40,7 @@ rec {
             "${hardenCmd} configure-process ${procName} > $out";
 
           mkBootImage = kern: user-binaries: pkgs.runCommandNoCC "${system}-boot-image" { } ''
-            mkdir -p $out/bin
-
-            ${hardenCmd} boot-image ${kern}/bin/epoxy-kern ${user-binaries} > $out/bin/epoxy-boot
+            ${hardenCmd} boot-image ${kern}/bin/epoxy-kern ${user-binaries} > $out
           '';
 
           # A file that contains all processes that are necessary to build the system.
@@ -88,6 +86,14 @@ rec {
       qemu-hello = buildSystem "qemu-hello";
       ulx3s-saxonsoc-fbdemo = buildSystem "ulx3s-saxonsoc-fbdemo";
     };
+
+  tests = {
+    qemu-hello = riscvPkgs.callPackage ./test-hello.nix {
+      inherit (dependencies) epoxy-qemu-boot;
+
+      bootElf = systems.qemu-hello.boot-image;
+    };
+  };
 
   # TODO Use test.nix
 }

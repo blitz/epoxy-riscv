@@ -3,7 +3,8 @@ let
 
   lib = release.riscvPkgs.lib;
 
-  bootImages = lib.mapAttrs (k: v: v.boot-image) release.systems;
+  bootImages = lib.attrsets.mapAttrs' (k: v: lib.attrsets.nameValuePair "boot-${k}" v.boot-image) release.systems;
+
+  tests = lib.attrsets.mapAttrs' (k: v: lib.attrsets.nameValuePair "test-${k}" v) release.tests;
 in
-# TODO Add tests. See test.nix.
-bootImages
+bootImages // tests
