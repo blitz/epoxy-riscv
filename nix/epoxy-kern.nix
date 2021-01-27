@@ -7,7 +7,6 @@ stdenv.mkDerivation {
   src = ../src/kern;
 
   makeFlags = [
-    "-f" "Makefile.new"
     "EPOXY_API=${epoxy-api}/include"
     "KERN_STATE=${epoxy-kern-state}"
     "PREFIX=$(out)"
