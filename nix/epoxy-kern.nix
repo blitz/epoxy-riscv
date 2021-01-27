@@ -12,6 +12,8 @@ stdenv.mkDerivation {
     "PREFIX=$(out)"
   ];
 
+  enableParallelBuilding = true;
+
   # This is not useful.
   dontPatchELF = true;
   dontStrip = true;
