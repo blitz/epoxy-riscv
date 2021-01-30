@@ -1,7 +1,3 @@
--- Dhall 13.0.0 can do hexadecimal, but the formatter is only fixed in 14.0.0.
---
--- XXX Large device mappings are currently very inefficient to generate (probably because of our n^2
--- page table deduplication).
 let MemoryType
     : Type
     = < Available | Device : { key : Text } >
@@ -34,8 +30,6 @@ let virtioNetBar4Size = 0x00010000
 
 in  { memoryMap =
       [
-        -- The baseAddress has to be this for 32-bit RISC-V Qemu. For some reason, Qemu ignores the
-        -- ELFs entry address. See also KERNEL_BOOT_ADDRESS in Qemu v5.1.0.
         { baseAddress = 0x80400000
         , memoryLength = 0x1000000
         , memoryType = MemoryType.Available
