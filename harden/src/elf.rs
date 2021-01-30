@@ -4,9 +4,9 @@ use failure::Error;
 use goblin::Object;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
+use std::fmt;
 use std::fs;
 use std::path::Path;
-use std::fmt;
 
 /// Permissions for memory regions.
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -49,7 +49,7 @@ impl From<&goblin::elf::program_header::ProgramHeader> for Permissions {
 
             // This is a good default to avoid sadness. If we get this wrong, user code cannot
             // access it.
-            user: false
+            user: false,
         }
     }
 }

@@ -51,7 +51,7 @@ pub enum Resource {
         /// The number of supported external interrupts.
         ndev: u16,
         region: MemoryRegion,
-    }
+    },
 }
 
 #[derive(Deserialize, Debug, Clone)]

@@ -1,5 +1,5 @@
-use std::iter::FromIterator;
 use crate::interval::Interval;
+use std::iter::FromIterator;
 
 pub trait SimpleAlloc {
     /// Allocate a piece of memory from the allocator. The actual allocator type determines the
@@ -25,9 +25,7 @@ impl BumpPointerAlloc {
         assert!(is_power_of_two(min_align));
         assert_eq!(free.from & (min_align - 1), 0);
 
-        BumpPointerAlloc {
-            free, min_align
-        }
+        BumpPointerAlloc { free, min_align }
     }
 }
 
@@ -39,7 +37,8 @@ impl SimpleAlloc for BumpPointerAlloc {
 
         let cur = self.free.from;
         let next_aligned = self
-            .free.from
+            .free
+            .from
             .checked_add(size.checked_add(self.min_align - 1)?)?
             & !(self.min_align - 1);
 

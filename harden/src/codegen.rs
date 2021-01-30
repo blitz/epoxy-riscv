@@ -57,13 +57,13 @@ impl FromStr for Language {
 fn generate_cpp_res(name: &str, resource: &runtypes::MemoryResource) -> String {
     match &resource.meta {
         runtypes::ResourceMetaInfo::Stack => "".to_string(),
-        runtypes::ResourceMetaInfo::SifivePlic { ndev } => {
-            format!("
+        runtypes::ResourceMetaInfo::SifivePlic { ndev } => format!(
+            "
 constexpr uint16_t {}_ndev {{{}}};
 inline uint32_t volatile * const {}_reg {{reinterpret_cast<uint32_t volatile *>({:#x}ul)}};
 ",
-            name, ndev, name, resource.region.virt_start)
-        }
+            name, ndev, name, resource.region.virt_start
+        ),
         runtypes::ResourceMetaInfo::Framebuffer { format } => {
             if format.pixel != framebuffer::PixelFormat::R5G6B5 {
                 todo!("Implement different pixel formats");
