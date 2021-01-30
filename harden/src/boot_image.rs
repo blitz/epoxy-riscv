@@ -41,7 +41,10 @@ fn to_user_as(
 
     let mut user_as = AddressSpace::from(&Elf::new(&user_path).context("Failed to load user ELF")?);
 
-    user_as.add((&process.stack).into());
+    if let Some(stack) = &process.stack {
+        user_as.add(stack.into());
+    }
+
     user_as.extend(process.resources.iter().map(|(_, r)| r.into()));
 
     // Make mappings available at the user privilege.

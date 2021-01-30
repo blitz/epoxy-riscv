@@ -228,7 +228,9 @@ fn process_kobjects(
                 init_args: vec![
                     pointer_to(&proc_name),
                     Expression::LiteralUnsigned(process_entry(user_root, &process)?),
-                    Expression::LiteralUnsigned(process.initial_stack_pointer()),
+                    Expression::LiteralUnsigned(process.initial_stack_pointer().ok_or_else(
+                        || format_err!("Missing stack pointer for process {}", proc_name),
+                    )?),
                 ],
             },
         ],

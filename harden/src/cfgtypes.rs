@@ -21,6 +21,7 @@ pub struct Mapping {
 pub struct System {
     pub name: String,
     pub machine: String,
+    pub kernel: String,
     pub processes: Vec<Process>,
     pub mappings: Vec<Mapping>,
 }

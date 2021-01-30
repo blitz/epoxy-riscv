@@ -51,32 +51,36 @@ fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::MemoryRes
     Ok(stack)
 }
 
-fn map_memory<T: SimpleAlloc>(valloc: &mut T, region: &cfgtypes::MemoryRegion)
-    -> Result<runtypes::VirtualMemoryRegion, Error>
-{
+fn map_memory<T: SimpleAlloc>(
+    valloc: &mut T,
+    region: &cfgtypes::MemoryRegion,
+) -> Result<runtypes::VirtualMemoryRegion, Error> {
     Ok(runtypes::VirtualMemoryRegion {
         virt_start: valloc.alloc(region.size).ok_or_else(|| {
-            format_err!("Failed to allocate virtual memory memory region {:#?}",
-                        region)
+            format_err!(
+                "Failed to allocate virtual memory memory region {:#?}",
+                region
+            )
         })?,
         phys: runtypes::MemoryRegion::from(region),
     })
 }
 
-fn map_resource<T: SimpleAlloc>(valloc: &mut T, device: &cfgtypes::Resource)
-                                -> Result<runtypes::MemoryResource, Error>
-{
+fn map_resource<T: SimpleAlloc>(
+    valloc: &mut T,
+    device: &cfgtypes::Resource,
+) -> Result<runtypes::MemoryResource, Error> {
     Ok(match device {
-        cfgtypes::Resource::SiFivePLIC { ndev, region } =>
-            runtypes::MemoryResource {
-                region: map_memory(valloc, region)?,
-                meta: runtypes::ResourceMetaInfo::SifivePlic { ndev: *ndev }
+        cfgtypes::Resource::SiFivePLIC { ndev, region } => runtypes::MemoryResource {
+            region: map_memory(valloc, region)?,
+            meta: runtypes::ResourceMetaInfo::SifivePlic { ndev: *ndev },
+        },
+        cfgtypes::Resource::Framebuffer { format, region } => runtypes::MemoryResource {
+            region: map_memory(valloc, region)?,
+            meta: runtypes::ResourceMetaInfo::Framebuffer {
+                format: format.clone(),
             },
-        cfgtypes::Resource::Framebuffer { format, region } =>
-            runtypes::MemoryResource {
-                region: map_memory(valloc, region)?,
-                meta: runtypes::ResourceMetaInfo::Framebuffer { format: format.clone() },
-            }
+        },
     })
 }
 
@@ -90,7 +94,7 @@ fn to_process_resources<T: SimpleAlloc>(
     mappings: &[cfgtypes::Mapping],
     devices: &[cfgtypes::NamedResource],
 ) -> Result<runtypes::ResourceMap, Error> {
-    let rmap : runtypes::ResourceMap = needs
+    let rmap: runtypes::ResourceMap = needs
         .iter()
         .map(|need| -> Result<(String, cfgtypes::Resource), Error> {
             // A needed resource "dev" for process "hello" means we need to look for a mapping to
@@ -120,12 +124,37 @@ fn to_process_resources<T: SimpleAlloc>(
             Ok((need.name.clone(), source_res.resource.clone()))
         })
         .map(|v| -> Result<(String, runtypes::MemoryResource), Error> {
-            rflatten(v.map(|(name, dev)| -> Result<(String, runtypes::MemoryResource), Error> {
-                Ok((name, map_resource(valloc, &dev)?))}))
+            rflatten(v.map(
+                |(name, dev)| -> Result<(String, runtypes::MemoryResource), Error> {
+                    Ok((name, map_resource(valloc, &dev)?))
+                },
+            ))
         })
         .collect::<Result<runtypes::ResourceMap, Error>>()?;
 
     Ok(rmap)
+}
+
+#[derive(Debug, Clone, Copy)]
+enum ProcessType {
+    Kernel,
+    User,
+}
+
+fn get_process_valloc(process_type: ProcessType) -> impl SimpleAlloc {
+    BumpPointerAlloc::new(
+        match process_type {
+            ProcessType::User => Interval {
+                from: USER_RESOURCE_START,
+                to: USER_RESOURCE_END,
+            },
+            ProcessType::Kernel => Interval {
+                from: KERN_RESOURCE_START,
+                to: KERN_RESOURCE_END,
+            },
+        },
+        PAGE_SIZE,
+    )
 }
 
 fn internalize_process(
@@ -133,6 +162,7 @@ fn internalize_process(
     machine: &cfgtypes::Machine,
     process: &cfgtypes::Process,
     mappings: &[cfgtypes::Mapping],
+    process_type: ProcessType,
 ) -> Result<runtypes::Process, Error> {
     let app_cfg_file = cfgfile::find(cfgfile::Type::Application, root, &process.program);
     info!(
@@ -145,18 +175,17 @@ fn internalize_process(
         .parse()
         .context("Failed to parse machine description")?;
 
-    let mut valloc = BumpPointerAlloc::new(
-        Interval {
-            from: VIRT_RESOURCE_START,
-            to: VIRT_RESOURCE_END,
-        },
-        PAGE_SIZE,
-    );
+    let mut valloc = get_process_valloc(process_type);
 
     Ok(runtypes::Process {
         name: process.name.clone(),
         binary: program.binary,
-        stack: make_user_stack(&mut valloc)?,
+        stack: match process_type {
+            ProcessType::User => Some(make_user_stack(&mut valloc)?),
+
+            // The kernel takes care of its own stack.
+            ProcessType::Kernel => None,
+        },
         resources: to_process_resources(
             &mut valloc,
             &process.name,
@@ -182,12 +211,22 @@ fn configure_system(
     let processes: Vec<runtypes::Process> = system
         .processes
         .iter()
-        .map(|p| internalize_process(root, &machine, p, &system.mappings))
+        .map(|p| internalize_process(root, &machine, p, &system.mappings, ProcessType::User))
         .collect::<Result<Vec<runtypes::Process>, Error>>()?;
 
     Ok(runtypes::Configuration {
         name: system.name.clone(),
         available_memory: machine.available_memory.clone(),
+        kernel: internalize_process(
+            root,
+            &machine,
+            &cfgtypes::Process {
+                name: system.kernel.clone(),
+                program: system.kernel.clone(),
+            },
+            &system.mappings,
+            ProcessType::Kernel,
+        )?,
         processes: processes
             .into_iter()
             .map(|p| -> (String, runtypes::Process) { (p.name.clone(), p) })
@@ -230,15 +269,18 @@ fn epoxy_configure_process(
 
 fn epoxy_configure_kernel(
     system: &runtypes::Configuration,
-    do_header: bool,
+    out_type: &str,
     user_root: &Path,
 ) -> Result<(), Error> {
     print!(
         "{}",
-        if do_header {
-            kernel_codegen::generate_hpp(&system)?
-        } else {
-            kernel_codegen::generate_cpp(&system, user_root)?
+        match out_type {
+            "state-hpp" => kernel_codegen::generate_hpp(&system)?,
+            "state-cpp" => kernel_codegen::generate_cpp(&system, user_root)?,
+            "resources" => codegen::generate(codegen::Language::CPP, &system.kernel),
+            _ => Err(format_err!(
+                "Unrecognized output type. Should be one of: state-hpp state-cpp resources"
+            ))?,
         }
     );
 
@@ -292,13 +334,13 @@ pub fn main() -> Result<(), Error> {
                          .default_value("c++")))
         .subcommand(SubCommand::with_name("configure-kernel")
                     .about("Generate configuration code for the kernel (C++ only)")
+                    .arg(Arg::with_name("type")
+                         .required(true)
+                         .help("Specify what type of output should be generated: state-hpp, state-cpp, or resources"))
                     .arg(Arg::with_name("user-binaries")
                          .required(true)
                          .help("The path where user binaries can be found"))
-                    .arg(Arg::with_name("header")
-                         .short("h")
-                         .long("header")
-                         .help("Generate the header instead of the C++ source")))
+                    )
         .subcommand(SubCommand::with_name("boot-image")
                     .about("Generate a bootable image for the target platform")
                     .arg(Arg::with_name("kernel-binary")
@@ -339,6 +381,8 @@ pub fn main() -> Result<(), Error> {
 
     let configured_system = configure_system(cfg_root, &system_spec)?;
 
+    debug!("Configured system is: {:#x?}", configured_system);
+
     if let Some(_) = matches.subcommand_matches("verify") {
         epoxy_verify(&configured_system)
     } else if let Some(_) = matches.subcommand_matches("list-processes") {
@@ -356,7 +400,9 @@ pub fn main() -> Result<(), Error> {
     } else if let Some(cfg_kern_matches) = matches.subcommand_matches("configure-kernel") {
         epoxy_configure_kernel(
             &configured_system,
-            cfg_kern_matches.is_present("header"),
+            cfg_kern_matches
+                .value_of("type")
+                .expect("required option missing"),
             Path::new(
                 cfg_kern_matches
                     .value_of("user-binaries")

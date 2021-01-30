@@ -77,12 +77,14 @@ pub struct Process {
     pub resources: ResourceMap,
 
     /// The stack of the single thread in the process.
-    pub stack: MemoryResource,
+    pub stack: Option<MemoryResource>,
 }
 
 impl Process {
-    pub fn initial_stack_pointer(&self) -> u64 {
-        self.stack.region.virt_start + self.stack.size() - 8
+    pub fn initial_stack_pointer(&self) -> Option<u64> {
+        let stack = self.stack.as_ref()?;
+
+        Some(stack.region.virt_start + stack.size() - 8)
     }
 }
 
@@ -90,5 +92,6 @@ impl Process {
 pub struct Configuration {
     pub name: String,
     pub available_memory: Vec<cfgtypes::MemoryRegion>,
+    pub kernel: Process,
     pub processes: ProcessMap,
 }

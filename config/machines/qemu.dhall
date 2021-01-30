@@ -5,6 +5,14 @@ in    { name = "qemu"
         [ { start = 0x80400000, size = 0x1000000 }
         , { start = 0x82200000, size = 0x100000 }
         ]
-      , devices = [] : List Epoxy.NamedResource
+      , devices =
+        [ { name = "plic"
+          , resource =
+              Epoxy.Resource.SiFivePLIC
+                { ndev = 0x20
+                , region = { start = 0x0c000000, size = 0x400000 }
+                }
+          }
+        ]
       }
     : Epoxy.Machine

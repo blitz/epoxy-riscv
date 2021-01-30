@@ -32,8 +32,9 @@ rec {
 
           mkKernState = user-binaries: pkgs.runCommandNoCC "${system}-kern-state" { } ''
             mkdir -p $out
-            ${hardenCmd} configure-kernel --header ${user-binaries} > $out/state.hpp
-            ${hardenCmd} configure-kernel ${user-binaries} > $out/state.cpp
+            ${hardenCmd} configure-kernel state-hpp ${user-binaries} > $out/state.hpp
+            ${hardenCmd} configure-kernel state-cpp ${user-binaries} > $out/state.cpp
+            ${hardenCmd} configure-kernel resources ${user-binaries} > $out/resources.hpp
           '';
 
           mkResourceHeader = procName: pkgs.runCommandNoCC "${system}-${procName}-resources.hpp" { }
