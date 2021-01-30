@@ -6,7 +6,7 @@ runCommandNoCC "epoxy-qemu-hello-test"
   } ''
    epoxy-qemu-boot \
                     -display none \
-                    -device loader,file=${bootElf} | tee run.log
+                    -kernel ${bootElf} | tee run.log
 
    set -x
    grep -q "hello | Hello World" run.log

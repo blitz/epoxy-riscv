@@ -20,10 +20,7 @@ in rec {
     spiceSupport = false;
     pulseSupport = false;
     smartcardSupport = false;
-    hostCpuTargets = [ "riscv32-softmmu" "riscv64-softmmu" ];
-  }).overrideAttrs (old : {
-    # Fix a bug that the SBI triggers. This should be fixed after 5.1.0.
-    patches = old.patches ++ [ ./0001-riscv-sifive_test-Allow-16-bit-writes-to-memory-regi.patch ];
+    hostCpuTargets = [ "riscv32-softmmu" ];
   });
 
   # All nixpkgs built for RISC-V with our patched newlib.
@@ -33,10 +30,8 @@ in rec {
 
     # Disabled floating point and compressed instructions to make SaxonSoc happy.
     crossSystem = pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded {
-      platform = {
-        gcc = {
-          arch = "rv32ima";
-        };
+      gcc = {
+        arch = "rv32ima";
       };
     };
   });
