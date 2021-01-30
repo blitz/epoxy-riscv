@@ -39,10 +39,17 @@ pub enum ResourceType {
 
 #[derive(Deserialize, Debug, Clone)]
 pub enum Resource {
+    /// A simple framebuffer.
     Framebuffer {
         format: framebuffer::Format,
         region: MemoryRegion,
     },
+    /// A SiFive Platform-Level Interrupt Controller.
+    SiFivePLIC {
+        /// The number of supported external interrupts.
+        ndev: u16,
+        region: MemoryRegion,
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]

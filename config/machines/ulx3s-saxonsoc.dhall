@@ -15,6 +15,13 @@ in    { name = "ulx3s-saxonsoc"
                 , region = { start = 0x80e00000, size = 0x96000 }
                 }
           }
+          , { name = "plic"
+            , resource =
+                Epoxy.Resource.SiFivePLIC
+                  { ndev = 0x20
+                  , region = { start = 0x0c000000, size = 0x400000 }
+                  }
+            }
         ]
       }
     : Epoxy.Machine

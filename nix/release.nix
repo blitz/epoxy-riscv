@@ -16,7 +16,7 @@ rec {
   shellDependencies = {
     inherit (dependencies)
       epoxy-qemu-boot qemuHeadless pprintpp range-v3;
-    inherit (pkgs) clang-tools niv;
+    inherit (pkgs) clang-tools niv dhall;
   };
 
   # This is the new harden binary that needs quite a bit of work to be useful.

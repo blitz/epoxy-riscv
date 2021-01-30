@@ -20,7 +20,9 @@ let FramebufferFormat
 
 let Resource
     : Type
-    = < Framebuffer : { format : FramebufferFormat, region : MemoryRegion } >
+    = < Framebuffer : { format : FramebufferFormat, region : MemoryRegion }
+      | SiFivePLIC : { ndev : Natural, region : MemoryRegion }
+      >
 
 let NamedResource
     : Type
@@ -32,13 +34,7 @@ let NamedResourceType
 
 let Application
     : Type
-    = { -- | The name of the application as displayed by tools.
-        name : Text
-      , -- | A list of resources that an application needs to run.
-        needs : List NamedResourceType
-      , -- | The Nix expression that builds this application.
-        binary : Text
-      }
+    = { name : Text, needs : List NamedResourceType, binary : Text }
 
 let Machine
     : Type

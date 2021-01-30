@@ -44,6 +44,7 @@ pub struct VirtualMemoryRegion {
 pub enum ResourceMetaInfo {
     Stack,
     Framebuffer { format: framebuffer::Format },
+    SifivePlic { ndev: u16 },
 }
 
 /// A system resource that is represented as a memory mapping. This is basically a piece of mapped

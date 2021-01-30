@@ -51,6 +51,35 @@ fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::MemoryRes
     Ok(stack)
 }
 
+fn map_memory<T: SimpleAlloc>(valloc: &mut T, region: &cfgtypes::MemoryRegion)
+    -> Result<runtypes::VirtualMemoryRegion, Error>
+{
+    Ok(runtypes::VirtualMemoryRegion {
+        virt_start: valloc.alloc(region.size).ok_or_else(|| {
+            format_err!("Failed to allocate virtual memory memory region {:#?}",
+                        region)
+        })?,
+        phys: runtypes::MemoryRegion::from(region),
+    })
+}
+
+fn map_resource<T: SimpleAlloc>(valloc: &mut T, device: &cfgtypes::Resource)
+                                -> Result<runtypes::MemoryResource, Error>
+{
+    Ok(match device {
+        cfgtypes::Resource::SiFivePLIC { ndev, region } =>
+            runtypes::MemoryResource {
+                region: map_memory(valloc, region)?,
+                meta: runtypes::ResourceMetaInfo::SifivePlic { ndev: *ndev }
+            },
+        cfgtypes::Resource::Framebuffer { format, region } =>
+            runtypes::MemoryResource {
+                region: map_memory(valloc, region)?,
+                meta: runtypes::ResourceMetaInfo::Framebuffer { format: format.clone() },
+            }
+    })
+}
+
 /// Take resource mappings and resolve them into named resources.
 ///
 /// TODO This is needlessly long/unmodular/ugly.
@@ -91,22 +120,8 @@ fn to_process_resources<T: SimpleAlloc>(
             Ok((need.name.clone(), source_res.resource.clone()))
         })
         .map(|v| -> Result<(String, runtypes::MemoryResource), Error> {
-            rflatten(v.map(|(name, res)| -> Result<(String, runtypes::MemoryResource), Error> {
-                Ok(match res {
-                    cfgtypes::Resource::Framebuffer { format, region } => (
-                        name.clone(),
-                        runtypes::MemoryResource {
-                            region: runtypes::VirtualMemoryRegion {
-                                virt_start: valloc.alloc(region.size).ok_or_else(|| {
-                                    format_err!("Failed to allocate virtual memory for resource {} in process {}",
-                                                name, proc_name)
-                                })?,
-                                phys: runtypes::MemoryRegion::from(&region),
-                            },
-                            meta: runtypes::ResourceMetaInfo::Framebuffer { format: format },
-                        },
-                    ),
-                })}))
+            rflatten(v.map(|(name, dev)| -> Result<(String, runtypes::MemoryResource), Error> {
+                Ok((name, map_resource(valloc, &dev)?))}))
         })
         .collect::<Result<runtypes::ResourceMap, Error>>()?;
 
