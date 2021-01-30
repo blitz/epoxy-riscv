@@ -47,6 +47,7 @@ let System
     : Type
     = { name : Text
       , machine : Text
+      , kernel : Text
       , processes : List { name : Text, program : Text }
       , mappings : List { from : Text, to : Text }
       }
