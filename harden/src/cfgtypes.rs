@@ -35,6 +35,7 @@ pub struct MemoryRegion {
 #[derive(Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ResourceType {
     Framebuffer,
+    SiFivePLIC,
 }
 
 #[derive(Deserialize, Debug, Clone)]

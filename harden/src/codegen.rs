@@ -60,7 +60,7 @@ fn generate_cpp_res(name: &str, resource: &runtypes::MemoryResource) -> String {
         runtypes::ResourceMetaInfo::SifivePlic { ndev } => {
             format!("
 constexpr uint16_t {}_ndev {{{}}};
-inline uint32_t volatile * const {}_reg {{*reinterpret_cast<uint32_t volatile *>({})}};
+inline uint32_t volatile * const {}_reg {{reinterpret_cast<uint32_t volatile *>({:#x}ul)}};
 ",
             name, ndev, name, resource.region.virt_start)
         }

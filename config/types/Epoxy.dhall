@@ -1,6 +1,6 @@
 let ResourceType
     : Type
-    = < Framebuffer >
+    = < Framebuffer | SiFivePLIC >
 
 let MemoryRegion
     : Type
