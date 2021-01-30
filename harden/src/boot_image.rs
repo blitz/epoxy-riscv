@@ -27,6 +27,21 @@ impl From<&runtypes::Configuration> for PhysMemory {
     }
 }
 
+fn to_kernel_as(
+    process: &runtypes::Process,
+    user_binaries: &Path,
+) -> Result<(Elf, AddressSpace), Error> {
+    let kernel_path: PathBuf = [user_binaries, Path::new(&process.binary)].iter().collect();
+    info!("Using {} as kernel binary", kernel_path.display(),);
+
+    let kernel_elf = Elf::new(&kernel_path).context("Failed to load kernel ELF")?;
+
+    let mut kernel_as = AddressSpace::from(&kernel_elf);
+    kernel_as.extend(process.resources.iter().map(|(_, r)| r.into()));
+
+    Ok((kernel_elf, kernel_as))
+}
+
 fn to_user_as(
     process: &runtypes::Process,
     user_binaries: &Path,
@@ -91,15 +106,8 @@ fn sym_paddr(name: &str, elf: &Elf, addr_space: &AddressSpace) -> Result<u64, Er
     })
 }
 
-pub fn generate(
-    system: &runtypes::Configuration,
-    kernel_binary: &Path,
-    user_binaries: &Path,
-) -> Result<(), Error> {
-    info!("Using {} as kernel", kernel_binary.display());
-
-    let kernel_elf = Elf::new(kernel_binary).context("Failed to load kernel ELF")?;
-    let mut kernel_as = AddressSpace::from(&kernel_elf);
+pub fn generate(system: &runtypes::Configuration, user_binaries: &Path) -> Result<(), Error> {
+    let (kernel_elf, mut kernel_as) = to_kernel_as(&system.kernel, user_binaries)?;
     let mut pmem: PhysMemory = system.into();
 
     debug!("Kernel address space is: {:#?}", kernel_as);

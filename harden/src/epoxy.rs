@@ -287,12 +287,8 @@ fn epoxy_configure_kernel(
     Ok(())
 }
 
-fn epoxy_boot_image(
-    system: &runtypes::Configuration,
-    kernel_binary: &Path,
-    user_binaries: &Path,
-) -> Result<(), Error> {
-    boot_image::generate(system, kernel_binary, user_binaries)
+fn epoxy_boot_image(system: &runtypes::Configuration, user_binaries: &Path) -> Result<(), Error> {
+    boot_image::generate(system, user_binaries)
 }
 
 pub fn main() -> Result<(), Error> {
@@ -343,9 +339,6 @@ pub fn main() -> Result<(), Error> {
                     )
         .subcommand(SubCommand::with_name("boot-image")
                     .about("Generate a bootable image for the target platform")
-                    .arg(Arg::with_name("kernel-binary")
-                         .required(true)
-                         .help("The kernel binary to use"))
                     .arg(Arg::with_name("user-binaries")
                          .required(true)
                          .help("The path where user binaries can be found")))
@@ -412,11 +405,6 @@ pub fn main() -> Result<(), Error> {
     } else if let Some(boot_image_matches) = matches.subcommand_matches("boot-image") {
         epoxy_boot_image(
             &configured_system,
-            Path::new(
-                boot_image_matches
-                    .value_of("kernel-binary")
-                    .expect("required option missing"),
-            ),
             Path::new(
                 boot_image_matches
                     .value_of("user-binaries")

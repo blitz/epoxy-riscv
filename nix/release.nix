@@ -40,8 +40,8 @@ rec {
           mkResourceHeader = procName: pkgs.runCommandNoCC "${system}-${procName}-resources.hpp" { }
             "${hardenCmd} configure-process ${procName} > $out";
 
-          mkBootImage = kern: user-binaries: pkgs.runCommandNoCC "${system}-boot-image" { } ''
-            ${hardenCmd} boot-image ${kern}/bin/epoxy-kern ${user-binaries} > $out
+          mkBootImage = user-binaries: pkgs.runCommandNoCC "${system}-boot-image" { } ''
+            ${hardenCmd} boot-image ${user-binaries} > $out
           '';
 
           # A file that contains all processes that are necessary to build the system.
@@ -73,13 +73,12 @@ rec {
             epoxy-kern-state = kern-state;
           };
 
-          # This is only convenience for developing the Rust harden code.
           boot-image-input = riscvPkgs.symlinkJoin {
             name = "all-binaries";
             paths = [ user-binaries kern ];
           };
 
-          boot-image = mkBootImage kern user-binaries;
+          boot-image = mkBootImage boot-image-input;
         };
     in
     {
