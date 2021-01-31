@@ -4,6 +4,7 @@
 #include "exception_frame.hpp"
 #include "exception_info.hpp"
 #include "format.hpp"
+#include "plic.hpp"
 #include "process.hpp"
 #include "sbi.hpp"
 #include "scheduler.hpp"
@@ -138,6 +139,7 @@ void start()
 #endif
       ")\n");
 
+  plic::global().mask_all();
   arch_init();
 
   schedule();

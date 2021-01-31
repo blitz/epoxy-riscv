@@ -93,8 +93,13 @@ pub fn generate(language: Language, process: &runtypes::Process) -> String {
 
 #pragma once
 
+#if __STDC_HOSTED__
 #include <cstddef>
 #include <cstdint>
+#else
+#include <epoxy-api/c_types.hpp>
+#endif
+
 {}",
             process
                 .resources
