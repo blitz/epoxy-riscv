@@ -27,6 +27,9 @@ void arch_init()
   // all interrupts and exceptions enter at the same location.
   csr_w<csr::STVEC>(reinterpret_cast<uintptr_t>(asm_exc_entry));
 
+  // Enable external interrupts.
+  csr_rs<csr::SIE>(SIE_SEIE);
+
   // A scratch register containing zero means we are in the kernel.
   csr_w<csr::SSCRATCH>(0);
 }
@@ -139,8 +142,11 @@ void start()
 #endif
       ")\n");
 
-  plic::global().mask_all();
+
   arch_init();
+
+  plic::global().mask_all();
+  plic::global().set_hart_threshold(0);
 
   schedule();
 }

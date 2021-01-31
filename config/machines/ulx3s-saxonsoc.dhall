@@ -19,7 +19,7 @@ in    { name = "ulx3s-saxonsoc"
             , resource =
                 Epoxy.Resource.SiFivePLIC
                   { ndev = 0x20
-                  , region = { start = 0x0c000000, size = 0x400000 }
+                  , region = { start = 0x10c00000, size = 0x400000 }
                   }
             }
         ]

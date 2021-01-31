@@ -26,6 +26,8 @@ enum : mword_t {
   SCAUSE_IRQ = 1UL << (__riscv_xlen - 1),
 
   SIE_STIE = 1UL << 5,  // Timer enable
+  SIE_SEIE = 1UL << 9,	// External Interrupt enable
+
   SIP_STIP = 1UL << 5,  // Timer pending
 };
 

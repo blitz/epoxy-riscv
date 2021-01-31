@@ -19,7 +19,7 @@ class plic
   static const int_threshold NTHRESHOLD = 8;
 
   static constexpr size_t bits_per_word() { return sizeof(reg_[0] * 8); }
-  
+
   class in_place_bitfield
   {
     uint32_t volatile * const base_;
@@ -45,12 +45,12 @@ class plic
       } else {
 	base_[i / bits_per_word()] &= ~bit;
       }
-    }    
+    }
   };
 
   in_place_bitfield pending_bits() const { return in_place_bitfield { reg_, 0x1000 }; }
   in_place_bitfield enable_bits() const { return in_place_bitfield { reg_, 0x2000 }; }
-  
+
   /// Return a pointer for the priority register of an interrupt source.
   uint32_t volatile *priority_reg(int_no src) const
   {
@@ -63,19 +63,25 @@ public:
   /// Return the global instances of the PLIC.
   static plic const& global();
 
+  /// The number of interrupts supported by this PLIC.
+  uint16_t ndev() const
+  {
+    return ndev_;
+  }
+
   /// Return the interrupt number of the next pending interrupt. This
   /// "claims" the interrupt.
-  int_no next_interrupt() const
+  int_no claim() const
   {
-    return reg_[0x20004 / sizeof(reg_[0])];
+    return reg_[0x200004 / sizeof(reg_[0])];
   }
 
   /// Mark an interrupt as being handled. This is the same as EOI on
   /// x86 interrupt controllers.
   void complete(int_no src) const
   {
-    assert(src > 0 and src < ndev_);    
-    reg_[0x20004 / sizeof(reg_[0])] = src;
+    assert(src > 0 and src < ndev_);
+    reg_[0x200004 / sizeof(reg_[0])] = src;
   }
 
   /// Set the threshold at which the hart operates.
@@ -86,7 +92,13 @@ public:
   void set_hart_threshold(int_threshold t) const
   {
     assert(t >= 0 and t < NTHRESHOLD);
-    reg_[0x20000 / sizeof(reg_[0])] = t;
+    reg_[0x200000 / sizeof(reg_[0])] = t;
+  }
+
+  /// Return the current threshold at which the hart operates.
+  int_threshold hart_threshold() const
+  {
+    return reg_[0x200000 / sizeof(reg_[0])];
   }
 
   /// Set the interrupt's priority.
