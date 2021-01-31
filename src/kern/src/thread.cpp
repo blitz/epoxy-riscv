@@ -15,11 +15,11 @@ void clear_lrsc_reservation()
   mword_t sc_dummy;
 
 #if __riscv_xlen == 64
-  asm volatile("sc.d zero, zero, (%[mem])" : "=m"(sc_dummy) : [ mem ] "r"(&sc_dummy));
+  asm volatile("sc.d zero, zero, (%[mem])" : "=m"(sc_dummy) : [mem] "r"(&sc_dummy));
 #elif __riscv_xlen == 32
-  asm volatile("sc.w zero, zero, (%[mem])" : "=m"(sc_dummy) : [ mem ] "r"(&sc_dummy));
+  asm volatile("sc.w zero, zero, (%[mem])" : "=m"(sc_dummy) : [mem] "r"(&sc_dummy));
 #else
-# error Unknown platform
+#error Unknown platform
 #endif
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <epoxy-api/c_types.hpp>
+
 #include "config_types.hpp"
 
 class process

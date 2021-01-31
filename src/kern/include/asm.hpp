@@ -48,10 +48,11 @@ inline uint64_t rdtime()
   // Repeat reading the two parts of the timer register if the low
   // part wrapped.
   do {
-    asm volatile("rdtimeh %0\n"
-		 "rdtime %1\n"
-		 "rdtimeh %2\n"
-		 : "=r" (time_hi_before), "=r" (time_lo), "=r" (time_hi_after));
+    asm volatile(
+        "rdtimeh %0\n"
+        "rdtime %1\n"
+        "rdtimeh %2\n"
+        : "=r"(time_hi_before), "=r"(time_lo), "=r"(time_hi_after));
   } while (time_hi_after != time_hi_before);
 
   return static_cast<uint64_t>(time_hi_before) << 32 | time_lo;

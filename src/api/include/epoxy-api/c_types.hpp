@@ -20,13 +20,13 @@ using int64_t = long long;
 using uint64_t = unsigned long long;
 
 #ifdef __riscv
-# if __riscv_xlen == 32
+#if __riscv_xlen == 32
 using size_t = unsigned int;
-# else
-using size_t = unsigned long;
-# endif
 #else
-# error Unknown platform
+using size_t = unsigned long;
+#endif
+#else
+#error Unknown platform
 #endif
 
 #define offsetof(type, member) __builtin_offsetof(type, member)

@@ -460,10 +460,10 @@ public:
 }  // anonymous namespace
 
 extern "C" {
+#include <clock.h>
 #include <uip.h>
 #include <uip_arp.h>
 #include <uipopt.h>
-#include <clock.h>
 }
 
 void uip_log(char *msg)

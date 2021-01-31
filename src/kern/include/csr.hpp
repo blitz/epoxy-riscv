@@ -32,7 +32,7 @@ enum : mword_t {
 template <csr CSR>
 inline void csr_w(mword_t value)
 {
-  asm volatile("csrw %[csr], %[val]" : : [ csr ] "i"(CSR), [ val ] "r"(value) : "memory");
+  asm volatile("csrw %[csr], %[val]" : : [csr] "i"(CSR), [val] "r"(value) : "memory");
 }
 
 template <csr CSR>
@@ -40,7 +40,7 @@ inline mword_t csr_r()
 {
   mword_t out;
 
-  asm volatile("csrr %[out], %[csr]" : [ out ] "=r"(out) : [ csr ] "i"(CSR));
+  asm volatile("csrr %[out], %[csr]" : [out] "=r"(out) : [csr] "i"(CSR));
 
   return out;
 }
@@ -50,9 +50,7 @@ inline mword_t csr_rc(mword_t value)
 {
   mword_t out;
 
-  asm volatile("csrrc %[out], %[csr], %[val]"
-               : [ out ] "=r"(out)
-               : [ csr ] "i"(CSR), [ val ] "r"(value));
+  asm volatile("csrrc %[out], %[csr], %[val]" : [out] "=r"(out) : [csr] "i"(CSR), [val] "r"(value));
 
   return out;
 }
@@ -62,9 +60,7 @@ inline mword_t csr_rs(mword_t value)
 {
   mword_t out;
 
-  asm volatile("csrrs %[out], %[csr], %[val]"
-               : [ out ] "=r"(out)
-               : [ csr ] "i"(CSR), [ val ] "r"(value));
+  asm volatile("csrrs %[out], %[csr], %[val]" : [out] "=r"(out) : [csr] "i"(CSR), [val] "r"(value));
 
   return out;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <epoxy-api/api.hpp>
+
 #include "kobject.hpp"
 
 struct capability_set {

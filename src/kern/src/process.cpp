@@ -1,6 +1,7 @@
+#include "process.hpp"
+
 #include <epoxy-api/api.hpp>
 
-#include "process.hpp"
 #include "csr.hpp"
 #include "state.hpp"
 

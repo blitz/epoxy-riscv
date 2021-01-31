@@ -2,6 +2,7 @@
 
 #include <epoxy-api/c_types.hpp>
 #include <epoxy-api/types.hpp>
+
 #include "assert.hpp"
 
 // General-purpose registers.
