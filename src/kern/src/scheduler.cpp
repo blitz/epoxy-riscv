@@ -7,6 +7,12 @@
 #include "sbi.hpp"
 #include "state.hpp"
 #include "util.hpp"
+#include "resources.hpp"
+
+namespace {
+  constexpr uint64_t schedule_hz {128};
+  constexpr uint64_t time_slice_ticks {sbitimer_freq_hz / schedule_hz};
+}
 
 // We implement a trivial round-robin scheduling for now. This saves us from
 // having a run queue or any other fancy data structure.
@@ -30,10 +36,8 @@ void schedule()
       auto const candidate {*thread_cur};
 
       if (candidate->is_runnable()) {
-        // TODO Use a decent time slice length. We currently use
-        // excessively long time slices to demonstrate scheduling.
         csr_rs<csr::SIE>(SIE_STIE);
-        sbi_set_timer(rdtime() + 10000000);
+        sbi_set_timer(rdtime() + time_slice_ticks);
         candidate->activate();
       }
     }
