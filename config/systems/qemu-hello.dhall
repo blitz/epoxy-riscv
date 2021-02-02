@@ -4,6 +4,9 @@ in    { name = "Qemu Hello World"
       , machine = "qemu"
       , kernel = "kern"
       , processes = [ { program = "hello", name = "hello" } ]
-      , mappings = [ { from = "plic", to = "kern.plic" } ]
+      , mappings =
+        [ { from = "plic", to = "kern.plic" }
+        , { from = "sbitimer", to = "kern.sbitimer" }
+        ]
       }
     : Epoxy.System

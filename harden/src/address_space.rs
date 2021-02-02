@@ -115,12 +115,12 @@ impl Mapping {
     }
 }
 
-impl From<&runtypes::MemoryResource> for Mapping {
-    fn from(mres: &runtypes::MemoryResource) -> Self {
+impl From<&runtypes::VirtualMemoryRegion> for Mapping {
+    fn from(mres: &runtypes::VirtualMemoryRegion) -> Self {
         Mapping {
-            vaddr: mres.region.virt_start,
+            vaddr: mres.virt_start,
             perm: Permissions::read_write(),
-            backing: match mres.region.phys {
+            backing: match mres.phys {
                 runtypes::MemoryRegion::Phys { size, start } => Backing::Phys { phys: start, size },
                 runtypes::MemoryRegion::AnonymousZeroes { size } => Backing::InitializedData {
                     data: vec![0; size.try_into().unwrap()],

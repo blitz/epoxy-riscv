@@ -6,8 +6,7 @@ use std::collections::BTreeMap;
 use crate::cfgtypes;
 use crate::framebuffer;
 
-#[derive(Debug)]
-
+#[derive(Debug, Clone)]
 pub enum MemoryRegion {
     AnonymousZeroes { size: u64 },
     Phys { size: u64, start: u64 },
@@ -34,37 +33,34 @@ impl From<&cfgtypes::MemoryRegion> for MemoryRegion {
 /// A memory mapping in a process.
 ///
 /// TODO: This also needs to model permissions.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VirtualMemoryRegion {
     pub virt_start: u64,
     pub phys: MemoryRegion,
 }
 
-#[derive(Debug)]
-pub enum ResourceMetaInfo {
-    Stack,
-    Framebuffer { format: framebuffer::Format },
-    SifivePlic { ndev: u16 },
-}
-
-/// A system resource that is represented as a memory mapping. This is basically a piece of mapped
-/// physical memory plus some metainformation.
-#[derive(Debug)]
-pub struct MemoryResource {
-    pub region: VirtualMemoryRegion,
-
-    /// Metainformation about this resource.
-    pub meta: ResourceMetaInfo,
-}
-
-impl MemoryResource {
+impl VirtualMemoryRegion {
     pub fn size(&self) -> u64 {
-        self.region.phys.size()
+        self.phys.size()
     }
 }
 
+#[derive(Debug)]
+pub enum ResourceMetaInfo {
+    Framebuffer { format: framebuffer::Format },
+    SifivePlic { ndev: u16 },
+    SBITimer { freq_hz: u64 },
+}
+
+/// A system resource. This will be a bunch of meta information with an optional memory mapping.
+#[derive(Debug)]
+pub struct Resource {
+    pub meta: ResourceMetaInfo,
+    pub opt_region: Option<VirtualMemoryRegion>,
+}
+
 pub type ProcessMap = BTreeMap<String, Process>;
-pub type ResourceMap = BTreeMap<String, MemoryResource>;
+pub type ResourceMap = BTreeMap<String, Resource>;
 
 /// A process with its binary and assigned resources.
 #[derive(Debug)]
@@ -77,14 +73,14 @@ pub struct Process {
     pub resources: ResourceMap,
 
     /// The stack of the single thread in the process.
-    pub stack: Option<MemoryResource>,
+    pub stack: Option<VirtualMemoryRegion>,
 }
 
 impl Process {
     pub fn initial_stack_pointer(&self) -> Option<u64> {
         let stack = self.stack.as_ref()?;
 
-        Some(stack.region.virt_start + stack.size() - 8)
+        Some(stack.virt_start + stack.size() - 8)
     }
 }
 

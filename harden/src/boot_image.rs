@@ -37,7 +37,13 @@ fn to_kernel_as(
     let kernel_elf = Elf::new(&kernel_path).context("Failed to load kernel ELF")?;
 
     let mut kernel_as = AddressSpace::from(&kernel_elf);
-    kernel_as.extend(process.resources.iter().map(|(_, r)| r.into()));
+    kernel_as.extend(
+        process
+            .resources
+            .iter()
+            .filter_map(|(_, r)| r.opt_region.clone())
+            .map(|vr| (&vr).into()),
+    );
 
     Ok((kernel_elf, kernel_as))
 }
@@ -60,7 +66,13 @@ fn to_user_as(
         user_as.add(stack.into());
     }
 
-    user_as.extend(process.resources.iter().map(|(_, r)| r.into()));
+    user_as.extend(
+        process
+            .resources
+            .iter()
+            .filter_map(|(_, r)| r.opt_region.clone())
+            .map(|vr| (&vr).into()),
+    );
 
     // Make mappings available at the user privilege.
     //

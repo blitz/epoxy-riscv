@@ -54,15 +54,21 @@ impl FromStr for Language {
     }
 }
 
-fn generate_cpp_res(name: &str, resource: &runtypes::MemoryResource) -> String {
+fn generate_cpp_res(name: &str, resource: &runtypes::Resource) -> String {
     match &resource.meta {
-        runtypes::ResourceMetaInfo::Stack => "".to_string(),
         runtypes::ResourceMetaInfo::SifivePlic { ndev } => format!(
             "
 constexpr uint16_t {}_ndev {{{}}};
 inline uint32_t volatile * const {}_reg {{reinterpret_cast<uint32_t volatile *>({:#x}ul)}};
 ",
-            name, ndev, name, resource.region.virt_start
+            name,
+            ndev,
+            name,
+            resource
+                .opt_region
+                .as_ref()
+                .expect("PLIC without memory region")
+                .virt_start
         ),
         runtypes::ResourceMetaInfo::Framebuffer { format } => {
             if format.pixel != framebuffer::PixelFormat::R5G6B5 {
@@ -81,8 +87,14 @@ inline uint16_t volatile (&{}_pixels)[{}_height][{}] {{*reinterpret_cast<uint16_
 ",
                     name, format.width,
                     name, format.height,
-                    name, name, format.stride / 2, name, format.stride / 2, resource.region.virt_start)
+                    name, name, format.stride / 2, name, format.stride / 2, resource.opt_region.as_ref().expect("framebuffer without memory region").virt_start)
         }
+        runtypes::ResourceMetaInfo::SBITimer { freq_hz } => format!(
+            "
+constexpr uint64_t {}_freq_hz {{{}}};
+",
+            name, freq_hz
+        ),
     }
 }
 

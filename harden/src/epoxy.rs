@@ -27,30 +27,18 @@ fn rflatten<T>(r: Result<Result<T, Error>, Error>) -> Result<T, Error> {
     }
 }
 
-/// Lift an option out of a result.
-fn option_lift<T>(r: Result<Option<T>, Error>) -> Option<Result<T, Error>> {
-    match r {
-        Ok(Some(v)) => Some(Ok(v)),
-        Ok(None) => None,
-        Err(e) => Some(Err(e)),
-    }
-}
-
-fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::MemoryResource, Error> {
+fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::VirtualMemoryRegion, Error> {
     valloc
         .alloc(PAGE_SIZE)
         .ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
 
-    let stack = runtypes::MemoryResource {
-        region: runtypes::VirtualMemoryRegion {
+    let stack = runtypes::VirtualMemoryRegion {
             virt_start: valloc
                 .alloc(USER_STACK_SIZE)
                 .ok_or_else(|| format_err!("Failed to allocate stack"))?,
             phys: runtypes::MemoryRegion::AnonymousZeroes {
                 size: USER_STACK_SIZE,
             },
-        },
-        meta: runtypes::ResourceMetaInfo::Stack,
     };
 
     valloc
@@ -79,19 +67,24 @@ fn map_memory<T: SimpleAlloc>(
 fn map_resource<T: SimpleAlloc>(
     valloc: &mut T,
     device: &cfgtypes::Resource,
-) -> Result<Option<runtypes::MemoryResource>, Error> {
+) -> Result<runtypes::Resource, Error> {
     Ok(match device {
-        cfgtypes::Resource::SiFivePLIC { ndev, region } => Some(runtypes::MemoryResource {
-            region: map_memory(valloc, region)?,
+        cfgtypes::Resource::SiFivePLIC { ndev, region } => runtypes::Resource {
+            opt_region: Some(map_memory(valloc, region)?),
             meta: runtypes::ResourceMetaInfo::SifivePlic { ndev: *ndev },
-        }),
-        cfgtypes::Resource::Framebuffer { format, region } => Some(runtypes::MemoryResource {
-            region: map_memory(valloc, region)?,
+        },
+        cfgtypes::Resource::Framebuffer { format, region } => runtypes::Resource {
+            opt_region: Some(map_memory(valloc, region)?),
             meta: runtypes::ResourceMetaInfo::Framebuffer {
                 format: format.clone(),
             },
-        }),
-        cfgtypes::Resource::SBITimer { .. } => None,
+        },
+        cfgtypes::Resource::SBITimer { freq_hz } => runtypes::Resource {
+            opt_region: None,
+            meta: runtypes::ResourceMetaInfo::SBITimer {
+                freq_hz: *freq_hz
+            }
+        },
     })
 }
 
@@ -135,15 +128,14 @@ fn to_process_resources<T: SimpleAlloc>(
             Ok((need.name.clone(), source_res.resource.clone()))
         })
         .map(
-            |v| -> Result<Option<(String, runtypes::MemoryResource)>, Error> {
+            |v| -> Result<(String, runtypes::Resource), Error> {
                 rflatten(v.map(
-                    |(name, dev)| -> Result<Option<(String, runtypes::MemoryResource)>, Error> {
-                        Ok(map_resource(valloc, &dev)?.map(|r| (name, r)))
+                    |(name, dev)| -> Result<(String, runtypes::Resource), Error> {
+                        Ok((name, map_resource(valloc, &dev)?))
                     },
                 ))
             },
         )
-        .filter_map(|v| option_lift(v))
         .collect::<Result<runtypes::ResourceMap, Error>>()?;
 
     Ok(rmap)

@@ -10,6 +10,7 @@ in    { name = "Framebuffer Demo"
       , mappings =
         [ { from = "hdmi-fb", to = "fbdemo.fb0" }
         , { from = "plic", to = "kern.plic" }
+        , { from = "sbitimer", to = "kern.sbitimer" }
         ]
       }
     : Epoxy.System
