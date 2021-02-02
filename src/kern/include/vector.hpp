@@ -44,7 +44,7 @@ public:
 
   constexpr vector() {}
 
-  // TODO We have to prevent destructor calls from being generatoed.
+  // TODO We have to prevent destructor calls from being generated.
   // ~vector()
   // {
   //   reset();

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "kobject.hpp"
-#include "state.hpp"		// for the number of threads
+#include "state.hpp"  // for the number of threads
 #include "util.hpp"
 #include "vector.hpp"
 
 /// A virtual interrupt.
-class virq {
+class virq
+{
   bool triggered {false};
 
   /// The list of all threads that are currently blocked on this event
@@ -14,7 +15,6 @@ class virq {
   vector<thread *, array_size(threads)> blocked_threads;
 
 public:
-
   /// Enqueue a thread to the wait list.
   void enqueue_waiter(thread *thread)
   {
@@ -32,13 +32,13 @@ public:
 
     triggered = false;
     return old;
-  }  
+  }
 };
 
 class virq_wait_kobject final : public kobject
 {
-  virq * const virq_;
-  
+  virq *const virq_;
+
 public:
   syscall_result_t invoke(thread *thread, syscall_args const &args) override;
 

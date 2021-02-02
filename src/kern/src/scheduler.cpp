@@ -4,15 +4,16 @@
 #include "assert.hpp"
 #include "csr.hpp"
 #include "format.hpp"
+#include "resources.hpp"
 #include "sbi.hpp"
 #include "state.hpp"
 #include "util.hpp"
-#include "resources.hpp"
 
-namespace {
-  constexpr uint64_t schedule_hz {128};
-  constexpr uint64_t time_slice_ticks {sbitimer_freq_hz / schedule_hz};
-}
+namespace
+{
+constexpr uint64_t schedule_hz {128};
+constexpr uint64_t time_slice_ticks {sbitimer_freq_hz / schedule_hz};
+}  // namespace
 
 // We implement a trivial round-robin scheduling for now. This saves us from
 // having a run queue or any other fancy data structure.

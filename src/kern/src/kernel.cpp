@@ -142,7 +142,6 @@ void start()
 #endif
       ")\n");
 
-
   arch_init();
 
   plic::global().mask_all();

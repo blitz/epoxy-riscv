@@ -4,12 +4,11 @@
 
 #include "assert.hpp"
 
-
 /// An abstraction around the SiFice Platform-Level Interrupt
 /// Controller.
 class plic
 {
-  uint32_t volatile * const reg_;
+  uint32_t volatile *const reg_;
   uint16_t const ndev_;
 
   using int_no = int;
@@ -22,14 +21,15 @@ class plic
 
   class in_place_bitfield
   {
-    uint32_t volatile * const base_;
+    uint32_t volatile *const base_;
 
     size_t bits_per_word() const { return sizeof(reg_[0]) * 8; }
 
   public:
     in_place_bitfield(uint32_t volatile *reg_, size_t base_offset)
-      : base_{&reg_[base_offset / sizeof(base_[0])]}
-    {}
+        : base_ {&reg_[base_offset / sizeof(base_[0])]}
+    {
+    }
 
     bool get(int_no i) const
     {
@@ -41,15 +41,15 @@ class plic
       uint32_t bit {(static_cast<uint32_t>(1) << (i % bits_per_word()))};
 
       if (v) {
-	base_[i / bits_per_word()] |= bit;
+        base_[i / bits_per_word()] |= bit;
       } else {
-	base_[i / bits_per_word()] &= ~bit;
+        base_[i / bits_per_word()] &= ~bit;
       }
     }
   };
 
-  in_place_bitfield pending_bits() const { return in_place_bitfield { reg_, 0x1000 }; }
-  in_place_bitfield enable_bits() const { return in_place_bitfield { reg_, 0x2000 }; }
+  in_place_bitfield pending_bits() const { return in_place_bitfield {reg_, 0x1000}; }
+  in_place_bitfield enable_bits() const { return in_place_bitfield {reg_, 0x2000}; }
 
   /// Return a pointer for the priority register of an interrupt source.
   uint32_t volatile *priority_reg(int_no src) const
@@ -59,22 +59,15 @@ class plic
   }
 
 public:
-
   /// Return the global instances of the PLIC.
-  static plic const& global();
+  static plic const &global();
 
   /// The number of interrupts supported by this PLIC.
-  uint16_t ndev() const
-  {
-    return ndev_;
-  }
+  uint16_t ndev() const { return ndev_; }
 
   /// Return the interrupt number of the next pending interrupt. This
   /// "claims" the interrupt.
-  int_no claim() const
-  {
-    return reg_[0x200004 / sizeof(reg_[0])];
-  }
+  int_no claim() const { return reg_[0x200004 / sizeof(reg_[0])]; }
 
   /// Mark an interrupt as being handled. This is the same as EOI on
   /// x86 interrupt controllers.
@@ -96,10 +89,7 @@ public:
   }
 
   /// Return the current threshold at which the hart operates.
-  int_threshold hart_threshold() const
-  {
-    return reg_[0x200000 / sizeof(reg_[0])];
-  }
+  int_threshold hart_threshold() const { return reg_[0x200000 / sizeof(reg_[0])]; }
 
   /// Set the interrupt's priority.
   void set_interupt_prio(int_no src, int_threshold t) const
@@ -141,7 +131,5 @@ public:
 
   /// Construct a PLIC object with a pointer to its registers and the
   /// number of supported interrupts.
-  constexpr plic(uint32_t volatile *reg, uint16_t ndev)
-    : reg_{reg}, ndev_{ndev}
-  {}
+  constexpr plic(uint32_t volatile *reg, uint16_t ndev) : reg_ {reg}, ndev_ {ndev} {}
 };

@@ -1,7 +1,9 @@
-#include "scheduler.hpp"
 #include "virq.hpp"
 
-syscall_result_t virq_wait_kobject::invoke(thread *thread, [[maybe_unused]] syscall_args const &args)
+#include "scheduler.hpp"
+
+syscall_result_t virq_wait_kobject::invoke(thread *thread,
+                                           [[maybe_unused]] syscall_args const &args)
 {
   if (virq_->consume_value()) {
     // We consumed one event.
