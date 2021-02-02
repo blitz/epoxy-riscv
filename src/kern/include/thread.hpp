@@ -30,6 +30,7 @@ public:
   bool is_runnable() const { return state_ == thread_state::RUNNABLE; }
 
   void exit() { state_ = thread_state::EXITED; }
+  void block() { state_ = thread_state::BLOCKED; }
 
   [[noreturn]] void finish_syscall(syscall_result_t ret)
   {

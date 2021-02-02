@@ -34,7 +34,7 @@ KERN_LDFLAGS := $(COMMON_LDFLAGS) -nostdlib
 
 KERN_OBJ := $(addsuffix .kern.o, $(addprefix src/, \
                 link asm unpaged_entry paged_entry patched process kernel kobject exc_entry \
-                scheduler thread state format_backend memset assert format lshrdi3 plic))
+                scheduler thread state format_backend memset assert format lshrdi3 plic virq))
 
 src/state.cpp: $(KERN_STATE)/state.cpp
 	cp $< $@
