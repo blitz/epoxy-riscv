@@ -13,6 +13,9 @@ in    { name = "qemu"
                 , region = { start = 0x0c000000, size = 0x400000 }
                 }
           }
+        , { name = "sbi-timer"
+          , resource = Epoxy.Resource.SBITimer { freq_hz = 1000000 }
+          }
         ]
       }
     : Epoxy.Machine

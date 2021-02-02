@@ -15,13 +15,16 @@ in    { name = "ulx3s-saxonsoc"
                 , region = { start = 0x80e00000, size = 0x96000 }
                 }
           }
-          , { name = "plic"
-            , resource =
-                Epoxy.Resource.SiFivePLIC
-                  { ndev = 0x20
-                  , region = { start = 0x10c00000, size = 0x400000 }
-                  }
-            }
+        , { name = "plic"
+          , resource =
+              Epoxy.Resource.SiFivePLIC
+                { ndev = 0x20
+                , region = { start = 0x10c00000, size = 0x400000 }
+                }
+          }
+        , { name = "sbi-timer"
+          , resource = Epoxy.Resource.SBITimer { freq_hz = 52000000 }
+          }
         ]
       }
     : Epoxy.Machine

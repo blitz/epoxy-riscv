@@ -1,6 +1,6 @@
 let ResourceType
     : Type
-    = < Framebuffer | SiFivePLIC >
+    = < Framebuffer | SiFivePLIC | SBITimer >
 
 let MemoryRegion
     : Type
@@ -22,6 +22,7 @@ let Resource
     : Type
     = < Framebuffer : { format : FramebufferFormat, region : MemoryRegion }
       | SiFivePLIC : { ndev : Natural, region : MemoryRegion }
+      | SBITimer : { freq_hz : Natural }
       >
 
 let NamedResource

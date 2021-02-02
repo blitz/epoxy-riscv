@@ -27,6 +27,15 @@ fn rflatten<T>(r: Result<Result<T, Error>, Error>) -> Result<T, Error> {
     }
 }
 
+/// Lift an option out of a result.
+fn option_lift<T>(r: Result<Option<T>, Error>) -> Option<Result<T, Error>> {
+    match r {
+        Ok(Some(v)) => Some(Ok(v)),
+        Ok(None) => None,
+        Err(e) => Some(Err(e)),
+    }
+}
+
 fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::MemoryResource, Error> {
     valloc
         .alloc(PAGE_SIZE)
@@ -66,21 +75,23 @@ fn map_memory<T: SimpleAlloc>(
     })
 }
 
+/// Map a resource into memory. This might return None, if the resource does not need to be mapped.
 fn map_resource<T: SimpleAlloc>(
     valloc: &mut T,
     device: &cfgtypes::Resource,
-) -> Result<runtypes::MemoryResource, Error> {
+) -> Result<Option<runtypes::MemoryResource>, Error> {
     Ok(match device {
-        cfgtypes::Resource::SiFivePLIC { ndev, region } => runtypes::MemoryResource {
+        cfgtypes::Resource::SiFivePLIC { ndev, region } => Some(runtypes::MemoryResource {
             region: map_memory(valloc, region)?,
             meta: runtypes::ResourceMetaInfo::SifivePlic { ndev: *ndev },
-        },
-        cfgtypes::Resource::Framebuffer { format, region } => runtypes::MemoryResource {
+        }),
+        cfgtypes::Resource::Framebuffer { format, region } => Some(runtypes::MemoryResource {
             region: map_memory(valloc, region)?,
             meta: runtypes::ResourceMetaInfo::Framebuffer {
                 format: format.clone(),
             },
-        },
+        }),
+        cfgtypes::Resource::SBITimer { .. } => None,
     })
 }
 
@@ -123,13 +134,16 @@ fn to_process_resources<T: SimpleAlloc>(
             info!("Mapping {} to {}", source_name, mapping_to);
             Ok((need.name.clone(), source_res.resource.clone()))
         })
-        .map(|v| -> Result<(String, runtypes::MemoryResource), Error> {
-            rflatten(v.map(
-                |(name, dev)| -> Result<(String, runtypes::MemoryResource), Error> {
-                    Ok((name, map_resource(valloc, &dev)?))
-                },
-            ))
-        })
+        .map(
+            |v| -> Result<Option<(String, runtypes::MemoryResource)>, Error> {
+                rflatten(v.map(
+                    |(name, dev)| -> Result<Option<(String, runtypes::MemoryResource)>, Error> {
+                        Ok(map_resource(valloc, &dev)?.map(|r| (name, r)))
+                    },
+                ))
+            },
+        )
+        .filter_map(|v| option_lift(v))
         .collect::<Result<runtypes::ResourceMap, Error>>()?;
 
     Ok(rmap)

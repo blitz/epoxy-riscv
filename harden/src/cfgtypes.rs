@@ -37,6 +37,7 @@ pub struct MemoryRegion {
 pub enum ResourceType {
     Framebuffer,
     SiFivePLIC,
+    SBITimer,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -52,6 +53,8 @@ pub enum Resource {
         ndev: u16,
         region: MemoryRegion,
     },
+    /// The simple one-shot timer implemented by SBI.
+    SBITimer { freq_hz: u64 },
 }
 
 #[derive(Deserialize, Debug, Clone)]
