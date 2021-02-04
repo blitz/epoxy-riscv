@@ -131,7 +131,20 @@ public:
 
   /// Construct a PLIC object with a pointer to its registers and the
   /// number of supported interrupts.
-  constexpr plic(uint32_t volatile *reg, uint16_t ndev) : reg_ {reg}, ndev_ {ndev} {}
+  plic(uint32_t volatile *reg, uint16_t ndev) : reg_ {reg}, ndev_ {ndev}
+  {
+    mask_all();
+
+    // We program our HART at priority 0 and all interrupts at
+    // priority 1. This means that all interrupts are eligable to
+    // being raised (if they are unmasked of course).
+
+    set_hart_threshold(0);
+
+    for (int_no i = 1; i < ndev; i++) {
+      set_interupt_prio(i, 1);
+    }
+  }
 };
 
 /// A link to a source interrupt at the PLIC.

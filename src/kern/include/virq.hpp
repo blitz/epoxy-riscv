@@ -23,7 +23,7 @@ public:
   virq() = default;
 
   /// A vIRQ that is wired to a real interrupt source.
-  explicit virq(plic_irq_link *irq_link) : irq_link_ {irq_link} {}
+  explicit virq(plic_irq_link *irq_link);
 
   /// Enqueue a thread to the wait list.
   void enqueue_waiter(thread *thread)

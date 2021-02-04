@@ -3,6 +3,11 @@
 #include "plic.hpp"
 #include "scheduler.hpp"
 
+virq::virq(plic_irq_link *irq_link) : irq_link_ {irq_link}
+{
+  irq_link_->unmask();
+}
+
 bool virq::consume_value()
 {
   bool old = triggered_;

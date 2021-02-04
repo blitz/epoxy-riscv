@@ -143,9 +143,5 @@ void start()
       ")\n");
 
   arch_init();
-
-  plic::global().mask_all();
-  plic::global().set_hart_threshold(0);
-
   schedule();
 }
