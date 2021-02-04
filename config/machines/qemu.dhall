@@ -9,7 +9,7 @@ in    { name = "qemu"
         [ { name = "plic"
           , resource =
               Epoxy.Resource.SiFivePLIC
-                { ndev = 0x20
+                { ndev = 0x7f
                 , region = { start = 0x0c000000, size = 0x400000 }
                 }
           }
