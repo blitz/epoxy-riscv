@@ -31,6 +31,7 @@ public:
 
   void exit() { state_ = thread_state::EXITED; }
   void block() { state_ = thread_state::BLOCKED; }
+  void unblock() { state_ = thread_state::RUNNABLE; }
 
   [[noreturn]] void finish_syscall(syscall_result_t ret)
   {

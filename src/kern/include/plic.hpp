@@ -133,3 +133,19 @@ public:
   /// number of supported interrupts.
   constexpr plic(uint32_t volatile *reg, uint16_t ndev) : reg_ {reg}, ndev_ {ndev} {}
 };
+
+/// A link to a source interrupt at the PLIC.
+class plic_irq_link
+{
+  /// The PLIC this interrupt belongs to.
+  plic *const plic_;
+
+  /// The interrupt at the PLIC.
+  int const irq_;
+
+public:
+  /// Unmask the linked interrupt source.
+  void unmask() const { plic_->unmask(irq_); }
+
+  plic_irq_link(plic *plic, int irq) : plic_ {plic}, irq_ {irq} { assert(plic and irq != 0); }
+};

@@ -42,6 +42,30 @@ public:
     new (&(*this)[length++])(T) {value};
   }
 
+  T pop_at(size_t pos)
+  {
+    if (unlikely(pos >= length)) {
+      __builtin_trap();
+    }
+
+    T ret {(*this)[pos]};
+
+    // Move all elements after the removal point one to the front.
+    for (size_t i = pos + 1; i < length; i++) {
+      (*this)[i - 1] = (*this)[i];
+    }
+
+    // Shrink the vector by one element.
+    (*this)[length - 1].~T();
+    length--;
+
+    return ret;
+  }
+
+  T pop_front() { return pop_at(0); }
+
+  T pop_back() { return pop_at(length - 1); }
+
   constexpr vector() {}
 
   // TODO We have to prevent destructor calls from being generated.
