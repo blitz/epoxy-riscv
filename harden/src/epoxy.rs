@@ -247,14 +247,6 @@ fn epoxy_verify(system: &runtypes::Configuration) -> Result<(), Error> {
     Ok(())
 }
 
-fn epoxy_list_processes(system: &runtypes::Configuration) -> Result<(), Error> {
-    for pname in system.processes.keys() {
-        println!("{}", pname);
-    }
-
-    Ok(())
-}
-
 fn epoxy_configure_process(
     system: &runtypes::Configuration,
     pname: &str,
@@ -321,8 +313,6 @@ pub fn main() -> Result<(), Error> {
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(SubCommand::with_name("verify")
                     .about("Verify the system configuration"))
-        .subcommand(SubCommand::with_name("list-processes")
-                    .about("List all processes"))
         .subcommand(SubCommand::with_name("configure-process")
                     .about("Generate configuration code for one process")
                     .arg(Arg::with_name("process")
@@ -384,8 +374,6 @@ pub fn main() -> Result<(), Error> {
 
     if let Some(_) = matches.subcommand_matches("verify") {
         epoxy_verify(&configured_system)
-    } else if let Some(_) = matches.subcommand_matches("list-processes") {
-        epoxy_list_processes(&configured_system)
     } else if let Some(cfg_proc_matches) = matches.subcommand_matches("configure-process") {
         epoxy_configure_process(
             &configured_system,
