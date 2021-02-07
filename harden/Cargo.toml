@@ -8,7 +8,7 @@ license = "AGPL-3.0-or-later"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde_dhall = { version = "0.9.0", default-features = false }
+serde_dhall = { version = "0.10.0", default-features = false }
 failure = "0.1.8"
 failure_derive = "0.1.8"
 itertools = "0.9.0"
