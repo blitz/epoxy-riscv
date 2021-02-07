@@ -9,7 +9,7 @@ runCommandNoCC "epoxy-qemu-hello-test"
                     -kernel ${bootElf} | tee run.log
 
    set -x
-   grep -q "hello | Hello World" run.log
+   grep -q "h4 | Hello World" run.log
    grep -q "Last thread is gone" run.log
    set +x
    
