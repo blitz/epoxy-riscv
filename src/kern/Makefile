@@ -55,6 +55,6 @@ epoxy.kern.elf: $(KERN_OBJ)
 .PHONY: install
 install: epoxy.kern.elf
 	mkdir -p $(PREFIX)/bin
-	install $< $(PREFIX)/bin/epoxy-kern
+	install $< $(PREFIX)/bin/kern
 
 -include src/*.d

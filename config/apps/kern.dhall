@@ -5,6 +5,5 @@ in    { name = "kern"
         [ { name = "plic", type = Epoxy.ResourceType.SiFivePLIC }
         , { name = "sbitimer", type = Epoxy.ResourceType.SBITimer }
         ]
-      , binary = "bin/epoxy-kern"
       }
     : Epoxy.Application

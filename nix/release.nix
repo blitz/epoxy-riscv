@@ -44,14 +44,18 @@ rec {
             ${hardenCmd} boot-image ${user-binaries} > $out
           '';
 
-          # A file that contains all processes that are necessary to build the system.
-          list-processes-output = pkgs.runCommandNoCC "${system}-processes" { } ''
-            ${hardenCmd} list-processes > $out
-          '';
+          # A list of name/program sets that describe all processes that we need to build
+          processes = builtins.fromJSON (builtins.readFile (pkgs.runCommandNoCC "${system}-processes" {
+            nativeBuildInputs = [ pkgs.dhall-json pkgs.jq ];
+          } ''
+            export XDG_CACHE_HOME=/tmp
+            dhall-to-json --file ${../config}/systems/${system}.dhall | jq .processes > $out
+          ''));
 
           # Return a derivation for the process from the system description.
-          buildProcess = procName: riscvPkgs.callPackage (./epoxy- + "${procName}.nix") {
-            resourceHeader = mkResourceHeader procName;
+          buildProcess = {name, program}: riscvPkgs.callPackage (./epoxy- + "${program}.nix") {
+            resourceHeader = mkResourceHeader name;
+            outputName = name;
           };
 
         in
@@ -60,10 +64,7 @@ rec {
           user-binaries = riscvPkgs.symlinkJoin {
             name = "${system}-user-binaries";
             paths =
-              let
-                procs = builtins.filter (n: n != "") (pkgs.lib.splitString "\n" (builtins.readFile list-processes-output));
-              in
-              builtins.map buildProcess procs;
+              builtins.map buildProcess processes;
           };
 
           kern-state = mkKernState user-binaries;

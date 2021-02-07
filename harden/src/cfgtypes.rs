@@ -80,5 +80,4 @@ pub struct Machine {
 pub struct Application {
     pub name: String,
     pub needs: Vec<NamedResourceType>,
-    pub binary: String,
 }

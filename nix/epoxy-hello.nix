@@ -1,4 +1,4 @@
-{ stdenv, lib, cmake, ninja, resourceHeader ? null }:
+{ stdenv, lib, cmake, ninja, outputName ? null, resourceHeader ? null }:
 
 stdenv.mkDerivation {
   pname = "epoxy-hello";
@@ -11,8 +11,9 @@ stdenv.mkDerivation {
     ninja
   ];
 
-  buildInputs = [];
+  buildInputs = [ ];
 
-  cmakeFlags = lib.optional (resourceHeader != null)
-    "-DRESOURCE_HEADER=${resourceHeader}";
+  cmakeFlags =
+    lib.optional (outputName != null) "-DTARGET_BIN_NAME=${outputName}"
+    ++ lib.optional (resourceHeader != null) "-DRESOURCE_HEADER=${resourceHeader}";
 }

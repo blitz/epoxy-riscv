@@ -185,7 +185,7 @@ fn internalize_process(
 
     Ok(runtypes::Process {
         name: process.name.clone(),
-        binary: program.binary,
+        binary: format!("bin/{}", process.name),
         stack: match process_type {
             ProcessType::User => Some(make_user_stack(&mut valloc)?),
 

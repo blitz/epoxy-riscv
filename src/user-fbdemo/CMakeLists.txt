@@ -12,9 +12,12 @@ add_custom_command(
   COMMAND cp -v ${RESOURCE_HEADER} ${CMAKE_CURRENT_BINARY_DIR}/src/resources.hpp
   )
 
+set(TARGET_BIN_NAME ${PROJECT_NAME} CACHE STRING "The name with with the binary is installed")
+
 add_executable(${PROJECT_NAME}
   src/main.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/src/resources.hpp)
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${TARGET_BIN_NAME})
 
 target_include_directories(${PROJECT_NAME}
           INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src

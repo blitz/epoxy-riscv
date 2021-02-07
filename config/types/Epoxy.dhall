@@ -35,7 +35,7 @@ let NamedResourceType
 
 let Application
     : Type
-    = { name : Text, needs : List NamedResourceType, binary : Text }
+    = { name : Text, needs : List NamedResourceType }
 
 let Machine
     : Type
