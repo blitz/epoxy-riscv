@@ -33,12 +33,12 @@ fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::VirtualMe
         .ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
 
     let stack = runtypes::VirtualMemoryRegion {
-            virt_start: valloc
-                .alloc(USER_STACK_SIZE)
-                .ok_or_else(|| format_err!("Failed to allocate stack"))?,
-            phys: runtypes::MemoryRegion::AnonymousZeroes {
-                size: USER_STACK_SIZE,
-            },
+        virt_start: valloc
+            .alloc(USER_STACK_SIZE)
+            .ok_or_else(|| format_err!("Failed to allocate stack"))?,
+        phys: runtypes::MemoryRegion::AnonymousZeroes {
+            size: USER_STACK_SIZE,
+        },
     };
 
     valloc
@@ -81,9 +81,7 @@ fn map_resource<T: SimpleAlloc>(
         },
         cfgtypes::Resource::SBITimer { freq_hz } => runtypes::Resource {
             opt_region: None,
-            meta: runtypes::ResourceMetaInfo::SBITimer {
-                freq_hz: *freq_hz
-            }
+            meta: runtypes::ResourceMetaInfo::SBITimer { freq_hz: *freq_hz },
         },
     })
 }
@@ -127,15 +125,13 @@ fn to_process_resources<T: SimpleAlloc>(
             info!("Mapping {} to {}", source_name, mapping_to);
             Ok((need.name.clone(), source_res.resource.clone()))
         })
-        .map(
-            |v| -> Result<(String, runtypes::Resource), Error> {
-                rflatten(v.map(
-                    |(name, dev)| -> Result<(String, runtypes::Resource), Error> {
-                        Ok((name, map_resource(valloc, &dev)?))
-                    },
-                ))
-            },
-        )
+        .map(|v| -> Result<(String, runtypes::Resource), Error> {
+            rflatten(v.map(
+                |(name, dev)| -> Result<(String, runtypes::Resource), Error> {
+                    Ok((name, map_resource(valloc, &dev)?))
+                },
+            ))
+        })
         .collect::<Result<runtypes::ResourceMap, Error>>()?;
 
     Ok(rmap)
