@@ -7,7 +7,7 @@ use crate::constants::PAGE_SIZE;
 use crate::elf::Elf;
 pub use crate::elf::Permissions;
 use crate::interval::Interval;
-use crate::phys_mem::PhysMemory;
+use crate::phys_mem::{PhysMemory, PlaceAs};
 use crate::runtypes;
 
 #[derive(Clone, PartialEq)]
@@ -209,12 +209,21 @@ impl AddressSpace {
                     Backing::InitializedData { data } => Ok(Mapping {
                         backing: Backing::Phys {
                             size: data.len().try_into()?,
-                            phys: pmem.place(&data).ok_or_else(|| {
-                                format_err!(
+                            phys: pmem
+                                .place(
+                                    &data,
+                                    if m.perm.write {
+                                        PlaceAs::Unique
+                                    } else {
+                                        PlaceAs::Shareable
+                                    },
+                                )
+                                .ok_or_else(|| {
+                                    format_err!(
                                     "Unable to fixate initialized data section at {:#x} in memory",
                                     m.vaddr
                                 )
-                            })?,
+                                })?,
                         },
                         ..*m
                     }),

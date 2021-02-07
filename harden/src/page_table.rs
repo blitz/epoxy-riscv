@@ -4,7 +4,7 @@ use log::debug;
 use std::convert::TryInto;
 
 use crate::address_space::{AddressSpace, Permissions};
-use crate::phys_mem::PhysMemory;
+use crate::phys_mem::{PhysMemory, PlaceAs};
 
 /// A page table format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -77,7 +77,7 @@ fn page_table(
         None
     } else {
         let combined = combine(&pt_data);
-        let phys = pmem.place_shareable(&combined)?;
+        let phys = pmem.place(&combined, PlaceAs::Shareable)?;
 
         assert_eq!(combined.len(), 4096);
         debug!("Allocated page table at phys {:#x}", phys);

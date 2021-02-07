@@ -6,6 +6,15 @@ use std::convert::{From, TryInto};
 use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc, SimpleAlloc};
 use crate::interval::Interval;
 
+#[derive(Debug, Copy, Clone)]
+pub enum PlaceAs {
+    /// Memory placed as unique needs to be put into a previously unused piece of physical memory.
+    Unique,
+
+    /// Memory placed with this type is considered immutable and can be reused for other placements.
+    Shareable,
+}
+
 #[derive(Debug)]
 pub struct Chunk {
     pub paddr: u64,
@@ -167,19 +176,15 @@ impl PhysMemory {
 
     /// Places data at a page aligned and free location in physical memory. Returns the address at
     /// which it was written.
-    pub fn place(&mut self, data: &[u8]) -> Option<u64> {
+    ///
+    /// When `ptype` is `PlaceAs::Shareable` memory can be de-duplicated. Placing the same shareable
+    /// data twice will result in the same address being returned. This is useful for read-only
+    /// memory to save space.
+    pub fn place(&mut self, data: &[u8], _ptype: PlaceAs) -> Option<u64> {
         let addr = self.free_memory.alloc(data.len().try_into().unwrap())?;
 
         self.write(addr, data);
         Some(addr)
-    }
-
-    /// Similar to `place` but allows for deduplication. Placing the same shareable data twice will
-    /// result in the same address being returned. This is useful for read-only memory to save
-    /// space.
-    pub fn place_shareable(&mut self, data: &[u8]) -> Option<u64> {
-        // TODO Implement me.
-        self.place(data)
     }
 
     /// Reads memory from physical memory. Returns zeros for locations that have never been written
