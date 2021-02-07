@@ -1,6 +1,8 @@
 //! This module implements a memory abstraction. Any content rendered into this memory will be part
 //! of the boot image that is generated.
 
+use log::debug;
+use std::collections::HashMap;
 use std::convert::{From, TryInto};
 
 use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc, SimpleAlloc};
@@ -36,7 +38,15 @@ struct Memory {
 /// A representation of physical memory as it will be written into the boot image.
 pub struct PhysMemory {
     memory: Memory,
+
+    /// A allocator for free physical space.
     free_memory: ChainedAlloc<BumpPointerAlloc>,
+
+    /// A map from already placed memory content to the location where it is located in memory.
+    ///
+    /// TODO: Note that this is extremely primitive and no attempt has been made to optimize for
+    /// sharing at smaller granularities than whole ELF segments.
+    shareable_memory: HashMap<Vec<u8>, u64>,
 }
 
 /// A recursive helper function for `Memory::read()`.
@@ -165,6 +175,7 @@ impl PhysMemory {
     pub fn new(free_memory: ChainedAlloc<BumpPointerAlloc>) -> PhysMemory {
         PhysMemory {
             memory: Memory::default(),
+            shareable_memory: HashMap::default(),
             free_memory,
         }
     }
@@ -174,17 +185,39 @@ impl PhysMemory {
         self.memory.write(paddr, data)
     }
 
+    pub fn place_unique(&mut self, data: &[u8]) -> Option<u64> {
+        let addr = self.free_memory.alloc(data.len().try_into().unwrap())?;
+
+        self.write(addr, data);
+        Some(addr)
+    }
+
+    pub fn place_shareable(&mut self, data: &[u8]) -> Option<u64> {
+        self.shareable_memory
+            .get(data)
+            .map(|v| {
+                debug!("Reusing {:#x} bytes at {:#x}.", data.len(), *v);
+                *v
+            })
+            .or_else(|| {
+                let newly_written = self.place_unique(data)?;
+
+                self.shareable_memory.insert(data.to_vec(), newly_written);
+                Some(newly_written)
+            })
+    }
+
     /// Places data at a page aligned and free location in physical memory. Returns the address at
     /// which it was written.
     ///
     /// When `ptype` is `PlaceAs::Shareable` memory can be de-duplicated. Placing the same shareable
     /// data twice will result in the same address being returned. This is useful for read-only
     /// memory to save space.
-    pub fn place(&mut self, data: &[u8], _ptype: PlaceAs) -> Option<u64> {
-        let addr = self.free_memory.alloc(data.len().try_into().unwrap())?;
-
-        self.write(addr, data);
-        Some(addr)
+    pub fn place(&mut self, data: &[u8], ptype: PlaceAs) -> Option<u64> {
+        match ptype {
+            PlaceAs::Shareable => self.place_shareable(data),
+            PlaceAs::Unique => self.place_unique(data),
+        }
     }
 
     /// Reads memory from physical memory. Returns zeros for locations that have never been written
