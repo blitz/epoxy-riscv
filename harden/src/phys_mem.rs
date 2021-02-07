@@ -169,6 +169,15 @@ impl Memory {
                 .collect(),
         }
     }
+
+    fn size(&self) -> u64 {
+        self.chunks
+            .iter()
+            .map(|c| c.data.len())
+            .sum::<usize>()
+            .try_into()
+            .unwrap()
+    }
 }
 
 impl PhysMemory {
@@ -230,6 +239,11 @@ impl PhysMemory {
     /// Return a list of memory chunks.
     pub fn chunks(&self) -> Vec<Chunk> {
         self.memory.flattened().chunks
+    }
+
+    /// Return the amount of memory stored so far.
+    pub fn size(&self) -> u64 {
+        self.memory.size()
     }
 }
 

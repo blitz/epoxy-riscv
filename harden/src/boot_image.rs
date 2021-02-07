@@ -159,6 +159,8 @@ pub fn generate(system: &runtypes::Configuration, user_binaries: &Path) -> Resul
         &pts_to_data(&user_satps)?,
     );
 
+    info!("Boot image needs {} KiB of RAM.", pmem.size() >> 10);
+
     if atty::is(atty::Stream::Stdout) {
         Err(format_err!(
             "Refusing to write binary data to a terminal. Please redirect output to a stream."
