@@ -39,7 +39,12 @@ public:
   mword_t a4() const { return regs_[14]; }
 
 protected:
-  explicit constexpr exception_frame(mword_t pc, mword_t sp) : pc_ {pc} { regs_[2] = sp; }
+  explicit constexpr exception_frame(mword_t pc, mword_t sp, mword_t a0, mword_t a1) : pc_ {pc}
+  {
+    regs_[2] = sp;
+    regs_[10] = a0;
+    regs_[11] = a1;
+  }
 };
 
 // These offsets are used from assembly (see exc_entry.S).

@@ -1,7 +1,6 @@
 use failure::Error;
 use std::convert::TryInto;
 use std::fmt;
-use std::iter;
 
 use crate::constants::PAGE_SIZE;
 use crate::elf::Elf;
@@ -39,31 +38,40 @@ impl Backing {
         }
     }
 
-    /// Move a mapping to the left by the given number of bytes. This basically subtracts the offset
-    /// from the start address.
-    fn moved_left(&self, offset: u64) -> Backing {
-        match self {
-            Backing::InitializedData { .. } => self.clone(),
-            Backing::Phys { size, phys } => Backing::Phys {
-                phys: phys - offset,
-                size: *size,
-            },
-        }
-    }
-
-    /// Return a new backing store that is extended by the given number of bytes. Content is zero-padded if possible.
+    /// Return a new backing store that is extended by the given number of bytes. Content is
+    /// zero-padded if possible.
     pub fn extended(&self, bytes: u64) -> Backing {
         match self {
             Backing::InitializedData { data } => Backing::InitializedData {
-                data: data
-                    .iter()
-                    .cloned()
-                    .chain(iter::repeat(0).take(bytes.try_into().unwrap()))
-                    .collect(),
+                data: {
+                    let mut n = data.clone();
+
+                    n.extend(vec![0; bytes.try_into().unwrap()]);
+                    n
+                },
             },
             Backing::Phys { size, phys } => Backing::Phys {
                 size: size + bytes,
                 phys: *phys,
+            },
+        }
+    }
+
+    /// Return a new backing store that is prepended by the given number of bytes. Content is
+    /// zero-padded if possible.
+    pub fn prepended(&self, bytes: u64) -> Backing {
+        match self {
+            Backing::InitializedData { data } => Backing::InitializedData {
+                data: {
+                    let mut n = vec![0; bytes.try_into().unwrap()];
+
+                    n.extend(data);
+                    n
+                },
+            },
+            Backing::Phys { size, phys } => Backing::Phys {
+                size: size + bytes,
+                phys: *phys - bytes,
             },
         }
     }
@@ -90,18 +98,18 @@ impl Mapping {
     /// zero padded when required.
     pub fn page_aligned(&self) -> Self {
         // The amount of bytes the start of the mapping is beyond a page boundary.
-        let offset = (PAGE_SIZE - (self.vaddr % PAGE_SIZE)) % PAGE_SIZE;
+        let offset = self.vaddr % PAGE_SIZE;
 
         // The amount of bytes missing at the end to let the mapping end on a page boundary.
         let pad_bytes = (PAGE_SIZE - ((self.backing.size() + offset) % PAGE_SIZE)) % PAGE_SIZE;
 
         assert_eq!((self.vaddr - offset) % PAGE_SIZE, 0);
-        assert_eq!((self.backing.size() + pad_bytes) % PAGE_SIZE, 0);
+        assert_eq!((self.backing.size() + pad_bytes + offset) % PAGE_SIZE, 0);
 
         Mapping {
             vaddr: self.vaddr - offset,
             perm: self.perm,
-            backing: self.backing.moved_left(offset).extended(pad_bytes),
+            backing: self.backing.prepended(offset).extended(pad_bytes),
         }
     }
 
@@ -276,16 +284,6 @@ mod tests {
         // size()
         assert_eq!(init.size(), 2);
         assert_eq!(phys.size(), 0x10);
-
-        // moved_left()
-        assert_eq!(init.moved_left(1), init);
-        assert_eq!(
-            phys.moved_left(1),
-            (Backing::Phys {
-                phys: 0x100f,
-                size: 0x0010,
-            })
-        );
 
         // extended()
         assert_eq!(init.extended(4).size(), 6);

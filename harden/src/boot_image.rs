@@ -62,9 +62,7 @@ fn to_user_as(
 
     let mut user_as = AddressSpace::from(&Elf::new(&user_path).context("Failed to load user ELF")?);
 
-    if let Some(stack) = &process.stack {
-        user_as.add(stack.into());
-    }
+    user_as.extend(process.anon_mem.iter().map(|vr| vr.into()));
 
     user_as.extend(
         process

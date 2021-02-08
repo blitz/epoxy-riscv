@@ -72,16 +72,12 @@ pub struct Process {
     /// to an actual resource.
     pub resources: ResourceMap,
 
-    /// The stack of the single thread in the process.
-    pub stack: Option<VirtualMemoryRegion>,
-}
+    /// Additional anonymous memory regions (stack, heap, ...).
+    pub anon_mem: Vec<VirtualMemoryRegion>,
 
-impl Process {
-    pub fn initial_stack_pointer(&self) -> Option<u64> {
-        let stack = self.stack.as_ref()?;
-
-        Some(stack.virt_start + stack.size() - 8)
-    }
+    pub stack_ptr: u64,
+    pub heap_start: u64,
+    pub heap_end: u64,
 }
 
 #[derive(Debug)]

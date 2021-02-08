@@ -27,19 +27,26 @@ fn rflatten<T>(r: Result<Result<T, Error>, Error>) -> Result<T, Error> {
     }
 }
 
+fn make_anon_mem<T: SimpleAlloc>(
+    valloc: &mut T,
+    size: u64,
+) -> Result<runtypes::VirtualMemoryRegion, Error> {
+    assert_eq!(size % PAGE_SIZE, 0);
+
+    Ok(runtypes::VirtualMemoryRegion {
+        virt_start: valloc
+            .alloc(size)
+            .ok_or_else(|| format_err!("Failed to allocate anonymous memory"))?,
+        phys: runtypes::MemoryRegion::AnonymousZeroes { size: size },
+    })
+}
+
 fn make_user_stack<T: SimpleAlloc>(valloc: &mut T) -> Result<runtypes::VirtualMemoryRegion, Error> {
     valloc
         .alloc(PAGE_SIZE)
         .ok_or_else(|| format_err!("Failed to allocate stack guard page"))?;
 
-    let stack = runtypes::VirtualMemoryRegion {
-        virt_start: valloc
-            .alloc(USER_STACK_SIZE)
-            .ok_or_else(|| format_err!("Failed to allocate stack"))?,
-        phys: runtypes::MemoryRegion::AnonymousZeroes {
-            size: USER_STACK_SIZE,
-        },
-    };
+    let stack = make_anon_mem(valloc, USER_STACK_SIZE)?;
 
     valloc
         .alloc(PAGE_SIZE)
@@ -178,24 +185,39 @@ fn internalize_process(
         .context("Failed to parse machine description")?;
 
     let mut valloc = get_process_valloc(process_type);
+    let resources = to_process_resources(
+        &mut valloc,
+        &process.name,
+        &program.needs,
+        mappings,
+        &machine.devices,
+    )
+    .context("Failed to resolve process resources for process")?;
 
-    Ok(runtypes::Process {
-        name: process.name.clone(),
-        binary: format!("bin/{}", process.name),
-        stack: match process_type {
-            ProcessType::User => Some(make_user_stack(&mut valloc)?),
+    Ok(match process_type {
+        ProcessType::User => {
+            let stack = make_user_stack(&mut valloc)?;
+            let heap = make_anon_mem(&mut valloc, USER_HEAP_SIZE)?;
 
-            // The kernel takes care of its own stack.
-            ProcessType::Kernel => None,
+            runtypes::Process {
+                name: process.name.clone(),
+                binary: format!("bin/{}", process.name),
+                stack_ptr: stack.virt_start + stack.size() - 8,
+                heap_start: heap.virt_start,
+                heap_end: heap.virt_start + heap.size(),
+                anon_mem: vec![stack, heap],
+                resources,
+            }
+        }
+        ProcessType::Kernel => runtypes::Process {
+            name: process.name.clone(),
+            binary: format!("bin/{}", process.name),
+            stack_ptr: 0,
+            heap_start: 0,
+            heap_end: 0,
+            anon_mem: vec![],
+            resources,
         },
-        resources: to_process_resources(
-            &mut valloc,
-            &process.name,
-            &program.needs,
-            mappings,
-            &machine.devices,
-        )
-        .context("Failed to resolve process resources for process")?,
     })
 }
 
