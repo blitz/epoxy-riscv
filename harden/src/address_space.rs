@@ -289,4 +289,29 @@ mod tests {
         assert_eq!(init.extended(4).size(), 6);
         assert_eq!(phys.extended(4).size(), 0x14);
     }
+
+    #[test]
+    fn test_page_aligned() {
+        let map = Mapping {
+            vaddr: 0xfff,
+            perm: Permissions::read_write(),
+            backing: Backing::InitializedData { data: vec![1, 2] },
+        };
+
+        let aligned = map.page_aligned();
+
+        assert_eq!(aligned.vaddr, 0x0000);
+        assert_eq!(aligned.size(), 0x2000);
+        assert_eq!(aligned.perm, map.perm);
+
+        match &aligned.backing {
+            Backing::InitializedData { data } => {
+                assert_eq!(data.len(), 0x2000);
+                assert_eq!(&data[0xfff..0x1001], &[1, 2]);
+                assert_eq!(data[0], 0);
+                assert_eq!(data[0x1002], 0);
+            }
+            _ => panic!("page alignment changed backing store?"),
+        }
+    }
 }
