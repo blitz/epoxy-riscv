@@ -35,7 +35,7 @@ let NamedResourceType
 
 let Application
     : Type
-    = { name : Text, needs : List NamedResourceType }
+    = { name : Text, heap_kb : Natural, needs : List NamedResourceType }
 
 let Machine
     : Type

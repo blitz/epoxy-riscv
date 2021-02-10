@@ -10,9 +10,6 @@ pub const USER_RESOURCE_END: u64 = 0x50000000;
 /// The default stack size for user programs.
 pub const USER_STACK_SIZE: u64 = 0x4000;
 
-/// The default heap size for user programs.
-pub const USER_HEAP_SIZE: u64 = 0x200000;
-
 /// The virtual address where kernel resource mappings start.
 pub const KERN_RESOURCE_START: u64 = 0x88000000;
 

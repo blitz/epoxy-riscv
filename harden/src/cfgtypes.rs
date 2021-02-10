@@ -79,5 +79,6 @@ pub struct Machine {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Application {
     pub name: String,
+    pub heap_kb: u64,
     pub needs: Vec<NamedResourceType>,
 }

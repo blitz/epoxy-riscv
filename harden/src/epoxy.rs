@@ -197,7 +197,7 @@ fn internalize_process(
     Ok(match process_type {
         ProcessType::User => {
             let stack = make_user_stack(&mut valloc)?;
-            let heap = make_anon_mem(&mut valloc, USER_HEAP_SIZE)?;
+            let heap = make_anon_mem(&mut valloc, program.heap_kb << 10)?;
 
             runtypes::Process {
                 name: process.name.clone(),
