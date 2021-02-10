@@ -95,6 +95,20 @@ constexpr uint64_t {}_freq_hz {{{}}};
 ",
             name, freq_hz
         ),
+        runtypes::ResourceMetaInfo::SpinalGPIO { ngpio } => format!(
+            "
+constexpr uint16_t {}_ngpio {{{}}};
+inline uint32_t volatile * const {}_reg {{reinterpret_cast<uint32_t volatile *>({:#x}ul)}};
+",
+            name,
+            ngpio,
+            name,
+            resource
+                .opt_region
+                .as_ref()
+                .expect("PLIC without memory region")
+                .virt_start
+        ),
     }
 }
 

@@ -50,6 +50,7 @@ pub enum ResourceMetaInfo {
     Framebuffer { format: framebuffer::Format },
     SifivePlic { ndev: u16 },
     SBITimer { freq_hz: u64 },
+    SpinalGPIO { ngpio: u16 },
 }
 
 /// A system resource. This will be a bunch of meta information with an optional memory mapping.

@@ -38,6 +38,7 @@ pub enum ResourceType {
     Framebuffer,
     SiFivePLIC,
     SBITimer,
+    SpinalGPIO,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -55,6 +56,12 @@ pub enum Resource {
     },
     /// The simple one-shot timer implemented by SBI.
     SBITimer { freq_hz: u64 },
+    /// The GPIO controller on SaxonSoc and other cores written in SpinalHDL.
+    SpinalGPIO {
+        /// The number of supported external interrupts.
+        ngpio: u16,
+        region: MemoryRegion,
+    },
 }
 
 #[derive(Deserialize, Debug, Clone)]

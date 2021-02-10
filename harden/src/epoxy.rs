@@ -90,6 +90,10 @@ fn map_resource<T: SimpleAlloc>(
             opt_region: None,
             meta: runtypes::ResourceMetaInfo::SBITimer { freq_hz: *freq_hz },
         },
+        cfgtypes::Resource::SpinalGPIO { ngpio, region } => runtypes::Resource {
+            opt_region: Some(map_memory(valloc, region)?),
+            meta: runtypes::ResourceMetaInfo::SpinalGPIO { ngpio: *ngpio },
+        },
     })
 }
 
