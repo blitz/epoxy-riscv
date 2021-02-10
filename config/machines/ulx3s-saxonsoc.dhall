@@ -25,6 +25,11 @@ in    { name = "ulx3s-saxonsoc"
         , { name = "sbitimer"
           , resource = Epoxy.Resource.SBITimer { freq_hz = 52000000 }
           }
+        , { name = "gpio"
+          , resource =
+              Epoxy.Resource.SpinalGPIO
+                { ngpio = 0x20, region = { start = 0x10000000, size = 0x1000 } }
+          }
         ]
       }
     : Epoxy.Machine

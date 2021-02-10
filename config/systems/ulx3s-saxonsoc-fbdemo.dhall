@@ -5,10 +5,11 @@ in    { name = "Framebuffer Demo"
       , kernel = "kern"
       , processes =
         [ { program = "fbdemo", name = "fbdemo" }
-        , { program = "hello", name = "hello" }
+        , { program = "blink", name = "blink" }
         ]
       , mappings =
         [ { from = "hdmi-fb", to = "fbdemo.fb0" }
+        , { from = "gpio", to = "blink.gpio0" }
         , { from = "plic", to = "kern.plic" }
         , { from = "sbitimer", to = "kern.sbitimer" }
         ]
