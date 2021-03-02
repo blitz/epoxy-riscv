@@ -287,16 +287,12 @@ fn epoxy_configure_process(
     Ok(())
 }
 
-fn epoxy_configure_kernel(
-    system: &runtypes::Configuration,
-    out_type: &str,
-    user_root: &Path,
-) -> Result<(), Error> {
+fn epoxy_configure_kernel(system: &runtypes::Configuration, out_type: &str) -> Result<(), Error> {
     print!(
         "{}",
         match out_type {
             "state-hpp" => kernel_codegen::generate_hpp(&system)?,
-            "state-cpp" => kernel_codegen::generate_cpp(&system, user_root)?,
+            "state-cpp" => kernel_codegen::generate_cpp(&system)?,
             "resources" => codegen::generate(codegen::Language::CPP, &system.kernel),
             _ => Err(format_err!(
                 "Unrecognized output type. Should be one of: state-hpp state-cpp resources"
@@ -351,9 +347,6 @@ pub fn main() -> Result<(), Error> {
                     .arg(Arg::with_name("type")
                          .required(true)
                          .help("Specify what type of output should be generated: state-hpp, state-cpp, or resources"))
-                    .arg(Arg::with_name("user-binaries")
-                         .required(true)
-                         .help("The path where user binaries can be found"))
                     )
         .subcommand(SubCommand::with_name("boot-image")
                     .about("Generate a bootable image for the target platform")
@@ -412,11 +405,6 @@ pub fn main() -> Result<(), Error> {
             cfg_kern_matches
                 .value_of("type")
                 .expect("required option missing"),
-            Path::new(
-                cfg_kern_matches
-                    .value_of("user-binaries")
-                    .expect("required option missing"),
-            ),
         )
     } else if let Some(boot_image_matches) = matches.subcommand_matches("boot-image") {
         epoxy_boot_image(

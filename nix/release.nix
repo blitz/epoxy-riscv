@@ -30,13 +30,6 @@ rec {
         let
           hardenCmd = "${new-harden}/bin/harden -r ${../config} -s ${system} -vvvv";
 
-          mkKernState = user-binaries: pkgs.runCommandNoCC "${system}-kern-state" { } ''
-            mkdir -p $out
-            ${hardenCmd} configure-kernel state-hpp ${user-binaries} > $out/state.hpp
-            ${hardenCmd} configure-kernel state-cpp ${user-binaries} > $out/state.cpp
-            ${hardenCmd} configure-kernel resources ${user-binaries} > $out/resources.hpp
-          '';
-
           mkResourceHeader = procName: pkgs.runCommandNoCC "${system}-${procName}-resources.hpp" { }
             "${hardenCmd} configure-process ${procName} > $out";
 
@@ -67,7 +60,12 @@ rec {
               builtins.map buildProcess processes;
           };
 
-          kern-state = mkKernState user-binaries;
+          kern-state = pkgs.runCommandNoCC "${system}-kern-state" { } ''
+            mkdir -p $out
+            ${hardenCmd} configure-kernel state-hpp > $out/state.hpp
+            ${hardenCmd} configure-kernel state-cpp > $out/state.cpp
+            ${hardenCmd} configure-kernel resources > $out/resources.hpp
+          '';
 
           kern = riscvPkgs.callPackage ./epoxy-kern.nix {
             epoxy-api = api;
