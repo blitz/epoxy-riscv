@@ -1,8 +1,7 @@
-use failure::{Error, ResultExt};
+use failure::Error;
 use itertools::Itertools;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use crate::elf::Elf;
 use crate::runtypes;
 
 type Type = String;
@@ -175,13 +174,6 @@ fn pointer_to(s: &str) -> Expression {
     Expression::AddressOf(Box::new(Expression::Identifier(s.to_string())))
 }
 
-fn process_entry(user_root: &Path, process: &runtypes::Process) -> Result<u64, Error> {
-    let binary_path: PathBuf = [user_root, Path::new(&process.binary)].iter().collect();
-    let elf = Elf::new(&binary_path).context("Failed to load process ELF")?;
-
-    Ok(elf.entry)
-}
-
 /// Returns the name of the thread that is created in addition to all statements that need to go
 /// into the state file to create the necessary kernel options.
 fn process_kobjects(
@@ -227,7 +219,6 @@ fn process_kobjects(
                 name: thread_name,
                 init_args: vec![
                     pointer_to(&proc_name),
-                    Expression::LiteralUnsigned(process_entry(user_root, &process)?),
                     Expression::LiteralUnsigned(process.stack_ptr),
                     Expression::LiteralUnsigned(process.heap_start),
                     Expression::LiteralUnsigned(process.heap_end),

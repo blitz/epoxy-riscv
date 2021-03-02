@@ -2,6 +2,7 @@
 
 #include "asm.hpp"
 #include "csr.hpp"
+#include "patched.hpp"
 #include "process.hpp"
 #include "state.hpp"
 
@@ -24,6 +25,13 @@ void clear_lrsc_reservation()
 }
 
 }  // namespace
+
+thread::thread(process *process, mword_t sp, mword_t a0, mword_t a1)
+    : exception_frame {static_cast<mword_t>(USER_PCS[process->pid()]), sp, a0, a1},
+      process_ {process},
+      state_ {thread_state::RUNNABLE}
+{
+}
 
 void thread::exit_from_preemption()
 {

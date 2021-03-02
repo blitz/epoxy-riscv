@@ -88,8 +88,8 @@ fn to_user_as(
     Ok(user_as)
 }
 
-/// Convert a vector of page table pointers to byte data.
-fn pts_to_data(pts: &[u64]) -> Result<Vec<u8>, Error> {
+/// Convert a vector of 64-bit integers pointers to byte data.
+fn u64_to_byte_data(pts: &[u64]) -> Result<Vec<u8>, Error> {
     let mut data = vec![];
 
     for &satp in pts {
@@ -114,6 +114,13 @@ fn sym_paddr(name: &str, elf: &Elf, addr_space: &AddressSpace) -> Result<u64, Er
             vaddr
         )
     })
+}
+
+fn process_entry(user_root: &Path, process: &runtypes::Process) -> Result<u64, Error> {
+    let binary_path: PathBuf = [user_root, Path::new(&process.binary)].iter().collect();
+    let elf = Elf::new(&binary_path).context("Failed to load process ELF")?;
+
+    Ok(elf.entry)
 }
 
 pub fn generate(system: &runtypes::Configuration, user_binaries: &Path) -> Result<(), Error> {
@@ -142,19 +149,32 @@ pub fn generate(system: &runtypes::Configuration, user_binaries: &Path) -> Resul
         .map(|a| page_table::generate(page_table::Format::RiscvSv32, a, &mut pmem))
         .collect::<Result<Vec<u64>, Error>>()?;
 
+    let user_pcs = system
+        .processes
+        .iter()
+        .map(|(_, p)| -> Result<u64, Error> { process_entry(user_binaries, p) })
+        .collect::<Result<Vec<u64>, Error>>()?;
+
     info!("Patching kernel binary");
 
     // Patch the page table pointer the kernel boots with.
     pmem.write(
         sym_paddr("BOOT_SATP", &kernel_elf, &kernel_as).context("Failed to patch kernel SATP")?,
-        &pts_to_data(&user_satps[0..1])?,
+        &u64_to_byte_data(&user_satps[0..1])?,
     );
 
     // Patch the page tables of each user process.
     pmem.write(
         sym_paddr("USER_SATPS", &kernel_elf, &kernel_as)
             .context("Failed to patch user process SATPs")?,
-        &pts_to_data(&user_satps)?,
+        &u64_to_byte_data(&user_satps)?,
+    );
+
+    // Patch thread entry points.
+    pmem.write(
+        sym_paddr("USER_PCS", &kernel_elf, &kernel_as)
+            .context("Failed to patch user process entry points")?,
+        &u64_to_byte_data(&user_pcs)?,
     );
 
     info!("Boot image needs {} KiB of RAM.", pmem.size() >> 10);

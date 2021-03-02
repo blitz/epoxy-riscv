@@ -3,13 +3,10 @@
 #include <epoxy-api/api.hpp>
 
 #include "csr.hpp"
+#include "patched.hpp"
 #include "state.hpp"
 
 process *process::active_ = nullptr;
-
-// This will always be 64-bit values due to limitations in
-// epoxy-harden.
-extern "C" uint64_t const USER_SATPS[];
 
 kobject *process::lookup(cap_t capability)
 {
