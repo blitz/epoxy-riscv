@@ -53,13 +53,6 @@ rec {
 
         in
         rec {
-          # All user binaries symlinked into one derivation.
-          user-binaries = riscvPkgs.symlinkJoin {
-            name = "${system}-user-binaries";
-            paths =
-              builtins.map buildProcess processes;
-          };
-
           kern-state = pkgs.runCommandNoCC "${system}-kern-state" { } ''
             mkdir -p $out
             ${hardenCmd} configure-kernel state-hpp > $out/state.hpp
@@ -74,7 +67,7 @@ rec {
 
           boot-image-input = riscvPkgs.symlinkJoin {
             name = "all-binaries";
-            paths = [ user-binaries kern ];
+            paths = [ kern ] ++ builtins.map buildProcess processes;
           };
 
           boot-image = mkBootImage boot-image-input;
