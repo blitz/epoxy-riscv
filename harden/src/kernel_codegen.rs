@@ -1,6 +1,5 @@
 use failure::Error;
 use itertools::Itertools;
-use std::path::Path;
 
 use crate::runtypes;
 
