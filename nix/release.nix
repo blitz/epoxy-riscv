@@ -3,17 +3,15 @@
 , pkgs ? import nixpkgs { }
 }:
 let
+  naersk = pkgs.callPackage sources.naersk { };
   dependencies = import ./dependencies.nix { inherit sources nixpkgs pkgs; };
 
-  riscvPkgs = dependencies.riscvPkgs;
-
-  naersk = pkgs.callPackage sources.naersk { };
-
+  inherit (dependencies) rv32;
   inherit (import sources."gitignore.nix" { inherit (pkgs) lib; }) gitignoreSource;
 in
 rec {
   # This is for convenience to build RISC-V apps from the CLI with nix-build.
-  inherit riscvPkgs;
+  rv32Pkgs = rv32.pkgs;
 
   shellDependencies = {
     inherit (dependencies)
@@ -26,7 +24,7 @@ rec {
     root = gitignoreSource ../harden;
   };
 
-  api = riscvPkgs.callPackage ./epoxy-api.nix { };
+  api = rv32.pkgs.callPackage ./epoxy-api.nix { };
 
   systems =
     let
@@ -50,7 +48,7 @@ rec {
           ''));
 
           # Return a derivation for the process from the system description.
-          buildProcess = {name, program}: riscvPkgs.callPackage (./epoxy- + "${program}.nix") {
+          buildProcess = {name, program}: rv32.pkgs.callPackage (./epoxy- + "${program}.nix") {
             resourceHeader = mkResourceHeader name;
             outputName = name;
           };
@@ -64,12 +62,12 @@ rec {
             ${hardenCmd} configure-kernel resources > $out/resources.hpp
           '';
 
-          kern = riscvPkgs.callPackage ./epoxy-kern.nix {
+          kern = rv32.pkgs.callPackage ./epoxy-kern.nix {
             epoxy-api = api;
             epoxy-kern-state = kern-state;
           };
 
-          boot-image-input = riscvPkgs.symlinkJoin {
+          boot-image-input = rv32.pkgs.symlinkJoin {
             name = "all-binaries";
             paths = [ kern ] ++ builtins.map buildProcess processes;
           };
@@ -84,7 +82,7 @@ rec {
     };
 
   tests = {
-    qemu-hello = riscvPkgs.callPackage ./test-hello.nix {
+    qemu-hello = rv32.pkgs.callPackage ./test-hello.nix {
       inherit (dependencies) epoxy-qemu-boot;
 
       bootElf = systems.qemu-hello.boot-image;

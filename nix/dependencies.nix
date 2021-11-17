@@ -23,19 +23,22 @@ in rec {
     hostCpuTargets = [ "riscv32-softmmu" "riscv64-softmmu" ];
   });
 
-  # All nixpkgs built for RISC-V with our patched newlib.
-  riscvPkgs = (import nixpkgs {
-    # Patch the libc to do system calls the epoxy way.
-    overlays = [ newlibOverlay ];
 
-    # Disabled floating point and compressed instructions to make SaxonSoc happy.
-    crossSystem = pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded {
-      gcc = {
-        arch = "rv32ima";
+  rv32 = {
+    # All nixpkgs built for RISC-V with our patched newlib.
+    pkgs = (import nixpkgs {
+      # Patch the libc to do system calls the epoxy way.
+      overlays = [ newlibOverlay ];
+
+      # Disabled floating point and compressed instructions to make SaxonSoc happy.
+      crossSystem = pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded {
+        gcc = {
+          arch = "rv32ima";
+        };
       };
-    };
-  });
+    });
 
-  pprintpp = riscvPkgs.callPackage ./pprintpp.nix { };
-  range-v3 = riscvPkgs.callPackage ./range-v3.nix { };
+    pprintpp = pkgs.callPackage ./pprintpp.nix { };
+    range-v3 = pkgs.callPackage ./range-v3.nix { };
+  };
 }
