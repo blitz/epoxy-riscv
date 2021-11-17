@@ -23,7 +23,6 @@ in rec {
     hostCpuTargets = [ "riscv32-softmmu" "riscv64-softmmu" ];
   });
 
-
   rv32 = {
     # All nixpkgs built for RISC-V with our patched newlib.
     pkgs = (import nixpkgs {
@@ -34,6 +33,24 @@ in rec {
       crossSystem = pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded {
         gcc = {
           arch = "rv32ima";
+        };
+      };
+    });
+
+    pprintpp = pkgs.callPackage ./pprintpp.nix { };
+    range-v3 = pkgs.callPackage ./range-v3.nix { };
+  };
+
+  rv64 = {
+    # All nixpkgs built for RISC-V with our patched newlib.
+    pkgs = (import nixpkgs {
+      # Patch the libc to do system calls the epoxy way.
+      overlays = [ newlibOverlay ];
+
+      # Disable floating point.
+      crossSystem = pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv64-embedded {
+        gcc = {
+          arch = "rv64imac";
         };
       };
     });

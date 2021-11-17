@@ -6,12 +6,15 @@ let
   naersk = pkgs.callPackage sources.naersk { };
   dependencies = import ./dependencies.nix { inherit sources nixpkgs pkgs; };
 
-  inherit (dependencies) rv32;
+  inherit (dependencies) rv32 rv64;
   inherit (import sources."gitignore.nix" { inherit (pkgs) lib; }) gitignoreSource;
 in
 rec {
+  inherit pkgs;
+
   # This is for convenience to build RISC-V apps from the CLI with nix-build.
   rv32Pkgs = rv32.pkgs;
+  rv64Pkgs = rv64.pkgs;
 
   shellDependencies = {
     inherit (dependencies)
