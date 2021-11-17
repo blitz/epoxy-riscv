@@ -8,6 +8,8 @@ let
   riscvPkgs = dependencies.riscvPkgs;
 
   naersk = pkgs.callPackage sources.naersk { };
+
+  inherit (import sources."gitignore.nix" { inherit (pkgs) lib; }) gitignoreSource;
 in
 rec {
   # This is for convenience to build RISC-V apps from the CLI with nix-build.
@@ -20,7 +22,9 @@ rec {
   };
 
   # This is the new harden binary that needs quite a bit of work to be useful.
-  new-harden = naersk.buildPackage { root = ../harden; };
+  new-harden = naersk.buildPackage {
+    root = gitignoreSource ../harden;
+  };
 
   api = riscvPkgs.callPackage ./epoxy-api.nix { };
 
