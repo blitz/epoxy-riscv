@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use crate::address_space::AddressSpace;
 use crate::bump_ptr_alloc::{BumpPointerAlloc, ChainedAlloc};
 use crate::constants::PAGE_SIZE;
-use crate::elf::Elf;
+use crate::elf::{Elf, ElfClass};
 use crate::elf_writer;
 use crate::interval::Interval;
 use crate::page_table;
@@ -137,8 +137,8 @@ pub fn generate(system: &runtypes::Configuration, user_binaries: &Path) -> Resul
         .iter()
         .map(|a| {
             let pt_format = match kernel_elf.class {
-                crate::elf::ElfClass::Class32 => page_table::Format::RiscvSv32,
-                crate::elf::ElfClass::Class64 => page_table::Format::RiscvSv39,
+                ElfClass::Class32 => page_table::Format::RiscvSv32,
+                ElfClass::Class64 => page_table::Format::RiscvSv39,
             };
             page_table::generate(pt_format, a, &mut pmem)
         })
@@ -186,7 +186,10 @@ pub fn generate(system: &runtypes::Configuration, user_binaries: &Path) -> Resul
 
         elf_writer::write(
             out_buf,
-            elf_writer::Format::Elf32,
+            match kernel_elf.class {
+                ElfClass::Class32 => elf_writer::Format::Elf32,
+                ElfClass::Class64 => elf_writer::Format::Elf64,
+            },
             kernel_as
                 .lookup_phys(kernel_elf.entry)
                 .ok_or_else(|| format_err!("Failed to resolve vaddr {:#x}", kernel_elf.entry))?,
