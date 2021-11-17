@@ -1,6 +1,9 @@
 //! Abstract the underlying ELF libary and expose the simple bit of functionality we need.
 
 use anyhow::Error;
+use goblin::elf64::header::EI_CLASS;
+use goblin::elf64::header::ELFCLASS32;
+use goblin::elf64::header::ELFCLASS64;
 use goblin::Object;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
@@ -65,7 +68,14 @@ pub struct Segment {
 
 type SymbolMap = BTreeMap<String, u64>;
 
+pub enum ElfClass {
+    Class32,
+    Class64,
+}
+
 pub struct Elf {
+    pub class: ElfClass,
+
     /// Entry point of the ELF.
     pub entry: u64,
 
@@ -110,6 +120,11 @@ impl Elf {
 
         match Object::parse(&data)? {
             Object::Elf(elf) => Ok(Elf {
+                class: match elf.header.e_ident[EI_CLASS] {
+                    ELFCLASS32 => ElfClass::Class32,
+                    ELFCLASS64 => ElfClass::Class64,
+                    e => return Err(format_err!("Invalid ELF class {:x}", e)),
+                },
                 entry: elf.entry,
                 segments: elf
                     .program_headers

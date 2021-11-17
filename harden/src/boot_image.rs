@@ -135,7 +135,13 @@ pub fn generate(system: &runtypes::Configuration, user_binaries: &Path) -> Resul
 
     let user_satps = user_ass
         .iter()
-        .map(|a| page_table::generate(page_table::Format::RiscvSv32, a, &mut pmem))
+        .map(|a| {
+            let pt_format = match kernel_elf.class {
+                crate::elf::ElfClass::Class32 => page_table::Format::RiscvSv32,
+                crate::elf::ElfClass::Class64 => page_table::Format::RiscvSv39,
+            };
+            page_table::generate(pt_format, a, &mut pmem)
+        })
         .collect::<Result<Vec<u64>, Error>>()?;
 
     let user_pcs = system

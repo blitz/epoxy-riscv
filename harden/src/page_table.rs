@@ -48,6 +48,7 @@ impl std::error::Error for PageTableError {}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Format {
     RiscvSv32,
+    RiscvSv39,
 }
 
 const PTE_V: u8 = 1 << 0;
@@ -71,9 +72,18 @@ fn permission_bits(perm: Permissions) -> u8 {
 #[derive(Debug, Copy, Clone)]
 struct PageTableFormat {
     bits_per_level: u8,
+    levels: u8,
 }
 
-const FORMAT_SV32: PageTableFormat = PageTableFormat { bits_per_level: 10 };
+const FORMAT_SV32: PageTableFormat = PageTableFormat {
+    bits_per_level: 10,
+    levels: 2,
+};
+
+const FORMAT_SV39: PageTableFormat = PageTableFormat {
+    bits_per_level: 9,
+    levels: 3,
+};
 
 fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> Result<u64, PageTableError> {
     if let Some((paddr, perm)) = addr_space.lookup(vaddr) {
@@ -165,12 +175,25 @@ pub fn generate(
 
     match format {
         Format::RiscvSv32 => {
-            let root_pt: u64 = page_table(FORMAT_SV32, pmem, 1, 0, addr_space)?
-                .expect("We should have at least one mapping?")
-                .into();
+            let root_pt: u64 =
+                page_table(FORMAT_SV32, pmem, FORMAT_SV32.levels - 1, 0, addr_space)?
+                    .expect("We should have at least one mapping?")
+                    .into();
 
             // Turn the page table pointer into a valid SATP value for Sv32.
             let satp = (root_pt >> 12) | 1 << 31;
+
+            debug!("User process SATP is {:#x}", satp);
+            Ok(satp)
+        }
+        Format::RiscvSv39 => {
+            let root_pt: u64 =
+                page_table(FORMAT_SV39, pmem, FORMAT_SV39.levels - 1, 0, addr_space)?
+                    .expect("We should have at least one mapping?")
+                    .into();
+
+            // Turn the page table pointer into a valid SATP value for Sv39.
+            let satp = (root_pt >> 12) | 8 << 60;
 
             debug!("User process SATP is {:#x}", satp);
             Ok(satp)
