@@ -1,4 +1,4 @@
-use failure::Error;
+use anyhow::Error;
 use log::debug;
 use std::convert::TryInto;
 

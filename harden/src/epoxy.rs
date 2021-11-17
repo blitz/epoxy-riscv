@@ -1,8 +1,7 @@
 //! This module implements the main application logic.
 
+use anyhow::{Context, Error};
 use clap::{App, AppSettings, Arg, SubCommand};
-use failure::Error;
-use failure::ResultExt;
 use log::{debug, info};
 use serde_dhall;
 use std::path::Path;
@@ -37,7 +36,7 @@ fn make_anon_mem<T: SimpleAlloc>(
         virt_start: valloc
             .alloc(size)
             .ok_or_else(|| format_err!("Failed to allocate anonymous memory"))?,
-        phys: runtypes::MemoryRegion::AnonymousZeroes { size: size },
+        phys: runtypes::MemoryRegion::AnonymousZeroes { size },
     })
 }
 

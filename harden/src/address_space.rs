@@ -1,4 +1,4 @@
-use failure::Error;
+use anyhow::Error;
 use std::convert::TryInto;
 use std::fmt;
 
@@ -227,7 +227,7 @@ impl AddressSpace {
                                     },
                                 )
                                 .ok_or_else(|| {
-                                    format_err!(
+                                    anyhow!(
                                     "Unable to fixate initialized data section at {:#x} in memory",
                                     m.vaddr
                                 )

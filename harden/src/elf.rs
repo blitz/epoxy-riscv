@@ -1,6 +1,6 @@
 //! Abstract the underlying ELF libary and expose the simple bit of functionality we need.
 
-use failure::Error;
+use anyhow::Error;
 use goblin::Object;
 use std::collections::BTreeMap;
 use std::convert::TryInto;

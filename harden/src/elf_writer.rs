@@ -36,8 +36,8 @@
 //!
 //! [1] https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
 
+use anyhow::Error;
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
-use failure::Error;
 use itertools::Itertools;
 use log::debug;
 use std::convert::TryInto;

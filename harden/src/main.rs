@@ -1,7 +1,7 @@
 #[macro_use]
-extern crate failure;
+extern crate anyhow;
 
-use log::error;
+use anyhow::Error;
 
 mod address_space;
 mod boot_image;
@@ -21,15 +21,6 @@ mod phys_mem;
 mod runtypes;
 mod vec_utils;
 
-fn main() {
-    std::process::exit(match epoxy::main() {
-        Ok(_) => 0,
-        Err(e) => {
-            error!("Exiting because of the following chain of errors:");
-            for (i, cause) in e.iter_chain().enumerate() {
-                error!("Error #{}: {}", i, cause);
-            }
-            1
-        }
-    });
+fn main() -> Result<(), Error> {
+    epoxy::main()
 }
