@@ -19,6 +19,7 @@ mod kernel_codegen;
 mod page_table;
 mod phys_mem;
 mod runtypes;
+mod vec_utils;
 
 fn main() {
     std::process::exit(match epoxy::main() {

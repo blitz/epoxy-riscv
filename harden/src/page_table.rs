@@ -4,19 +4,12 @@ use std::convert::TryInto;
 
 use crate::address_space::{AddressSpace, Permissions};
 use crate::phys_mem::{PhysMemory, PlaceAs};
+use crate::vec_utils::vec_u32_to_bytes;
 
 /// A page table format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Format {
     RiscvSv32,
-}
-
-/// Turn a vector of integers into its byte representation.
-fn combine(v: &[u32]) -> Vec<u8> {
-    v.iter().fold(vec![], |mut acc, &v| {
-        acc.extend_from_slice(&v.to_le_bytes());
-        acc
-    })
 }
 
 const PTE_V: u8 = 1 << 0;
@@ -82,7 +75,7 @@ fn page_table(
     if pt_data.iter().all(|&v| v == 0) {
         None
     } else {
-        let combined = combine(&pt_data);
+        let combined = vec_u32_to_bytes(&pt_data);
         let phys = pmem.place(&combined, PlaceAs::Shareable)?;
 
         assert_eq!(combined.len(), 4096);
@@ -108,18 +101,4 @@ pub fn generate(
 
     debug!("User process SATP is {:#x}", satp);
     Ok(satp)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn combine_u32_works() {
-        assert_eq!(combine(&[]), vec![]);
-        assert_eq!(
-            combine(&[0x76543210, 0xcafed00d]),
-            vec![0x10, 0x32, 0x54, 0x76, 0x0d, 0xd0, 0xfe, 0xca]
-        );
-    }
 }

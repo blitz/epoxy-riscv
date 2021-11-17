@@ -1,7 +1,6 @@
-use byteorder::{LittleEndian, WriteBytesExt};
 use failure::{Error, ResultExt};
 use log::{debug, info};
-use std::io::{self};
+use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::address_space::AddressSpace;
@@ -13,6 +12,7 @@ use crate::interval::Interval;
 use crate::page_table;
 use crate::phys_mem::PhysMemory;
 use crate::runtypes;
+use crate::vec_utils::vec_u64_to_bytes;
 
 impl From<&runtypes::Configuration> for PhysMemory {
     fn from(system: &runtypes::Configuration) -> Self {
@@ -88,17 +88,6 @@ fn to_user_as(
     Ok(user_as)
 }
 
-/// Convert a vector of 64-bit integers pointers to byte data.
-fn u64_to_byte_data(pts: &[u64]) -> Result<Vec<u8>, Error> {
-    let mut data = vec![];
-
-    for &satp in pts {
-        data.write_u64::<LittleEndian>(satp)?;
-    }
-
-    Ok(data)
-}
-
 /// Return the physical address of a symbol.
 fn sym_paddr(name: &str, elf: &Elf, addr_space: &AddressSpace) -> Result<u64, Error> {
     let vaddr = elf
@@ -160,21 +149,21 @@ pub fn generate(system: &runtypes::Configuration, user_binaries: &Path) -> Resul
     // Patch the page table pointer the kernel boots with.
     pmem.write(
         sym_paddr("BOOT_SATP", &kernel_elf, &kernel_as).context("Failed to patch kernel SATP")?,
-        &u64_to_byte_data(&user_satps[0..1])?,
+        &vec_u64_to_bytes(&user_satps[0..1]),
     );
 
     // Patch the page tables of each user process.
     pmem.write(
         sym_paddr("USER_SATPS", &kernel_elf, &kernel_as)
             .context("Failed to patch user process SATPs")?,
-        &u64_to_byte_data(&user_satps)?,
+        &vec_u64_to_bytes(&user_satps),
     );
 
     // Patch thread entry points.
     pmem.write(
         sym_paddr("USER_PCS", &kernel_elf, &kernel_as)
             .context("Failed to patch user process entry points")?,
-        &u64_to_byte_data(&user_pcs)?,
+        &vec_u64_to_bytes(&user_pcs),
     );
 
     info!("Boot image needs {} KiB of RAM.", pmem.size() >> 10);
