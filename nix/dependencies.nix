@@ -20,7 +20,7 @@ in rec {
     spiceSupport = false;
     pulseSupport = false;
     smartcardSupport = false;
-    hostCpuTargets = [ "riscv32-softmmu" ];
+    hostCpuTargets = [ "riscv32-softmmu" "riscv64-softmmu" ];
   });
 
   # All nixpkgs built for RISC-V with our patched newlib.
