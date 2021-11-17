@@ -1,4 +1,3 @@
-use byteorder::{LittleEndian, WriteBytesExt};
 use failure::Error;
 use log::debug;
 use std::convert::TryInto;
@@ -15,8 +14,7 @@ pub enum Format {
 /// Turn a vector of integers into its byte representation.
 fn combine(v: &[u32]) -> Vec<u8> {
     v.iter().fold(vec![], |mut acc, &v| {
-        // TODO Propagate errors.
-        acc.write_u32::<LittleEndian>(v).unwrap();
+        acc.extend_from_slice(&v.to_le_bytes());
         acc
     })
 }
@@ -110,4 +108,18 @@ pub fn generate(
 
     debug!("User process SATP is {:#x}", satp);
     Ok(satp)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn combine_u32_works() {
+        assert_eq!(combine(&[]), vec![]);
+        assert_eq!(
+            combine(&[0x76543210, 0xcafed00d]),
+            vec![0x10, 0x32, 0x54, 0x76, 0x0d, 0xd0, 0xfe, 0xca]
+        );
+    }
 }
