@@ -6,6 +6,43 @@ use crate::address_space::{AddressSpace, Permissions};
 use crate::phys_mem::{PhysMemory, PlaceAs};
 use crate::vec_utils::vec_u32_to_bytes;
 
+/// Errors from page table generation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PageTableError {
+    /// A physical address was not mappable in the page table.
+    ///
+    /// This can happen when a 32-bit page table is created, but the physical address is beyond 4G.
+    PhysAddressNotMappable { paddr: u64 },
+
+    /// A page table was allocated at a place where we cannot point to it.
+    ///
+    /// This is in an internal error, because we cannot ask for below-4G memory yet.
+    IllegalPageTablePlacement { paddr: u64 },
+
+    /// We failed to allocate backing storage for page tables.
+    MemoryAllocationFailed,
+}
+
+impl std::fmt::Display for PageTableError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PageTableError::PhysAddressNotMappable { paddr } => write!(
+                f,
+                "Physical address {:#x} is not representable in the page table.",
+                paddr
+            ),
+            PageTableError::IllegalPageTablePlacement { paddr } => write!(
+                f,
+                "Internal error: A page table was allocated at {:#x}, but we cannot use this address.",
+                paddr
+            ),
+            PageTableError::MemoryAllocationFailed => write!(f, "Failed to allocate memory for page table structures."),
+        }
+    }
+}
+
+impl std::error::Error for PageTableError {}
+
 /// A page table format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Format {
@@ -30,16 +67,17 @@ fn permission_bits(perm: Permissions) -> u8 {
         | PTE_V
 }
 
-fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> u32 {
+fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> Result<u32, PageTableError> {
     if let Some((paddr, perm)) = addr_space.lookup(vaddr) {
         assert_eq!(paddr & 0xFFF, 0);
 
-        // TODO Propagate errors.
-        let paddr_32: u32 = paddr.try_into().unwrap();
+        let paddr_32: u32 = paddr
+            .try_into()
+            .map_err(|_| PageTableError::PhysAddressNotMappable { paddr })?;
 
-        (paddr_32 >> 2) | u32::from(permission_bits(perm))
+        Ok((paddr_32 >> 2) | u32::from(permission_bits(perm)))
     } else {
-        0
+        Ok(0)
     }
 }
 
@@ -59,29 +97,33 @@ fn page_table(
     level: u32,
     vaddr: u64,
     addr_space: &AddressSpace,
-) -> Option<u32> {
+) -> Result<Option<u32>, PageTableError> {
     let pt_data = &(0..1024)
         .into_iter()
         .map(|pt_index| vaddr + (pt_index << (12 + (level * 10))))
-        .map(|vaddr| {
+        .map(|vaddr| -> Result<u32, PageTableError> {
             if level == 0 {
                 pt_entry(vaddr, addr_space)
             } else {
-                pt_next(page_table(pmem, level - 1, vaddr, addr_space))
+                Ok(pt_next(page_table(pmem, level - 1, vaddr, addr_space)?))
             }
         })
-        .collect::<Vec<u32>>();
+        .collect::<Result<Vec<u32>, PageTableError>>()?;
 
     if pt_data.iter().all(|&v| v == 0) {
-        None
+        Ok(None)
     } else {
         let combined = vec_u32_to_bytes(&pt_data);
-        let phys = pmem.place(&combined, PlaceAs::Shareable)?;
+        let phys = pmem
+            .place(&combined, PlaceAs::Shareable)
+            .ok_or(PageTableError::MemoryAllocationFailed)?;
 
         assert_eq!(combined.len(), 4096);
         debug!("Allocated page table at phys {:#x}", phys);
 
-        Some(phys.try_into().unwrap())
+        Ok(Some(phys.try_into().map_err(|_| {
+            PageTableError::IllegalPageTablePlacement { paddr: phys }
+        })?))
     }
 }
 
@@ -92,8 +134,8 @@ pub fn generate(
 ) -> Result<u64, Error> {
     assert_eq!(format, Format::RiscvSv32);
 
-    let root_pt: u64 = page_table(pmem, 1, 0, addr_space)
-        .ok_or_else(|| format_err!("Failed to allocate memory for page tables"))?
+    let root_pt: u64 = page_table(pmem, 1, 0, addr_space)?
+        .expect("We should have at least one mapping?")
         .into();
 
     // Turn the page table pointer into a valid SATP value for Sv32.
