@@ -21,14 +21,22 @@ fn combine(v: &[u32]) -> Vec<u8> {
     })
 }
 
-fn permission_bits(perm: Permissions) -> u32 {
-    (if perm.read { 1 << 1 } else { 0 })
-        | (if perm.write { 1 << 2 } else { 0 })
-        | (if perm.execute { 1 << 3 } else { 0 })
-        | (if perm.user { 1 << 4 } else { 0 })
-        | (1 << 6)              // Accessed
-        | (1 << 7)              // Dirty
-        | 1 // valid
+const PTE_V: u8 = 1 << 0;
+const PTE_R: u8 = 1 << 1;
+const PTE_W: u8 = 1 << 2;
+const PTE_X: u8 = 1 << 3;
+const PTE_U: u8 = 1 << 4;
+const PTE_A: u8 = 1 << 6;
+const PTE_D: u8 = 1 << 7;
+
+fn permission_bits(perm: Permissions) -> u8 {
+    (if perm.read { PTE_R } else { 0 })
+        | (if perm.write { PTE_W } else { 0 })
+        | (if perm.execute { PTE_X } else { 0 })
+        | (if perm.user { PTE_U } else { 0 })
+        | PTE_A
+        | PTE_D
+        | PTE_V
 }
 
 fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> u32 {
@@ -38,7 +46,7 @@ fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> u32 {
         // TODO Propagate errors.
         let paddr_32: u32 = paddr.try_into().unwrap();
 
-        (paddr_32 >> 2) | permission_bits(perm)
+        (paddr_32 >> 2) | u32::from(permission_bits(perm))
     } else {
         0
     }
