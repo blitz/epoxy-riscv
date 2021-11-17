@@ -1,9 +1,9 @@
 use anyhow::Error;
 use log::debug;
 use std::convert::{TryFrom, TryInto};
-use std::ops::Range;
 
 use crate::address_space::{AddressSpace, Permissions};
+use crate::interval::Interval;
 use crate::phys_mem::{PhysMemory, PlaceAs};
 use crate::vec_utils::{vec_u32_to_bytes, vec_u64_to_bytes};
 
@@ -96,11 +96,6 @@ fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> Result<u64, PageTableError
     }
 }
 
-fn vaddr_range_has_mapping(_vaddr_range: &Range<u64>, _addr_space: &AddressSpace) -> bool {
-    // TODO Actually check whether there is something in the given range.
-    true
-}
-
 /// Create a page table entry that points to another page table.
 fn pt_next(pt: Option<u64>) -> u64 {
     if let Some(phys) = pt {
@@ -122,25 +117,25 @@ fn page_table(
 ) -> Result<Option<u64>, PageTableError> {
     let pt_data = &(0..(1 << format.bits_per_level))
         .into_iter()
-        .map(|pt_index| -> Range<u64> {
+        .map(|pt_index| -> Interval {
             let size = 1 << u64::from(12 + level * format.bits_per_level);
 
-            Range {
-                start: vaddr + (pt_index * size),
-                end: vaddr + ((pt_index + 1) * size),
+            Interval {
+                from: vaddr + (pt_index * size),
+                to: vaddr + ((pt_index + 1) * size),
             }
         })
         .map(|vaddr_range| -> Result<u64, PageTableError> {
-            if !vaddr_range_has_mapping(&vaddr_range, addr_space) {
+            if !addr_space.has_mappings_in_range(vaddr_range) {
                 Ok(0)
             } else if level == 0 {
-                pt_entry(vaddr_range.start, addr_space)
+                pt_entry(vaddr_range.from, addr_space)
             } else {
                 Ok(pt_next(page_table(
                     format,
                     pmem,
                     level - 1,
-                    vaddr_range.start,
+                    vaddr_range.from,
                     addr_space,
                 )?))
             }

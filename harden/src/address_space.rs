@@ -195,6 +195,15 @@ impl AddressSpace {
         }
     }
 
+    /// Return true, if there is a mapping in this address range that intersects with the given
+    /// range.
+    pub fn has_mappings_in_range(&self, vaddr_range: Interval) -> bool {
+        self.mappings
+            .iter()
+            .find(|m| m.virt_ivl().intersects(vaddr_range))
+            .is_some()
+    }
+
     /// Look up the physical address. This is similar to `lookup`, but doesn't return the
     /// permissions as well.
     pub fn lookup_phys(&self, vaddr: u64) -> Option<u64> {
