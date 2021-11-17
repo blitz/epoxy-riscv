@@ -89,23 +89,37 @@ fn pt_next(pt: Option<u32>) -> u32 {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+struct PageTableFormat {
+    bits_per_level: u8,
+}
+
+const FORMAT_SV32: PageTableFormat = PageTableFormat { bits_per_level: 10 };
+
 /// Generate a page table at the given level. Level counts down with being the leaf.
 ///
 /// TODO This is very inefficient, because we iterate through all possible pages.
 fn page_table(
+    format: PageTableFormat,
     pmem: &mut PhysMemory,
-    level: u32,
+    level: u8,
     vaddr: u64,
     addr_space: &AddressSpace,
 ) -> Result<Option<u32>, PageTableError> {
-    let pt_data = &(0..1024)
+    let pt_data = &(0..(1 << format.bits_per_level))
         .into_iter()
-        .map(|pt_index| vaddr + (pt_index << (12 + (level * 10))))
+        .map(|pt_index| vaddr + (pt_index << u64::from(12 + level * format.bits_per_level)))
         .map(|vaddr| -> Result<u32, PageTableError> {
             if level == 0 {
                 pt_entry(vaddr, addr_space)
             } else {
-                Ok(pt_next(page_table(pmem, level - 1, vaddr, addr_space)?))
+                Ok(pt_next(page_table(
+                    format,
+                    pmem,
+                    level - 1,
+                    vaddr,
+                    addr_space,
+                )?))
             }
         })
         .collect::<Result<Vec<u32>, PageTableError>>()?;
@@ -134,13 +148,17 @@ pub fn generate(
 ) -> Result<u64, Error> {
     assert_eq!(format, Format::RiscvSv32);
 
-    let root_pt: u64 = page_table(pmem, 1, 0, addr_space)?
-        .expect("We should have at least one mapping?")
-        .into();
+    match format {
+        Format::RiscvSv32 => {
+            let root_pt: u64 = page_table(FORMAT_SV32, pmem, 1, 0, addr_space)?
+                .expect("We should have at least one mapping?")
+                .into();
 
-    // Turn the page table pointer into a valid SATP value for Sv32.
-    let satp = (root_pt >> 12) | 1 << 31;
+            // Turn the page table pointer into a valid SATP value for Sv32.
+            let satp = (root_pt >> 12) | 1 << 31;
 
-    debug!("User process SATP is {:#x}", satp);
-    Ok(satp)
+            debug!("User process SATP is {:#x}", satp);
+            Ok(satp)
+        }
+    }
 }
