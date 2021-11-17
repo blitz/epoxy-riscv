@@ -4,7 +4,7 @@ use std::convert::{TryFrom, TryInto};
 
 use crate::address_space::{AddressSpace, Permissions};
 use crate::phys_mem::{PhysMemory, PlaceAs};
-use crate::vec_utils::vec_u32_to_bytes;
+use crate::vec_utils::{vec_u32_to_bytes, vec_u64_to_bytes};
 
 /// Errors from page table generation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -151,6 +151,8 @@ fn page_table(
 
                 vec_u32_to_bytes(&cropped)
             }
+
+            9 => vec_u64_to_bytes(&pt_data),
             _ => unimplemented!("Bit per level {} is not handled yet", format.bits_per_level),
         };
         let phys = pmem
@@ -171,8 +173,6 @@ pub fn generate(
     addr_space: &AddressSpace,
     pmem: &mut PhysMemory,
 ) -> Result<u64, Error> {
-    assert_eq!(format, Format::RiscvSv32);
-
     match format {
         Format::RiscvSv32 => {
             let root_pt: u64 =
