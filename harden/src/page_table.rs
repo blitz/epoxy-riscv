@@ -1,6 +1,6 @@
 use anyhow::Error;
 use log::debug;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 use crate::address_space::{AddressSpace, Permissions};
 use crate::phys_mem::{PhysMemory, PlaceAs};
@@ -11,8 +11,9 @@ use crate::vec_utils::vec_u32_to_bytes;
 pub enum PageTableError {
     /// A physical address was not mappable in the page table.
     ///
-    /// This can happen when a 32-bit page table is created, but the physical address is beyond 4G.
-    PhysAddressNotMappable { paddr: u64 },
+    /// This can happen when a 32-bit page table is created, but the physical address is beyond what
+    /// can be represented.
+    PhysAddressNotMappable { pte: u64 },
 
     /// A page table was allocated at a place where we cannot point to it.
     ///
@@ -26,10 +27,10 @@ pub enum PageTableError {
 impl std::fmt::Display for PageTableError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PageTableError::PhysAddressNotMappable { paddr } => write!(
+            PageTableError::PhysAddressNotMappable { pte } => write!(
                 f,
-                "Physical address {:#x} is not representable in the page table.",
-                paddr
+                "Page table entry {:#x} is not representable in the page table.",
+                pte
             ),
             PageTableError::IllegalPageTablePlacement { paddr } => write!(
                 f,
@@ -67,34 +68,31 @@ fn permission_bits(perm: Permissions) -> u8 {
         | PTE_V
 }
 
-fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> Result<u32, PageTableError> {
-    if let Some((paddr, perm)) = addr_space.lookup(vaddr) {
-        assert_eq!(paddr & 0xFFF, 0);
-
-        let paddr_32: u32 = paddr
-            .try_into()
-            .map_err(|_| PageTableError::PhysAddressNotMappable { paddr })?;
-
-        Ok((paddr_32 >> 2) | u32::from(permission_bits(perm)))
-    } else {
-        Ok(0)
-    }
-}
-
-fn pt_next(pt: Option<u32>) -> u32 {
-    if let Some(phys) = pt {
-        phys >> 2 | 1
-    } else {
-        0
-    }
-}
-
 #[derive(Debug, Copy, Clone)]
 struct PageTableFormat {
     bits_per_level: u8,
 }
 
 const FORMAT_SV32: PageTableFormat = PageTableFormat { bits_per_level: 10 };
+
+fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> Result<u64, PageTableError> {
+    if let Some((paddr, perm)) = addr_space.lookup(vaddr) {
+        assert_eq!(paddr & 0xFFF, 0);
+
+        Ok((paddr >> 2) | u64::from(permission_bits(perm)))
+    } else {
+        Ok(0)
+    }
+}
+
+/// Create a page table entry that points to another page table.
+fn pt_next(pt: Option<u64>) -> u64 {
+    if let Some(phys) = pt {
+        phys >> 2 | u64::from(PTE_V)
+    } else {
+        0
+    }
+}
 
 /// Generate a page table at the given level. Level counts down with being the leaf.
 ///
@@ -105,11 +103,11 @@ fn page_table(
     level: u8,
     vaddr: u64,
     addr_space: &AddressSpace,
-) -> Result<Option<u32>, PageTableError> {
+) -> Result<Option<u64>, PageTableError> {
     let pt_data = &(0..(1 << format.bits_per_level))
         .into_iter()
         .map(|pt_index| vaddr + (pt_index << u64::from(12 + level * format.bits_per_level)))
-        .map(|vaddr| -> Result<u32, PageTableError> {
+        .map(|vaddr| -> Result<u64, PageTableError> {
             if level == 0 {
                 pt_entry(vaddr, addr_space)
             } else {
@@ -122,12 +120,29 @@ fn page_table(
                 )?))
             }
         })
-        .collect::<Result<Vec<u32>, PageTableError>>()?;
+        .collect::<Result<Vec<u64>, PageTableError>>()?;
 
     if pt_data.iter().all(|&v| v == 0) {
         Ok(None)
     } else {
-        let combined = vec_u32_to_bytes(&pt_data);
+        let combined = match format.bits_per_level {
+            // 32-bit Page Table Entries.
+            //
+            // We need to crop our temporary 64-bit entries to fit. If they don't we propagate this
+            // as an error.
+            10 => {
+                let cropped = pt_data
+                    .iter()
+                    .map(|&pt_entry64| -> Result<u32, PageTableError> {
+                        u32::try_from(pt_entry64)
+                            .map_err(|_| PageTableError::PhysAddressNotMappable { pte: pt_entry64 })
+                    })
+                    .collect::<Result<Vec<u32>, PageTableError>>()?;
+
+                vec_u32_to_bytes(&cropped)
+            }
+            _ => unimplemented!("Bit per level {} is not handled yet", format.bits_per_level),
+        };
         let phys = pmem
             .place(&combined, PlaceAs::Shareable)
             .ok_or(PageTableError::MemoryAllocationFailed)?;
