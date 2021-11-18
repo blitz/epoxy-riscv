@@ -7,7 +7,7 @@ EPOXY_API        ?= /does-not-exist
 
 PREFIX           ?= /usr/local
 
-COMMON_CFLAGS   = -g -flto -I$(EPOXY_API) -MD -Os -fno-common -fomit-frame-pointer -march=rv32ima
+COMMON_CFLAGS   = -g -flto -I$(EPOXY_API) -MD -Os -fno-common -fomit-frame-pointer
 COMMON_CXXFLAGS = -std=c++17 -Wall -Wunused-parameter
 COMMON_LDFLAGS  = -g -flto -static
 

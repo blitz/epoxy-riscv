@@ -31,7 +31,7 @@ rec {
 
   systems =
     let
-      buildSystem = system:
+      buildSystem = crossPkgs: system:
         let
           hardenCmd = "${new-harden}/bin/harden -r ${../config} -s ${system} -vvvv";
 
@@ -51,7 +51,7 @@ rec {
           ''));
 
           # Return a derivation for the process from the system description.
-          buildProcess = {name, program}: rv32.pkgs.callPackage (./epoxy- + "${program}.nix") {
+          buildProcess = {name, program}: crossPkgs.pkgs.callPackage (./epoxy- + "${program}.nix") {
             resourceHeader = mkResourceHeader name;
             outputName = name;
           };
@@ -65,12 +65,12 @@ rec {
             ${hardenCmd} configure-kernel resources > $out/resources.hpp
           '';
 
-          kern = rv32.pkgs.callPackage ./epoxy-kern.nix {
+          kern = crossPkgs.pkgs.callPackage ./epoxy-kern.nix {
             epoxy-api = api;
             epoxy-kern-state = kern-state;
           };
 
-          boot-image-input = rv32.pkgs.symlinkJoin {
+          boot-image-input = crossPkgs.pkgs.symlinkJoin {
             name = "all-binaries";
             paths = [ kern ] ++ builtins.map buildProcess processes;
           };
@@ -80,17 +80,15 @@ rec {
     in
     {
       # TODO Use readDir to automate this.
-      qemu-hello = buildSystem "qemu-hello";
-      ulx3s-saxonsoc-fbdemo = buildSystem "ulx3s-saxonsoc-fbdemo";
+      qemu-hello = buildSystem rv32 "qemu-hello";
+      qemu-hello-64 = buildSystem rv64 "qemu-hello";
+      ulx3s-saxonsoc-fbdemo = buildSystem rv32 "ulx3s-saxonsoc-fbdemo";
     };
 
   tests = {
-    qemu-hello = rv32.pkgs.callPackage ./test-hello.nix {
-      inherit (dependencies) epoxy-qemu-boot;
-
+    qemu-hello = pkgs.callPackage ./test-hello.nix {
+      epoxy-qemu-boot = dependencies.epoxy-qemu-boot-32;
       bootElf = systems.qemu-hello.boot-image;
     };
   };
-
-  # TODO Use test.nix
 }
