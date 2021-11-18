@@ -86,6 +86,29 @@ const FORMAT_SV39: PageTableFormat = PageTableFormat {
     levels: 3,
 };
 
+/// Replicate the sign bit across unused parts of the virtual address.
+fn canonicalize_vaddr(addr: u64, format: PageTableFormat) -> u64 {
+    match format.bits_per_level {
+        // 32-bit Paging. No sign extension necessary.
+        10 => addr,
+
+        9 => {
+            // The sign bit is set in this mask.
+            let address_width = format.bits_per_level * format.levels + 12;
+            let sign_bit_mask: u64 = 1 << (address_width - 1);
+            let upper_address_mask: u64 = !(sign_bit_mask - 1);
+
+            addr | if addr & sign_bit_mask != 0 {
+                upper_address_mask
+            } else {
+                0
+            }
+        }
+
+        _ => panic!("Invalid page table format"),
+    }
+}
+
 fn pt_entry(vaddr: u64, addr_space: &AddressSpace) -> Result<u64, PageTableError> {
     if let Some((paddr, perm)) = addr_space.lookup(vaddr) {
         assert_eq!(paddr & 0xFFF, 0);
@@ -119,10 +142,11 @@ fn page_table(
         .into_iter()
         .map(|pt_index| -> Interval {
             let size = 1 << u64::from(12 + level * format.bits_per_level);
+            let canon_vaddr = canonicalize_vaddr(vaddr + pt_index * size, format);
 
             Interval {
-                from: vaddr + (pt_index * size),
-                to: vaddr + ((pt_index + 1) * size),
+                from: canon_vaddr,
+                to: canon_vaddr + size,
             }
         })
         .map(|vaddr_range| -> Result<u64, PageTableError> {
@@ -208,5 +232,23 @@ pub fn generate(
             debug!("User process SATP is {:#x}", satp);
             Ok(satp)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_canonicalize_vaddrs() {
+        assert_eq!(canonicalize_vaddr(0, FORMAT_SV32), 0);
+        assert_eq!(canonicalize_vaddr(0xFFFF_FFFF, FORMAT_SV32), 0xFFFF_FFFF);
+
+        assert_eq!(canonicalize_vaddr(0, FORMAT_SV39), 0);
+        assert_eq!(canonicalize_vaddr(0xFFFF_FFFF, FORMAT_SV39), 0xFFFF_FFFF);
+        assert_eq!(
+            canonicalize_vaddr(0x40_0000_0000, FORMAT_SV39),
+            0xFFFF_FFC0_0000_0000
+        );
     }
 }
