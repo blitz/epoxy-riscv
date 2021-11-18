@@ -80,15 +80,14 @@ rec {
     in
     {
       # TODO Use readDir to automate this.
-      qemu-hello = buildSystem rv32 "qemu-hello";
+      qemu-hello-32 = buildSystem rv32 "qemu-hello";
       qemu-hello-64 = buildSystem rv64 "qemu-hello";
-      ulx3s-saxonsoc-fbdemo = buildSystem rv32 "ulx3s-saxonsoc-fbdemo";
-    };
+     };
 
   tests = {
-    qemu-hello = pkgs.callPackage ./test-hello.nix {
+    qemu-hello-32 = pkgs.callPackage ./test-hello.nix {
       epoxy-qemu-boot = dependencies.epoxy-qemu-boot-32;
-      bootElf = systems.qemu-hello.boot-image;
+      bootElf = systems.qemu-hello-32.boot-image;
     };
   };
 }
