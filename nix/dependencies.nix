@@ -35,6 +35,8 @@ in rec {
   epoxy-qemu-boot-32 = mkBoot 32;
   epoxy-qemu-boot-64 = mkBoot 64;
 
+  inherit qemuHeadless;
+
   rv32 = {
     pkgs = mkCrossPkgs (pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded {
       gcc = {
@@ -48,7 +50,7 @@ in rec {
   };
 
   rv64 = {
-    pkgs = mkCrossPkgs (pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded {
+    pkgs = mkCrossPkgs (pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv64-embedded {
       gcc = {
         # Disable floating point.
         arch = "rv64imac";

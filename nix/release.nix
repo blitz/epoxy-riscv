@@ -18,7 +18,7 @@ rec {
 
   shellDependencies = {
     inherit (dependencies)
-      epoxy-qemu-boot qemuHeadless pprintpp range-v3;
+      epoxy-qemu-boot-64 qemuHeadless;
     inherit (pkgs) clang-tools niv dhall;
   };
 
