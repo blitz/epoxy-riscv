@@ -89,5 +89,10 @@ rec {
       epoxy-qemu-boot = dependencies.epoxy-qemu-boot-32;
       bootElf = systems.qemu-hello-32.boot-image;
     };
+
+    qemu-hello-64 = pkgs.callPackage ./test-hello.nix {
+      epoxy-qemu-boot = dependencies.epoxy-qemu-boot-64;
+      bootElf = systems.qemu-hello-64.boot-image;
+    };
   };
 }
