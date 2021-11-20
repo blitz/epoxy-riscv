@@ -18,7 +18,7 @@ rec {
 
   shellDependencies = {
     inherit (dependencies)
-      epoxy-qemu-boot-64 qemuHeadless;
+      epoxy-qemu-boot-64 qemuHeadless connect-nezha;
     inherit (pkgs) clang-tools niv dhall;
   };
 

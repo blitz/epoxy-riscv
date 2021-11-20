@@ -37,6 +37,14 @@ in rec {
 
   inherit qemuHeadless;
 
+  # Use 'connect-nezha' to connect to the board.
+  connect-nezha = (pkgs.writeShellScriptBin "connect-nezha" ''
+    echo "Use C-a C-s to send files using XModem."
+    echo "Use C-a C-q to disconnect."
+    echo
+    exec ${pkgs.picocom}/bin/picocom --send-cmd "${pkgs.lrzsz}/bin/sx -vv" -b 115200 --flow n /dev/ttyUSB0
+  '');
+
   rv32 = {
     pkgs = mkCrossPkgs (pkgs.lib.recursiveUpdate pkgs.lib.systems.examples.riscv32-embedded {
       gcc = {
