@@ -1,13 +1,20 @@
 .PHONY: all
 all: epoxy.kern.elf
 
+TARGET:=$(shell $(CC) -dumpmachine | sed 's/-.*//')
+
+GCC_ARCH_riscv32:=rv32imac
+GCC_ARCH_riscv64:=rv64imac
+
+GCC_ARCH:=$(GCC_ARCH_$(TARGET))_zicsr
+
 # You need to set these variables 
 KERN_STATE       ?= /does-not-exist
 EPOXY_API        ?= /does-not-exist
 
 PREFIX           ?= /usr/local
 
-COMMON_CFLAGS   = -g -flto -I$(EPOXY_API) -MD -Os -fno-common -fomit-frame-pointer
+COMMON_CFLAGS   = -march=$(GCC_ARCH) -g -flto -I$(EPOXY_API) -MD -Os -fno-common -fomit-frame-pointer
 COMMON_CXXFLAGS = -std=c++17 -Wall -Wunused-parameter
 COMMON_LDFLAGS  = -g -flto -static
 

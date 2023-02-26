@@ -13,7 +13,7 @@ private:
   mword_t reg[31] {};
 
 public:
-  mword_t &operator[](size_t i)
+  constexpr mword_t &operator[](size_t i)
   {
     assert(i > 0 and i < 32);
     return reg[i - 1];
